@@ -1,227 +1,77 @@
-<?php 
+<?php
 /**
- * Moodec Transaction
+ * Moodec Transaction Table
  *
- * @package     local
- * @subpackage  local_moodec
- * @author      Thomas Threadgold
+ * @package     local_moodec
+ * @author      Vernon Spain - Formerly Thomas Threadgold
  * @copyright   2015 LearningWorks Ltd
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// Load Moodle config
-require_once dirname(__FILE__) . '/../../../config.php';
-// Load Tablelib lib
-require_once $CFG->dirroot .'/lib/tablelib.php';
-// Load Moodec lib
-require_once $CFG->dirroot .'/local/moodec/lib.php';
+namespace local_moodec;
 
-class moodec_transaction_table extends table_sql {
+use flexible_table;
+use moodle_url;
 
-    /**
-     * Constructor
-     * @param int $uniqueid all tables have to have a unique id, this is used
-     *      as a key when storing table properties like sort order in the session.
-     */
-    function __construct($uniqueid) {
-        parent::__construct($uniqueid);
-        // Define the list of columns to show.
-        $columns = array(
-            'purchase_date',
-            'id',
-            'user_id',
-            'amount',
-            'items',
-            'gateway',
-            'txn_id',
-            'status',
-            'actions'
-        );
-        $this->define_columns($columns);
+defined('MOODLE_INTERNAL') || die();
 
-        // Define the titles of columns to show in header.
-        $headers = array(
-            get_string('transaction_field_date', 'local_moodec')    ,   // 'Date'
-            get_string('transaction_field_id', 'local_moodec'),         // 'Transaction ID',
-            get_string('transaction_field_user', 'local_moodec'),       // 'User',
-            get_string('transaction_field_amount', 'local_moodec'),     // 'Amount',
-            get_string('transaction_field_items', 'local_moodec'),      // 'Number of items',
-            get_string('transaction_field_gateway', 'local_moodec'),    // 'Gateway',
-            get_string('transaction_field_txn', 'local_moodec'),
-            get_string('transaction_field_status', 'local_moodec'),     // 'Status',
-            get_string('transaction_field_actions', 'local_moodec'),     // 'Action'
-        );
-        $this->define_headers($headers);
+require_once($GLOBALS['CFG']->libdir . '/tablelib.php');
 
-        $this->sortable(true, 'purchase_date', SORT_DESC);
-        $this->no_sorting('user_id');
-        $this->no_sorting('amount');
-        $this->no_sorting('items');
-        $this->no_sorting('txn_id');
-        $this->no_sorting('gateway');
-        $this->no_sorting('actions');
+class transaction_table extends flexible_table {
+    protected int $userid;
+
+    public function __construct(int $userid) {
+        parent::__construct('moodec_transaction_table');
+
+        $this->userid = $userid;
+
+        $this->define_columns(['id', 'timecreated', 'gateway', 'status', 'cost']);
+        $this->define_headers([
+            get_string('id', 'local_moodec'),
+            get_string('timecreated', 'local_moodec'),
+            get_string('gateway', 'local_moodec'),
+            get_string('status', 'local_moodec'),
+            get_string('cost', 'local_moodec')
+        ]);
+
+        $this->define_baseurl(new moodle_url('/local/moodec/pages/history.php'));
+
+        $this->sortable(true, 'timecreated', SORT_DESC);
+        $this->collapsible(true);
+        $this->set_attribute('class', 'generaltable transaction-table');
     }
 
-    /**
-     * This function is called for each data row to allow processing of the
-     * purchase_date value.
-     *
-     * @param object $values Contains object with all the values of record.
-     * @return $string Return purchase_date formatted like 09:23:00 01/12/1991
-     */
-    function col_purchase_date($values) {
-        return date('H:i:s d/m/Y', $values->purchase_date);
-    }
+    public function query_db(int $pagesize, bool $useinitialsbar = true): void {
+        global $DB;
 
-    /**
-     * This function is called for each data row to allow processing of the
-     * username value.
-     *
-     * @param object $values Contains object with all the values of record.
-     * @return $string Return username with link to profile or username only
-     *     when downloading.
-     */
-    function col_user_id($values) {
-        global $CFG, $DB;
+        $countsql = "SELECT COUNT(1)
+                     FROM {local_moodec_transaction}
+                     WHERE user_id = :userid";
 
-        $user = $DB->get_record('user', array('id' => $values->user_id ));
+        $totals = $DB->count_records_sql($countsql, ['userid' => $this->userid]);
 
-        // If the data is being downloaded than we don't want to show HTML.
-        if ($this->is_downloading()) {
-            return $user->username;
-        } else {
-            return sprintf(
-                '<a href="%s">%s %s</a>',
-                new moodle_url($CFG->wwwroot . '/user/profile.php', array( 'id'=> $user->id )),
-                $user->firstname,
-                $user->lastname
-            );
+        $this->pagesize($pagesize, $totals);
+
+        $sort = $this->get_sql_sort();
+        if (empty($sort)) {
+            $sort = 'timecreated DESC';
         }
-    }
 
-    /**
-     * This function is called for each data row to allow processing of the
-     * amount value.
-     *
-     * @param object $values Contains object with all the values of record.
-     * @return $string Return amount including the currency symbol
-     */
-    function col_amount($values) {
+        $sql = "SELECT id, timecreated, gateway, status, cost
+                FROM {local_moodec_transaction}
+                WHERE user_id = :userid
+                ORDER BY $sort";
 
-        $t = new MoodecTransaction((int) $values->id);
+        $records = $DB->get_records_sql($sql, ['userid' => $this->userid], $this->get_page_start(), $this->get_page_size());
 
-        return local_moodec_get_currency_symbol(get_config('local_moodec', 'currency')) . number_format($t->get_cost(), 2, '.', ',');
-    }
-
-    /**
-     * This function is called for each data row to allow processing of the
-     * items value.
-     *
-     * @param object $values Contains object with all the values of record.
-     * @return $string Return the number of items in the transaction
-     */
-    function col_items($values) {
-        
-        $t = new MoodecTransaction((int) $values->id);
-
-        return count($t->get_items());
-    }
-
-    /**
-     * This function is called for each data row to allow processing of the
-     * gateway value.
-     *
-     * @param object $values Contains object with all the values of record.
-     * @return $string Return gateway formatted as per MoodecTransaction class function
-     */
-    function col_gateway($values) {
-        
-        $t = new MoodecTransaction((int) $values->id);
-
-        return $t->get_gateway(true);
-    }
-
-    /**
-     * This function is called for each data row to allow processing of the
-     * txn_id value.
-     *
-     * @param object $values Contains object with all the values of record.
-     * @return $string Return txn_id 
-     */
-    function col_txn_id($values) {
-        
-        if( empty($values->txn_id) || $values->txn_id == 0 ) {
-            return '-';
-        } else {
-            return $values->txn_id;
+        foreach ($records as $record) {
+            $this->add_data([
+                $record->id,
+                userdate($record->timecreated),
+                s($record->gateway),
+                s($record->status),
+                format_float($record->cost, 2)
+            ]);
         }
-    }
-
-    /**
-     * This function is called for each data row to allow processing of the
-     * purchase_date value.
-     *
-     * @param object $values Contains object with all the values of record.
-     * @return $string Return status formatted like as per the transaction class
-     */
-    function col_status($values) {
-        
-        $t = new MoodecTransaction((int) $values->id);
-
-        return $t->get_status(true);
-    }
-
-    /**
-     * This function is called for each data row to allow processing of the
-     * actions value.
-     *
-     * @param object $values Contains object with all the values of record.
-     * @return $string Return url to view the individual transaction
-     */
-    function col_actions($values) {
-        global $CFG;
-
-        $url = new moodle_url(
-            $CFG->wwwroot .'/local/moodec/pages/transaction/view.php', 
-            array( 'id' => $values->id )
-        );
-
-        if ($this->is_downloading()) {
-            return $url;
-        } else {
-            return sprintf(
-                '<a href="%s">%s</a>',
-                $url,
-                get_string('transaction_view_label', 'local_moodec')
-            );
-        }
-    }
-
-    /**
-     * This function is called for each data row to allow processing of
-     * columns which do not have a *_cols function.
-     * @return string return processed value. Return NULL if no change has
-     *     been made.
-     */
-    function other_cols($colname, $value) {
-        // --- Leaving here for future reference ---
-
-        // For security reasons we don't want to show the password hash.
-        // if ($colname == 'password') {
-        //     return "****";
-        // }
-    }
-
-    /**
-     * This function is not part of the public api.
-     */
-    function print_nothing_to_display() {
-        global $OUTPUT;
-        $this->print_initials_bar();
-
-        printf(
-            '<p class="transactions--empty">%s</p>',
-            get_string('transaction_table_empty', 'local_moodec')
-        );
     }
 }
