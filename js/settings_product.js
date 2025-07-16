@@ -1,23 +1,33 @@
-$(document).on('ready', function(){
+'use strict';
 
-	// Attach event handler to tier selection element
-	$('#id_product_type').on('change', function(){
+require(['jquery'], function($) {
 
-		var fieldCount = parseInt($('#id_format').val(), 10);
+    $(document).ready(function () {
 
-		console.log(fieldCount);
+        const $productType = $('#id_product_type');
+        const $formatField = $('#id_format');
 
-		for (var i = fieldCount; i > 1; i--) {
-			
-			if( $('#id_product_type').val() === 'PRODUCT_TYPE_SIMPLE' ) {
-				console.log('hide');
-				$('#id_product_variation_header_'+i).hide();
-			} else {
-				console.log('show');
-				$('#id_product_variation_header_'+i).show();
-			}
+        if (!$productType.length || !$formatField.length) {
+            console.warn('Moodec settings: Required form fields not found.');
+            return;
+        }
 
-		}
+        const toggleVariationHeaders = function () {
+            const fieldCount = parseInt($formatField.val(), 10) || 0;
+            const isSimple = $productType.val() === 'PRODUCT_TYPE_SIMPLE';
 
-	});
+            for (let i = fieldCount; i > 1; i--) {
+                const $header = $('#id_product_variation_header_' + i);
+                if ($header.length) {
+                    $header.toggle(!isSimple);
+                }
+            }
+        };
+
+        $productType.on('change', toggleVariationHeaders);
+
+        // Trigger once on page load to set correct state
+        toggleVariationHeaders();
+    });
+
 });
