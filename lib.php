@@ -2,394 +2,314 @@
 /**
  * Moodec Library file
  *
- * @package     local
- * @subpackage  local_moodec
- * @author   	Thomas Threadgold
+ * @package     local_moodec
+ * @author      Thomas Threadgold
  * @copyright   2015 LearningWorks Ltd
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die;
+defined('MOODLE_INTERNAL') || die();
 
-// Declare product type constants
+// Product type constants
 define('PRODUCT_TYPE_SIMPLE', 'PRODUCT_TYPE_SIMPLE');
 define('PRODUCT_TYPE_VARIABLE', 'PRODUCT_TYPE_VARIABLE');
 
-// Declare gateway type constants
+// Gateway constants
 define('MOODEC_GATEWAY_PAYPAL', 'MOODEC_GATEWAY_PAYPAL');
 define('MOODEC_GATEWAY_DPS', 'MOODEC_GATEWAY_DPS');
 
-
-// Load the required Moodec classes
-require_once $CFG->dirroot . '/local/moodec/classes/product.php';
-require_once $CFG->dirroot . '/local/moodec/classes/product_simple.php';
-require_once $CFG->dirroot . '/local/moodec/classes/product_variable.php';
-require_once $CFG->dirroot . '/local/moodec/classes/product_variation.php';
-require_once $CFG->dirroot . '/local/moodec/classes/cart.php';
-require_once $CFG->dirroot . '/local/moodec/classes/transaction.php';
-require_once $CFG->dirroot . '/local/moodec/classes/transaction_item.php';
-require_once $CFG->dirroot . '/local/moodec/classes/gateway.php';
-require_once $CFG->dirroot . '/local/moodec/classes/gateway_paypal.php';
-require_once $CFG->dirroot . '/local/moodec/classes/gateway_dps.php';
+// Class autoloading (deprecated requires removed — assumes PSR-4 or composer-based autoload)
+require_once($CFG->dirroot . '/local/moodec/autoload.php');
 
 /**
- * Extend the default Moodle navigation
- * @param  global_navigation $nav
- * @return void                 
- */
-function local_moodec_extends_navigation(global_navigation $nav) {
-	global $CFG, $PAGE, $DB;
-
-	// Add store container to menu
-	$storenode = $PAGE->navigation->add(
-		get_string('catalogue_title', 'local_moodec'),
-		new moodle_url($CFG->wwwroot . '/local/moodec/pages/catalogue.php'),
-		navigation_node::TYPE_CONTAINER
-	);
-
-	if (!!get_config('local_moodec', 'page_product_enable')) {
-
-		// We store the courses by category
-		// but only get categories with active products
-		$query = sprintf(
-			'SELECT DISTINCT 
-					cc.id, 
-					cc.visible,
-					cc.name
-			FROM	{course_categories} cc, 
-					{course} c, 
-					{local_moodec_product} lmp
-			WHERE 	cc.id = c.category
-			AND 	c.id = lmp.course_id
-			AND 	lmp.is_enabled = 1');
-
-		$categories = $DB->get_records_sql($query);
-
-		if (!!$categories) {
-			foreach ($categories as $category) {
-				if($category->visible) {
-
-					$catnode = $storenode->add(
-						$category->name,
-						new moodle_url($CFG->wwwroot . '/local/moodec/pages/catalogue.php', array('category' => $category->id)),
-						navigation_node::TYPE_CONTAINER
-					);
-
-					// Actually get the products
-					$products = local_moodec_get_products(-1, $category->id, 'fullname');
-
-					// Add products to the store menu
-					foreach ($products as $product) {
-						$catnode->add(
-							$product->get_fullname(),
-							new moodle_url($CFG->wwwroot . '/local/moodec/pages/product.php', array('id' => $product->get_id()))
-						);
-					}
-				}
-			}
-		}
-	}
-
-	// Add cart page to menu
-	$PAGE->navigation->add(
-		get_string('cart_title', 'local_moodec'),
-		new moodle_url($CFG->wwwroot . '/local/moodec/pages/cart.php')
-	);
-
-	// Add transactions page to menu
-	$PAGE->navigation->add(
-		get_string('transactions_title', 'local_moodec'),
-		new moodle_url($CFG->wwwroot . '/local/moodec/pages/transaction/index.php')
-	);
-}
-
-/**
- * Display the Moodec settings in the course settings block
- * For 2.3 and onwards
+ * Add Moodec links to global navigation.
  *
- * @param  settings_navigation $nav     The settings navigation object
- * @param  stdclass            $context Course context
+ * @param global_navigation $nav
  */
-function local_moodec_extends_settings_navigation(settings_navigation $nav, $context) {
-	global $CFG;
+function local_moodec_extends_navigation(global_navigation $nav): void {
+    global $CFG, $PAGE, $DB;
 
-	if ($context->contextlevel >= CONTEXT_COURSE and ($branch = $nav->get('courseadmin'))
-		and has_capability('moodle/course:update', $context)) {
-		$url = new moodle_url($CFG->wwwroot . '/local/moodec/settings/product.php', array('id' => $context->instanceid));
-		$branch->add(get_string('moodec_product_settings', 'local_moodec'), $url, $nav::TYPE_CONTAINER, null, 'moodec' . $context->instanceid, new pix_icon('i/settings', ''));
-	}
-}
+    $storenode = $PAGE->navigation->add(
+        get_string('catalogue_title', 'local_moodec'),
+        new moodle_url('/local/moodec/pages/catalogue.php'),
+        navigation_node::TYPE_CONTAINER
+    );
 
-function local_moodec_get_currencies() {
-	// See https://www.paypal.com/cgi-bin/webscr?cmd=p/sell/mc/mc_intro-outside,
-	// 3-character ISO-4217: https://cms.paypal.com/us/cgi-bin/?cmd=_render-content&content_ID=developer/e_howto_api_currency_codes
-	// See https://www.paymentexpress.com/technical_resources/ecommerce_hosted/pxpay.html
+    if (get_config('local_moodec', 'page_product_enable')) {
+        $sql = "SELECT DISTINCT cc.id, cc.visible, cc.name
+                  FROM {course_categories} cc
+                  JOIN {course} c ON c.category = cc.id
+                  JOIN {local_moodec_product} lmp ON lmp.course_id = c.id
+                 WHERE lmp.is_enabled = 1";
 
-	$codes = array('AUD','CAD','CHF','DKK','EUR','GBP','HKD','JPY','MYR','NZD','SGD','THB','USD');
-	$currencies = array();
-	foreach ($codes as $c) {
-		$currencies[$c] = new lang_string($c, 'core_currencies');
-	}
+        $categories = $DB->get_records_sql($sql);
 
-	return $currencies;
+        foreach ($categories as $category) {
+            if (!$category->visible) {
+                continue;
+            }
+
+            $catnode = $storenode->add(
+                $category->name,
+                new moodle_url('/local/moodec/pages/catalogue.php', ['category' => $category->id]),
+                navigation_node::TYPE_CONTAINER
+            );
+
+            $products = local_moodec_get_products(-1, $category->id, 'fullname');
+            foreach ($products as $product) {
+                $catnode->add(
+                    $product->get_fullname(),
+                    new moodle_url('/local/moodec/pages/product.php', ['id' => $product->get_id()])
+                );
+            }
+        }
+    }
+
+    $PAGE->navigation->add(
+        get_string('cart_title', 'local_moodec'),
+        new moodle_url('/local/moodec/pages/cart.php')
+    );
+
+    $PAGE->navigation->add(
+        get_string('transactions_title', 'local_moodec'),
+        new moodle_url('/local/moodec/pages/transaction/index.php')
+    );
 }
 
 /**
- * Returns the symbol for the supplied currency
- * @param  string $currency the currency code
- * @return string           the symbol
+ * Add Moodec links to course settings navigation.
+ *
+ * @param settings_navigation $nav
+ * @param stdClass $context
  */
-function local_moodec_get_currency_symbol($currency) {
+function local_moodec_extends_settings_navigation(settings_navigation $nav, stdClass $context): void {
+    global $CFG;
 
-	$codes = array(
-		'AUD' => '$',
-		'CAD' => '$',
-		'CHF' => 'CHF',
-		'DKK' => 'kr',
-		'EUR' => '€',
-		'GBP' => '£',
-		'HKD' => '$',
-		'JPY' => '¥',
-		'MYR' => 'RM',
-		'NZD' => '$',
-		'SGD' => '$',
-		'THB' => '฿',
-		'USD' => '$',
-	);
+    if ($context->contextlevel >= CONTEXT_COURSE && ($branch = $nav->get('courseadmin'))
+        && has_capability('moodle/course:update', $context)) {
 
-	if (array_key_exists($currency, $codes)) {
-		return $codes[$currency];
-	}
-
-	return '$';
+        $url = new moodle_url('/local/moodec/settings/product.php', ['id' => $context->instanceid]);
+        $branch->add(
+            get_string('moodec_product_settings', 'local_moodec'),
+            $url,
+            navigation_node::TYPE_SETTING,
+            null,
+            'moodec' . $context->instanceid,
+            new pix_icon('i/settings', '')
+        );
+    }
 }
 
 /**
- * Returns an product object
- * @param  int 				$id 	the course id
- * @return MoodecProduct     		Product, exception thrown if no product found
+ * Get supported currencies.
+ *
+ * @return array
  */
-function local_moodec_get_product($id) {
-	global $DB;
+function local_moodec_get_currencies(): array {
+    $codes = ['AUD','CAD','CHF','DKK','EUR','GBP','HKD','JPY','MYR','NZD','SGD','THB','USD'];
+    $currencies = [];
 
-	// build the query
-	$query = sprintf(
-		'SELECT type
-		FROM {local_moodec_product}
-		WHERE id = %d',
-		(int) $id
-	);
+    foreach ($codes as $c) {
+        $currencies[$c] = new lang_string($c, 'core_currencies');
+    }
 
-	// run the query
-	$product = $DB->get_record_sql($query);
-
-	// Return the product
-	if (!!$product) {
-		if( $product->type === PRODUCT_TYPE_SIMPLE) {
-			return new MoodecProductSimple((int) $id);
-		} else if( $product->type === PRODUCT_TYPE_VARIABLE) {
-			return new MoodecProductVariable((int) $id);
-		}
-	}
-
-	// Otherwise
-	throw new Exception('Unable to find product using identifier: ' . $id);
-}
-
-
-/**
- * Returns an array of the products
- * @param  int 		$page 		The pagination 'page' to return. -1 will return all products
- * @param  int 		$category  	The category id to filter
- * @param  string 	$sortfield 	The field to sort the data by
- * @param  string 	$sortorder 	Sort by ASC or DESC
- * @return array            	The products
- */
-function local_moodec_get_products($page = 1, $category = null, $sortfield = 'sortorder', $sortorder = 'ASC') {
-	global $DB;
-
-	// An array to store the products (this will be returned)
-	$products = array();
-
-	// Get the number of products to be shown per page from the plugin config
-	$productsPerPage = get_config('local_moodec', 'pagination');
-
-	// VALIDATE PARAMETERS
-	if (!in_array($sortfield, array('sortorder', 'price', 'fullname', 'duration', 'timecreated'))) {
-		$sortfield = 'sortorder';
-	}
-
-	// Sorting can only be done by 2 ways
-	if (!in_array($sortorder, array('ASC', 'DESC'))) {
-		$sortorder = 'ASC';
-	}
-
-	// If default, we won't filter by category
-	if ($category == 'default') {
-		$category = null;
-	}
-
-	// Ensure page is an int
-	if( !is_int($page) ) {
-		$page = (int) $page;
-	}
-
-	// Check if we should be returning all products or just a page of products
-	$returnAll = false;
-	if( $page === -1 ) {
-		$returnAll = true;
-	}
-
-	// Reduce page by 1 so we can get the first 10 products
-	// Because 0-based array stuff
-	$page = $page < 1 ? 0 : $page - 1;
-
-	// BUILD THE QUERY
-	$query = sprintf(
-		'SELECT DISTINCT lmp.id as productid
-		FROM 	{local_moodec_product} lmp, 
-				{local_moodec_variation} lmv, 
-				{course} c
-		WHERE 	lmp.id = lmv.product_id
-		AND 	lmp.course_id = c.id
-		AND		lmp.is_enabled = 1
-		%s
-	 	ORDER BY %s %s',
-	 	$category !== null ? 'AND c.category = ' . $category : '',
-	 	$sortfield,
-	 	$sortorder
-	);
-	
-	// RUN THE QUERY	
-	if( $returnAll ) {
-		$records = $DB->get_records_sql($query);
-	} else {
-		$records = $DB->get_records_sql($query, null, $productsPerPage * $page, $productsPerPage);
-	}
-
-	if( !!$records ) {
-
-		foreach ($records as $record) {
-	
-			// Add the product matching this id to the array
-			$products[] = local_moodec_get_product($record->productid);
-
-		}
-	}
-
-	return $products;
+    return $currencies;
 }
 
 /**
- * Returns an array of the products
- * @param  int 		$limit 		The number of random products to return
- * @param  int 		$category  	The category id to filter by
- * @return array            	The products
+ * Get currency symbol from currency code.
+ *
+ * @param string $currency
+ * @return string
  */
-function local_moodec_get_random_products($limit = 1, $category = null, $exclude = 0) {
-	global $DB;
+function local_moodec_get_currency_symbol(string $currency): string {
+    $symbols = [
+        'AUD' => '$', 'CAD' => '$', 'CHF' => 'CHF', 'DKK' => 'kr', 'EUR' => '€',
+        'GBP' => '£', 'HKD' => '$', 'JPY' => '¥', 'MYR' => 'RM', 'NZD' => '$',
+        'SGD' => '$', 'THB' => '฿', 'USD' => '$',
+    ];
 
-	// An array to store the products (this will be returned)
-	$products = array();
-
-	// VALIDATE PARAMETERS
-	// If default, we won't filter by category
-	if ($category == 'default') {
-		$category = null;
-	}
-
-	// Ensure page is an int
-	if( !is_int($limit) ) {
-		$limit = (int) $limit;
-	}
-
-	// BUILD THE QUERY
-	$query = sprintf(
-		'SELECT DISTINCT lmp.id as productid
-		FROM 	{local_moodec_product} lmp, 
-				{local_moodec_variation} lmv, 
-				{course} c
-		WHERE 	lmp.id = lmv.product_id
-		AND 	lmp.course_id = c.id
-		AND		lmp.is_enabled = 1
-		AND 	lmp.id != %d
-		%s
-	 	ORDER BY rand()',
-	 	$exclude,
-	 	$category !== null ? 'AND c.category = ' . $category : ''
-	);
-	
-	// RUN THE QUERY	
-	$records = $DB->get_records_sql($query, null, 0, $limit);
-
-	if( !!$records ) {
-		foreach ($records as $record) {
-	
-			// Add the product matching this id to the array
-			$products[] = local_moodec_get_product($record->productid);
-	
-		}
-	}
-
-	return $products;
+    return $symbols[$currency] ?? '$';
 }
 
 /**
- * Returns a list of <option> tags of each category
- * @param  int $id the active category
- * @return string     the HTML <option> list
+ * Get a single product object by ID.
+ *
+ * @param int $id
+ * @return MoodecProduct
+ * @throws moodle_exception
  */
-function local_moodec_get_category_list($id) {
-	global $DB;
+function local_moodec_get_product(int $id) {
+    global $DB;
 
-	$list = sprintf(
-		'<option value="default" %s>All</option>',
-		$id == null ? 'selected="selected"' : ''
-	);
+    $record = $DB->get_record('local_moodec_product', ['id' => $id], 'type', IGNORE_MISSING);
 
-	$categories = $DB->get_records('course_categories');
+    if (!$record) {
+        throw new moodle_exception('productnotfound', 'local_moodec', '', $id);
+    }
 
-	if (!!$categories) {
-		foreach ($categories as $category) {
-			if($category->visible) {
-				$list .= sprintf(
-					'<option value="%d" %s>%s</option>',
-					$category->id,
-					(int) $category->id === $id ? 'selected="selected"' : '',
-					$category->name
-				);
-			}
-		}
-	}
-
-	return $list;
+    return match ($record->type) {
+        PRODUCT_TYPE_SIMPLE   => new MoodecProductSimple($id),
+        PRODUCT_TYPE_VARIABLE => new MoodecProductVariable($id),
+        default => throw new moodle_exception('unsupportedproducttype', 'local_moodec', '', $record->type),
+    };
 }
 
-function local_moodec_get_groups($id) {
-	global $CFG;
-	require_once $CFG->libdir . '/grouplib.php';
-	$arr = array(
-		0 => get_string('product_variation_group_none', 'local_moodec')
-	);
-	$groups = groups_get_all_groups($id);
+/**
+ * Get a list of product objects.
+ *
+ * @param int $page
+ * @param int|null $category
+ * @param string $sortfield
+ * @param string $sortorder
+ * @return array
+ */
+function local_moodec_get_products(int $page = 1, ?int $category = null, string $sortfield = 'sortorder', string $sortorder = 'ASC'): array {
+    global $DB;
 
-	foreach ($groups as $g) {
-		$arr[$g->id] = $g->name;
-	}
+    $products = [];
+    $validfields = ['sortorder', 'price', 'fullname', 'duration', 'timecreated'];
 
-	return $arr;
+    if (!in_array($sortfield, $validfields)) {
+        $sortfield = 'sortorder';
+    }
+
+    if (!in_array(strtoupper($sortorder), ['ASC', 'DESC'])) {
+        $sortorder = 'ASC';
+    }
+
+    $productsperpage = (int)get_config('local_moodec', 'pagination');
+    $params = [];
+    $categorysql = '';
+
+    if ($category !== null && $category !== 'default') {
+        $categorysql = 'AND c.category = :category';
+        $params['category'] = $category;
+    }
+
+    $sql = "SELECT DISTINCT lmp.id AS productid
+            FROM {local_moodec_product} lmp
+            JOIN {local_moodec_variation} lmv ON lmp.id = lmv.product_id
+            JOIN {course} c ON lmp.course_id = c.id
+            WHERE lmp.is_enabled = 1
+            $categorysql
+            ORDER BY $sortfield $sortorder";
+
+    if ($page === -1) {
+        $records = $DB->get_records_sql($sql, $params);
+    } else {
+        $offset = max(0, $page - 1) * $productsperpage;
+        $records = $DB->get_records_sql($sql, $params, $offset, $productsperpage);
+    }
+
+    foreach ($records as $record) {
+        $products[] = local_moodec_get_product($record->productid);
+    }
+
+    return $products;
 }
 
-function local_moodec_extract_sort_vars($sort) {
-	$sortfield = 'sortorder';
-	$sortorder = 'ASC';
+/**
+ * Get a random list of products.
+ *
+ * @param int $limit
+ * @param int|null $category
+ * @param int $exclude
+ * @return array
+ */
+function local_moodec_get_random_products(int $limit = 1, ?int $category = null, int $exclude = 0): array {
+    global $DB;
 
-	if ($sort !== null && 0 < strlen($sort) && strpos('-', $sort) !== -1) {
-		$sortArray = explode('-', $sort);
+    $products = [];
+    $params = ['exclude' => $exclude];
+    $categorysql = '';
 
-		$sortfield = $sortArray[0];
-		$sortorder = strtoupper($sortArray[1]);
-	}
+    if ($category !== null && $category !== 'default') {
+        $categorysql = 'AND c.category = :category';
+        $params['category'] = $category;
+    }
 
-	return array($sortfield, $sortorder);
+    $sql = "SELECT DISTINCT lmp.id AS productid
+            FROM {local_moodec_product} lmp
+            JOIN {local_moodec_variation} lmv ON lmp.id = lmv.product_id
+            JOIN {course} c ON lmp.course_id = c.id
+            WHERE lmp.is_enabled = 1
+              AND lmp.id != :exclude
+              $categorysql
+            ORDER BY RANDOM()";
+
+    $records = $DB->get_records_sql($sql, $params, 0, $limit);
+
+    foreach ($records as $record) {
+        $products[] = local_moodec_get_product($record->productid);
+    }
+
+    return $products;
+}
+
+/**
+ * Generate a category dropdown.
+ *
+ * @param int|null $id
+ * @return string
+ */
+function local_moodec_get_category_list(?int $id): string {
+    global $DB;
+
+    $list = html_writer::tag('option', get_string('all'), ['value' => 'default', 'selected' => is_null($id) ? 'selected' : null]);
+
+    $categories = $DB->get_records('course_categories');
+    foreach ($categories as $category) {
+        if (!$category->visible) {
+            continue;
+        }
+
+        $attrs = ['value' => $category->id];
+        if ((int)$category->id === $id) {
+            $attrs['selected'] = 'selected';
+        }
+
+        $list .= html_writer::tag('option', format_string($category->name), $attrs);
+    }
+
+    return $list;
+}
+
+/**
+ * Return list of groups for a course.
+ *
+ * @param int $id
+ * @return array
+ */
+function local_moodec_get_groups(int $id): array {
+    global $CFG;
+
+    require_once($CFG->libdir . '/grouplib.php');
+
+    $arr = [0 => get_string('product_variation_group_none', 'local_moodec')];
+    $groups = groups_get_all_groups($id) ?? [];
+
+    foreach ($groups as $g) {
+        $arr[$g->id] = $g->name;
+    }
+
+    return $arr;
+}
+
+/**
+ * Parse sort field string into field + order.
+ *
+ * @param string|null $sort
+ * @return array
+ */
+function local_moodec_extract_sort_vars(?string $sort): array {
+    $sortfield = 'sortorder';
+    $sortorder = 'ASC';
+
+    if (!empty($sort) && strpos($sort, '-') !== false) {
+        [$sortfield, $sortorder] = explode('-', $sort);
+        $sortorder = strtoupper($sortorder);
+    }
+
+    return [$sortfield, $sortorder];
 }
