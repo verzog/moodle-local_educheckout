@@ -14,18 +14,29 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * Defines message providers (types of message sent) for the PayPal enrolment plugin.
- *
- * @package    enrol_paypal
- * @copyright  2012 Chris Follin
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 defined('MOODLE_INTERNAL') || die();
 
-$messageproviders = array(
-    'payment_gateway' => array(
-    	'capability' => 'moodle/site:config'
-    )
-);
+/**
+ * Message providers for the local_moodec plugin.
+ *
+ * @package     local_moodec
+ * @category    message
+ * @copyright   2025 Vernon Spain
+ * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+$messageproviders = [
+    'payment_notification' => [
+        'defaults' => [
+            'email' => MESSAGE_PERMITTED + MESSAGE_DEFAULT_LOGGEDIN + MESSAGE_DEFAULT_LOGGEDOFF,
+        ],
+        'capability' => 'local/moodec:manage',
+    ],
+
+    'payment_pending' => [
+        'defaults' => [
+            'email' => MESSAGE_PERMITTED + MESSAGE_DEFAULT_LOGGEDIN + MESSAGE_DEFAULT_LOGGEDOFF,
+        ],
+        'capability' => 'local/moodec:manage',
+    ],
+];
