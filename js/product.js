@@ -1,15 +1,20 @@
-// catalogue.js - Enhanced with tooltips and price formatting
 'use strict';
 
 require(['jquery'], function($) {
 
-    // Format price as currency (AUD used as example – adjust as needed)
-    const formatCurrency = amount => {
+    /**
+     * Format amount using local currency.
+     * @param {string|number} amount
+     * @param {string} currencyCode
+     * @returns {string}
+     */
+    const formatCurrency = (amount, currencyCode = 'AUD') => {
         const number = parseFloat(amount);
         if (isNaN(number)) return amount;
-        return new Intl.NumberFormat('en-AU', {
+
+        return new Intl.NumberFormat(navigator.language || 'en-AU', {
             style: 'currency',
-            currency: 'AUD',
+            currency: currencyCode,
             minimumFractionDigits: 2
         }).format(number);
     };
@@ -30,18 +35,20 @@ require(['jquery'], function($) {
 
         if (!$product.length) return;
 
-        // Update price
+        const currency = $product.data('currency') || 'AUD';
+
+        // --- Update Price ---
         const $priceContainer = $product.find('.product-price');
         const $amount = $priceContainer.find('.amount');
         const rawPrice = $priceContainer.data(`tier-${variationId}`) ?? $priceContainer.data('tier-default');
 
         if (rawPrice !== undefined) {
-            const formatted = formatCurrency(rawPrice);
+            const formatted = formatCurrency(rawPrice, currency);
             $amount.text(formatted);
             $amount.attr('title', `Price: ${formatted}`);
         }
 
-        // Update duration
+        // --- Update Duration ---
         const $durationContainer = $product.find('.product-duration');
         const rawDuration = $durationContainer.data(`tier-${variationId}`) ?? $durationContainer.data('tier-default');
 
@@ -50,5 +57,4 @@ require(['jquery'], function($) {
             $durationContainer.attr('title', `Course duration: ${rawDuration}`);
         }
     });
-
 });
