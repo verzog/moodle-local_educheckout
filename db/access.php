@@ -1,11 +1,26 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
 /**
- * Moodec Capability definitions
+ * Capability definitions for local_moodec.
  *
- * @package     local_moodec
- * @author      Vernon Spain - formerly Thomas Threadgold
- * @copyright   2015 LearningWorks Ltd
- * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    local_moodec
+ * @category   access
+ * @copyright  2025 Vernon Spain
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
@@ -13,26 +28,41 @@ defined('MOODLE_INTERNAL') || die();
 $capabilities = [
 
     'local/moodec:manage' => [
-        'riskbitmask' => RISK_SPAM,
         'captype' => 'write',
-        'contextlevel' => CONTEXT_COURSE,
+        'contextlevel' => CONTEXT_SYSTEM,
         'archetypes' => [
-            'editingteacher' => CAP_ALLOW,
             'manager' => CAP_ALLOW,
+            'editingteacher' => CAP_ALLOW,
         ],
+        'riskbitmask' => RISK_SPAM | RISK_CONFIG,
     ],
 
     'local/moodec:viewalltransactions' => [
-        'riskbitmask' => RISK_PERSONAL,
         'captype' => 'read',
         'contextlevel' => CONTEXT_SYSTEM,
         'archetypes' => [
-            'guest' => CAP_PREVENT,
-            'user' => CAP_PREVENT,
-            'student' => CAP_PREVENT,
-            'teacher' => CAP_PREVENT,
+            'manager' => CAP_ALLOW,
+            'editingteacher' => CAP_ALLOW,
+        ],
+        'riskbitmask' => RISK_PERSONAL,
+    ],
+
+    'local/moodec:viewowntransactions' => [
+        'captype' => 'read',
+        'contextlevel' => CONTEXT_USER,
+        'archetypes' => [
+            'user' => CAP_ALLOW,
+        ],
+    ],
+
+    'local/moodec:accessreport' => [
+        'captype' => 'read',
+        'contextlevel' => CONTEXT_COURSE,
+        'archetypes' => [
+            'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
             'manager' => CAP_ALLOW,
         ],
+        'riskbitmask' => RISK_PERSONAL,
     ],
 ];
