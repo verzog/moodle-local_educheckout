@@ -1,22 +1,27 @@
-$(document).on('ready', function(){
+// catalogue.js - Updated for Moodle 5.0 standards
+$(document).ready(function () {
 
-	// Auto submit filter forms when selection changes 
-	$('.filter-bar select').on('change', function(){
-		$('.filter-bar').submit();
-	});
+    // Auto-submit filter form on selection change
+    $('.filter-bar select').on('change', function () {
+        $(this).closest('form').trigger('submit');
+    });
 
-	// Update variable product information
-	$('.product-form .product-tier').on('change', function(){
-		var id = $(this).val();
-		var parent = $(this).parents('.product-item');
+    // Update price and duration for variable products
+    $('.product-form .product-tier').on('change', function () {
+        const $select = $(this);
+        const variationId = $select.val();
+        const $product = $select.closest('.product-item');
 
-		// Update price
-		var newPrice = $('.product-price', parent).attr('data-tier-' + id);
-		$('.product-price .amount', parent).text(newPrice);
+        // Update product price
+        const newPrice = $product.find('.product-price').data(`tier-${variationId}`);
+        if (newPrice !== undefined) {
+            $product.find('.product-price .amount').text(newPrice);
+        }
 
-		// Update course duration
-		var newDuration = $('.product-duration', parent).attr('data-tier-' + id);
-		$('.product-duration', parent).text(newDuration);
-	});
-
+        // Update product duration
+        const newDuration = $product.find('.product-duration').data(`tier-${variationId}`);
+        if (newDuration !== undefined) {
+            $product.find('.product-duration').text(newDuration);
+        }
+    });
 });
