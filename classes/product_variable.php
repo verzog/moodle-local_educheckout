@@ -4,7 +4,7 @@
  *
  * @package     local
  * @subpackage  local_moodec
- * @author      Thomas Threadgold
+ * @author      Vernon Spain formerly Thomas Threadgold
  * @copyright   2015 LearningWorks Ltd
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
