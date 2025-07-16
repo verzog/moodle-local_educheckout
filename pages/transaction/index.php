@@ -1,196 +1,144 @@
-<?php 
+<?php
 /**
  * Moodec Transactions Page
  *
- * @package     local
- * @subpackage  local_moodec
- * @author   	Thomas Threadgold
+ * @package     local_moodec
+ * @author      Thomas Threadgold, OpenAI Updates
  * @copyright   2015 LearningWorks Ltd
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once dirname(__FILE__) . '/../../../../config.php';
-require_once $CFG->dirroot . '/local/moodec/lib.php';
-require_once $CFG->dirroot . '/lib/tablelib.php';
-require_once $CFG->dirroot . '/local/moodec/classes/transaction_table.php';
+require_once(__DIR__ . '/../../../../config.php');
+require_once($CFG->dirroot . '/local/moodec/lib.php');
+require_once($CFG->dirroot . '/lib/tablelib.php');
+require_once($CFG->dirroot . '/local/moodec/classes/transaction_table.php');
 
-$params = array();
+$params = [];
 
-// Get the ID of the user to be displayed
+// Get filter parameters
 $userID = optional_param('user', 0, PARAM_INT);
-// The following are filters for the table
 $dateFrom = optional_param('date-from', null, PARAM_RAW);
 $dateTo = optional_param('date-to', null, PARAM_RAW);
-$gatewayPaypal = optional_param('paypal', 0, PARAM_RAW);
-$gatewayDPS = optional_param('dps', 0, PARAM_RAW);
-$statusComplete = optional_param('status-complete', 0, PARAM_RAW);
-$statusFailed = optional_param('status-failed', 0, PARAM_RAW);
-$statusPending = optional_param('status-pending', 0, PARAM_RAW);
-$statusNoSubmit = optional_param('status-nosubmit', 0, PARAM_RAW);
-// Determines whether or not to download the table
+$gatewayPaypal = optional_param('paypal', 0, PARAM_BOOL);
+$gatewayDPS = optional_param('dps', 0, PARAM_BOOL);
+$statusComplete = optional_param('status-complete', 0, PARAM_BOOL);
+$statusFailed = optional_param('status-failed', 0, PARAM_BOOL);
+$statusPending = optional_param('status-pending', 0, PARAM_BOOL);
+$statusNoSubmit = optional_param('status-nosubmit', 0, PARAM_BOOL);
 $download = optional_param('download', '', PARAM_ALPHA);
 
-if( !!$userID && is_int($userID) ) {
-	$params['user'] = $userID;
+if ($userID > 0) {
+    $params['user'] = $userID;
 }
-
-if( !!$dateFrom && !!strtotime($dateFrom) ) {
-	$params['date-from'] = $dateFrom;
+if (!empty($dateFrom) && strtotime($dateFrom)) {
+    $params['date-from'] = $dateFrom;
 }
-
-if( !!$dateTo && !!strtotime($dateTo)) {
-	$params['date-to'] = $dateTo;
+if (!empty($dateTo) && strtotime($dateTo)) {
+    $params['date-to'] = $dateTo;
 }
-
-if( !!$gatewayPaypal || $gatewayPaypal === 'on') {
-	$params['paypal'] = 1;
+if ($gatewayPaypal) {
+    $params['paypal'] = 1;
 }
-
-if( !!$gatewayDPS || $gatewayDPS === 'on' ) {
-	$params['dps'] = 1;
+if ($gatewayDPS) {
+    $params['dps'] = 1;
 }
-
-if( !!$statusComplete || $statusComplete === 'on' ) {
-	$params['status-complete'] = 1;
+if ($statusComplete) {
+    $params['status-complete'] = 1;
 }
-
-if( !!$statusFailed || $statusFailed === 'on' ) {
-	$params['status-failed'] = 1;
+if ($statusFailed) {
+    $params['status-failed'] = 1;
 }
-
-if( !!$statusPending || $statusPending === 'on' ) {
-	$params['status-pending'] = 1;
+if ($statusPending) {
+    $params['status-pending'] = 1;
 }
-
-if( !!$statusNoSubmit || $statusNoSubmit === 'on' ) {
-	$params['status-nosubmit'] = 1;
+if ($statusNoSubmit) {
+    $params['status-nosubmit'] = 1;
 }
 
 $context = context_system::instance();
-
-// Set PAGE variables
-$PAGE->set_context($context);
-$PAGE->set_url($CFG->wwwroot . '/local/moodec/pages/transaction/index.php', $params);
-
-// Force the user to login/create an account to access this page
 require_login();
 
-if ( !has_capability('local/moodec:viewalltransactions', $context) ) {
-	$userID = $USER->id;
+if (!has_capability('local/moodec:viewalltransactions', $context)) {
+    $userID = $USER->id;
+    $params['user'] = $userID;
 }
 
-// Check if the theme has a moodec pagelayout defined, otherwise use standard
-if (array_key_exists('moodec_transactions', $PAGE->theme->layouts)) {
-	$PAGE->set_pagelayout('moodec_transactions');
-} else if(array_key_exists('moodec', $PAGE->theme->layouts)) {
-	$PAGE->set_pagelayout('moodec');
+$PAGE->set_context($context);
+$PAGE->set_url(new moodle_url('/local/moodec/pages/transaction/index.php', $params));
+
+// Set pagelayout fallback
+if (isset($PAGE->theme->layouts['moodec_transactions'])) {
+    $PAGE->set_pagelayout('moodec_transactions');
+} elseif (isset($PAGE->theme->layouts['moodec'])) {
+    $PAGE->set_pagelayout('moodec');
 } else {
-	$PAGE->set_pagelayout('standard');
+    $PAGE->set_pagelayout('standard');
 }
 
-// Get the renderer for this page
 $renderer = $PAGE->get_renderer('local_moodec');
 
 $table = new moodec_transaction_table('moodec-transactions-list');
 $table->is_downloading($download, 'transaction-report', 'Moodec Transaction Report');
 
 if (!$table->is_downloading()) {
-    // Only print headers if not asked to download data
-    // Print the page header
-	$PAGE->set_title(get_string('transactions_title', 'local_moodec'));
-	$PAGE->set_heading(get_string('transactions_title', 'local_moodec'));
-
+    $PAGE->set_title(get_string('transactions_title', 'local_moodec'));
+    $PAGE->set_heading(get_string('transactions_title', 'local_moodec'));
     echo $OUTPUT->header();
-
-    printf('<h1 class="page__title">%s</h1>', get_string('transactions_title', 'local_moodec'));
-
-    $url = new moodle_url($CFG->wwwroot . '/local/moodec/pages/transaction/index.php');
-    echo $renderer->transaction_filter($params, $url);
+    echo html_writer::tag('h1', get_string('transactions_title', 'local_moodec'), ['class' => 'page__title']);
+    echo $renderer->transaction_filter($params, new moodle_url('/local/moodec/pages/transaction/index.php'));
 }
 
-// Configure the table
-$table->define_baseurl(new moodle_url($CFG->wwwroot . '/local/moodec/pages/transaction/index.php', $params));
-
+$table->define_baseurl(new moodle_url('/local/moodec/pages/transaction/index.php', $params));
 $table->set_attribute('class', 'admintable generaltable transaction_table');
 $table->collapsible(false);
-
 $table->is_downloadable(true);
-$table->show_download_buttons_at(array(TABLE_P_BOTTOM));
+$table->show_download_buttons_at([TABLE_P_BOTTOM]);
 
-// Initialise variables used to build the query
-$query = '1';
-$paramCount = count($params);
-$iterator = 1;
-
-if( 0 < $paramCount ) {
-	$query .= ' AND ';
+$where = [];
+if (isset($params['user'])) {
+    $where[] = 'user_id = :user';
+}
+if (isset($params['date-from'])) {
+    $where[] = 'purchase_date > :datefrom';
+}
+if (isset($params['date-to'])) {
+    $where[] = 'purchase_date < :dateto';
 }
 
-// Work out the sql where clause for the table based on filter params
-foreach($params as $key => $value) {
-	$addOr = false;
-
-	switch($key) {
-		case 'user':
-			$query .= sprintf('user_id = %d', $value);
-			break;
-
-		case 'date-from':
-			$query .= sprintf('purchase_date > %s', strtotime($value));
-			break;
-
-		case 'date-to':
-			$query .= sprintf('purchase_date < %s', strtotime($value));
-			break;
-
-		case 'paypal':
-			$addOr = isset($params['dps']);
-			$query .= !!$addOr ? '(' : ''; 
-			$query .= sprintf('gateway = "%s"', MOODEC_GATEWAY_PAYPAL);
-			break;
-
-		case 'dps':
-			$query .= sprintf('gateway = "%s"', MOODEC_GATEWAY_DPS);
-			$query .= isset($params['paypal']) ? ')' : '';
-			break;
-
-		case 'status-complete':
-			$addOr = isset($params['status-failed']) || isset($params['status-pending']) || isset($params['status-nosubmit']);
-			$query .= !!$addOr ? '(' : ''; 
-			$query .= sprintf('status = %d', MoodecTransaction::STATUS_COMPLETE);
-			break;
-
-		case 'status-failed':
-			$addOr = isset($params['status-pending']) || isset($params['status-nosubmit']);
-			$query .= (!isset($params['status-complete']) && !!$addOr ) ? '(' : ''; 
-			$query .= sprintf('status = %d', MoodecTransaction::STATUS_FAILED);
-			$query .= (isset($params['status-complete']) && !isset($params['status-pending']) && !isset($params['status-nosubmit'])) ? ')' : '';
-			break;
-
-		case 'status-pending':
-			$addOr = isset($params['status-nosubmit']);
-			$query .= (!isset($params['status-complete']) && !isset($params['status-failed']) && !!$addOr ) ? '(' : ''; 
-			$query .= sprintf('status = %d', MoodecTransaction::STATUS_PENDING);
-			$query .= ( (isset($params['status-complete']) || isset($params['status-failed'])) && !isset($params['status-nosubmit'])) ? ')' : '';
-			break;
-
-		case 'status-nosubmit':
-			$query .= sprintf('status = %d', MoodecTransaction::STATUS_NOT_SUBMITTED);
-			$query .= (isset($params['status-complete']) || isset($params['status-failed']) || isset($params['status-pending'])) ? ')' : '';
-			break;
-	}
-
-	if( !!$addOr && $iterator < $paramCount) {
-		$query .= ' OR ';
-	} elseif( !$addOr && $iterator < $paramCount) {
-		$query .= ' AND ';
-	}
-
-	$iterator++;
+$gateways = [];
+if (isset($params['paypal'])) {
+    $gateways[] = "gateway = 'paypal'";
+}
+if (isset($params['dps'])) {
+    $gateways[] = "gateway = 'dps'";
+}
+if ($gateways) {
+    $where[] = '(' . implode(' OR ', $gateways) . ')';
 }
 
-$table->set_sql('*', "{local_moodec_transaction}", $query);
+$statuses = [];
+if (isset($params['status-complete'])) {
+    $statuses[] = 'status = ' . MoodecTransaction::STATUS_COMPLETE;
+}
+if (isset($params['status-failed'])) {
+    $statuses[] = 'status = ' . MoodecTransaction::STATUS_FAILED;
+}
+if (isset($params['status-pending'])) {
+    $statuses[] = 'status = ' . MoodecTransaction::STATUS_PENDING;
+}
+if (isset($params['status-nosubmit'])) {
+    $statuses[] = 'status = ' . MoodecTransaction::STATUS_NOT_SUBMITTED;
+}
+if ($statuses) {
+    $where[] = '(' . implode(' OR ', $statuses) . ')';
+}
 
+$sqlwhere = implode(' AND ', $where);
+$table->set_sql('*', '{local_moodec_transaction}', $sqlwhere, [
+    'user' => $userID,
+    'datefrom' => isset($params['date-from']) ? strtotime($params['date-from']) : null,
+    'dateto' => isset($params['date-to']) ? strtotime($params['date-to']) : null,
+]);
 
 $table->out(50, true);
 
