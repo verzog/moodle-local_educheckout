@@ -19,7 +19,7 @@ define('MOODEC_GATEWAY_PAYPAL', 'MOODEC_GATEWAY_PAYPAL');
 define('MOODEC_GATEWAY_DPS', 'MOODEC_GATEWAY_DPS');
 
 // Class autoloading (deprecated requires removed — assumes PSR-4 or composer-based autoload)
-require_once($CFG->dirroot . '/local/moodec/autoload.php');
+// require_once($CFG->dirroot . '/local/moodec/autoload.php');
 
 /**
  * Add Moodec links to global navigation.
