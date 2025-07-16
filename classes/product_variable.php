@@ -1,92 +1,73 @@
-<?php 
+<?php
 /**
  * Moodec Variable Product
  *
  * @package     local
  * @subpackage  local_moodec
- * @author   	Thomas Threadgold
+ * @author      Thomas Threadgold
  * @copyright   2015 LearningWorks Ltd
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// Load Moodle config
-require_once dirname(__FILE__) . '/../../../config.php';
-// Load Moodec lib
-require_once dirname(__FILE__) . '/../lib.php';
+namespace local_moodec;
 
-class MoodecProductVariable extends MoodecProduct {
+use moodle_exception;
 
-	/**
-	 * Stores an array of MoodecProductVariation instances
-	 * @var array
-	 */
-	protected $_variations;
+require_once(__DIR__ . '/../../../config.php');
+require_once(__DIR__ . '/../lib.php');
+require_once(__DIR__ . '/product.php');
+require_once(__DIR__ . '/product_variation.php');
 
+class product_variable extends product {
     /**
-     * Loads the product from the DB, incuding product variation info
-     * @param  int 		$id		MoodecProduct id
-     * @return [type]     		[description]
+     * @var product_variation[]
      */
-    public function load($id) {
-    	global $DB;
+    protected array $_variations = [];
 
-    	parent::load($id);
+    public function __construct(?int $id = null) {
+        parent::__construct($id);
 
-    	$productVariations = $DB->get_records(
-    		'local_moodec_variation', 
-    		array(
-    			'product_id' => $id,
-			)
-		);
-
-    	if(!!$productVariations) {
-	    	foreach ($productVariations as $pv) {
-	    		$variationid = (int) $pv->id;
-	    		$this->_variations[$variationid] = new MoodecProductVariation($variationid, true);
-	    	}
-	    } else {
-        	throw new Exception('Unable to load product variation information using identifier: ' . $id);
-   		}
+        if (!is_null($id)) {
+            $this->load_variations();
+        }
     }
 
     /**
-     * Retrieves the product variation
-     * @param  int 			$id 				variation_id
-     * @return MoodecProductVariation     		Either the specific variation
+     * Load all variations for this product.
      */
-    public function get_variation($id = null, $returnDisabled = false){
+    protected function load_variations(): void {
+        global $DB;
 
-		// Check if there is a variation matching that ID
-		if( array_key_exists($id, $this->_variations) ) {
-			if( $this->_variations[$id]->is_enabled() || $returnDisabled ) {
-				return $this->_variations[$id];
-			}
-		} 
+        $records = $DB->get_records('local_moodec_product_variation', ['product_id' => $this->_id]);
 
-		return false;
+        foreach ($records as $record) {
+            $this->_variations[] = new product_variation($record);
+        }
     }
 
     /**
-     * Returns the product variations
-     * @param  boolean 	$returnAll 	true if disabled variations should be returned
-     * @return array             	variations
-     */	
-    public function get_variations($returnAll = false) {
+     * Get a variation by ID.
+     */
+    public function get_variation(int $id): ?product_variation {
+        foreach ($this->_variations as $variation) {
+            if ($variation->get_id() === $id) {
+                return $variation;
+            }
+        }
+        return null;
+    }
 
-    	if( $returnAll ) {
-    		return $this->_variations;
-    	}
+    /**
+     * Get all variations.
+     */
+    public function get_variations(): array {
+        return $this->_variations;
+    }
 
-		$enabledVariations = array();
-
-		// We only want to return variations which are enabled
-    	foreach ($this->_variations as $id => $v) {
-    		if( $v->is_enabled() ) {
-    			$enabledVariations[$id] = $v; 
-    		}
-    	}
-
-    	return $enabledVariations;
-	}
-
+    /**
+     * Returns true if there are any variations.
+     */
+    public function has_variations(): bool {
+        return !empty($this->_variations);
+    }
 }
