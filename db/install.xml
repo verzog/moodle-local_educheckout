@@ -5,7 +5,7 @@
             <FIELDS>
                 <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
                 <FIELD NAME="course_id" TYPE="int" LENGTH="10" NOTNULL="true"/>
-                <FIELD NAME="is_enabled" TYPE="int" LENGTH="1" NOTNULL="false" DEFAULT="0"/>
+                <FIELD NAME="is_enabled" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0"/>
                 <FIELD NAME="variation_count" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0"/>
                 <FIELD NAME="type" TYPE="text" NOTNULL="false"/>
                 <FIELD NAME="tags" TYPE="text" NOTNULL="false"/>
@@ -20,26 +20,29 @@
             <FIELDS>
                 <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
                 <FIELD NAME="product_id" TYPE="int" LENGTH="10" NOTNULL="true"/>
-                <FIELD NAME="is_enabled" TYPE="int" LENGTH="1" NOTNULL="false" DEFAULT="0"/>
+                <FIELD NAME="is_enabled" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0"/>
                 <FIELD NAME="name" TYPE="text" NOTNULL="false"/>
-                <FIELD NAME="price" TYPE="number" LENGTH="10" DECIMALS="2" NOTNULL="false" DEFAULT="0"/>
-                <FIELD NAME="duration" TYPE="int" LENGTH="10" NOTNULL="false" DEFAULT="0"/>
+                <FIELD NAME="price" TYPE="float" LENGTH="10" DECIMALS="2" NOTNULL="true" DEFAULT="0"/>
+                <FIELD NAME="duration" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
                 <FIELD NAME="group_id" TYPE="int" LENGTH="10" NOTNULL="false"/>
             </FIELDS>
             <KEYS>
                 <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
             </KEYS>
+            <INDEXES>
+                <INDEX NAME="productid_idx" UNIQUE="false" FIELDS="product_id"/>
+            </INDEXES>
         </TABLE>
 
         <TABLE NAME="local_moodec_transaction" COMMENT="Moodec transactions">
             <FIELDS>
                 <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-                <FIELD NAME="txn_id" TYPE="char" LENGTH="255" NOTNULL="false" COMMENT="The transaction id from the payment gateway, e.g. PayPal"/>
-                <FIELD NAME="user_id" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="The user ID who created the transaction"/>
-                <FIELD NAME="gateway" TYPE="text" NOTNULL="false" COMMENT="The payment gateway"/>
-                <FIELD NAME="status" TYPE="int" LENGTH="1" NOTNULL="false" DEFAULT="0" COMMENT="The transaction status"/>
-                <FIELD NAME="purchase_date" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Timestamp of the purchase"/>
-                <FIELD NAME="error" TYPE="text" NOTNULL="false" COMMENT="Any error messages"/>
+                <FIELD NAME="txn_id" TYPE="char" LENGTH="255" NOTNULL="false" COMMENT="Transaction ID from payment gateway"/>
+                <FIELD NAME="user_id" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="User ID who created the transaction"/>
+                <FIELD NAME="gateway" TYPE="text" NOTNULL="false" COMMENT="Payment gateway"/>
+                <FIELD NAME="status" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" COMMENT="Transaction status"/>
+                <FIELD NAME="purchase_date" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" COMMENT="Timestamp of the purchase"/>
+                <FIELD NAME="error" TYPE="text" NOTNULL="false" COMMENT="Error message if any"/>
             </FIELDS>
             <KEYS>
                 <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
@@ -49,14 +52,17 @@
         <TABLE NAME="local_moodec_trans_item" COMMENT="Moodec transaction items">
             <FIELDS>
                 <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-                <FIELD NAME="transaction_id" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Foreign key to transaction"/>
-                <FIELD NAME="product_id" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Moodec product ID"/>
-                <FIELD NAME="variation_id" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Moodec product variation ID"/>
-                <FIELD NAME="item_cost" TYPE="number" LENGTH="10" DECIMALS="2" NOTNULL="false" COMMENT="Cost of item at transaction time"/>
+                <FIELD NAME="transaction_id" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Reference to transaction"/>
+                <FIELD NAME="product_id" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Product ID"/>
+                <FIELD NAME="variation_id" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Variation ID"/>
+                <FIELD NAME="item_cost" TYPE="float" LENGTH="10" DECIMALS="2" NOTNULL="true" DEFAULT="0" COMMENT="Cost of item"/>
             </FIELDS>
             <KEYS>
                 <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
             </KEYS>
+            <INDEXES>
+                <INDEX NAME="transactionid_idx" UNIQUE="false" FIELDS="transaction_id"/>
+            </INDEXES>
         </TABLE>
     </TABLES>
 </XMLDB>
