@@ -14,6 +14,7 @@ require_once($CFG->dirroot . '/local/moodec/lib.php');
 $productid = required_param('id', PARAM_INT);
 
 require_login();
+
 $context = context_system::instance();
 $PAGE->set_context($context);
 $PAGE->set_url(new moodle_url('/local/moodec/pages/product.php', ['id' => $productid]));
