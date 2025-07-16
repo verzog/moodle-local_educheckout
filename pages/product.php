@@ -2,65 +2,51 @@
 /**
  * Moodec Product Page
  *
- * @package     local
- * @subpackage  local_moodec
- * @author   	Thomas Threadgold
+ * @package     local_moodec
+ * @author      Thomas Threadgold, OpenAI Updates
  * @copyright   2015 LearningWorks Ltd
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once dirname(__FILE__) . '/../../../config.php';
-require_once $CFG->dirroot . '/local/moodec/lib.php';
+require_once(__DIR__ . '/../../../config.php');
+require_once($CFG->dirroot . '/local/moodec/lib.php');
 
-// Get the ID of the course to be displayed
 $productid = required_param('id', PARAM_INT);
 
-// Set PAGE variables
-$PAGE->set_context(context_system::instance());
-$PAGE->set_url($CFG->wwwroot . '/local/moodec/pages/product.php', array('id' => $productid));
+require_login();
+$context = context_system::instance();
+$PAGE->set_context($context);
+$PAGE->set_url(new moodle_url('/local/moodec/pages/product.php', ['id' => $productid]));
 
-// Check if the theme has a moodec pagelayout defined, otherwise use standard
-if (array_key_exists('moodec_product', $PAGE->theme->layouts)) {
-	$PAGE->set_pagelayout('moodec_product');
-} else if(array_key_exists('moodec', $PAGE->theme->layouts)) {
-	$PAGE->set_pagelayout('moodec');
+if (isset($PAGE->theme->layouts['moodec_product'])) {
+    $PAGE->set_pagelayout('moodec_product');
+} elseif (isset($PAGE->theme->layouts['moodec'])) {
+    $PAGE->set_pagelayout('moodec');
 } else {
-	$PAGE->set_pagelayout('standard');
+    $PAGE->set_pagelayout('standard');
 }
 
-// Get the renderer for this page
-$renderer = $PAGE->get_renderer('local_moodec');
-
-// Include required javascript
 $PAGE->requires->jquery();
-$PAGE->requires->js(new moodle_url($CFG->wwwroot . '/local/moodec/js/product.js'));
+$PAGE->requires->js(new moodle_url('/local/moodec/js/product.js'));
 
-// Get the product via the course id
 $product = local_moodec_get_product($productid);
 
-// Check if the product actually exists/is available
 if (!$product) {
-	print_error('courseunavailable', 'error');
+    throw new moodle_exception('courseunavailable', 'error');
 }
 
-// Course must exist for there to be a product shown
-if (!($course = $DB->get_record('course', array('id' => $product->get_course_id())))) {
-	print_error('invalidcourseid', 'error');
-}
+$course = $DB->get_record('course', ['id' => $product->get_course_id()], '*', MUST_EXIST);
 
-//needs to have the product verified before setting page heading & title
-$PAGE->set_title(get_string('product_title', 'local_moodec', array('coursename' => $product->get_fullname() )));
-$PAGE->set_heading(get_string('product_title', 'local_moodec', array('coursename' => $product->get_fullname() )));
+$PAGE->set_title(get_string('product_title', 'local_moodec', ['coursename' => $product->get_fullname()]));
+$PAGE->set_heading(get_string('product_title', 'local_moodec', ['coursename' => $product->get_fullname()]));
 
+$renderer = $PAGE->get_renderer('local_moodec');
 
 echo $OUTPUT->header();
-
-// Render the product page content
 echo $renderer->single_product($product);
 
-// Check if related products should be shown and output if so
-if (!!get_config('local_moodec', 'page_product_show_related_products')) {
-	echo $renderer->related_products($product);
+if (!empty(get_config('local_moodec', 'page_product_show_related_products'))) {
+    echo $renderer->related_products($product);
 }
 
 echo $OUTPUT->footer();
