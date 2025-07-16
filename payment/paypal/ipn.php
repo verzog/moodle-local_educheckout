@@ -1,63 +1,53 @@
 <?php
 /**
- * Moodec Listener for Instant Payment Notification from Paypal
+ * Moodec Product Page
  *
- * @package     local
- * @subpackage  local_moodec
- * @author      Thomas Threadgold - based on code by others (Paypal Enrolment plugin)
+ * @package     local_moodec
+ * @author      Thomas Threadgold, OpenAI Updates
  * @copyright   2015 LearningWorks Ltd
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// Disable moodle specific debug messages and any errors in output,
-// comment out when debugging or better look into error log!
-define('NO_DEBUG_DISPLAY', true);
+require_once(__DIR__ . '/../../../config.php');
+require_once($CFG->dirroot . '/local/moodec/lib.php');
 
-require_once "../../../../config.php";
-require_once $CFG->dirroot . '/local/moodec/lib.php';
+$productid = required_param('id', PARAM_INT);
 
-// Require this for curl class
-require_once $CFG->libdir . '/filelib.php';
+require_login();
 
-/// Keep out casual intruders
-if (empty($_POST) or !empty($_GET)) {
-	print_error("Sorry, you can not use the script that way.");
+$context = context_system::instance();
+$PAGE->set_context($context);
+$PAGE->set_url(new moodle_url('/local/moodec/pages/product.php', ['id' => $productid]));
+
+if (isset($PAGE->theme->layouts['moodec_product'])) {
+    $PAGE->set_pagelayout('moodec_product');
+} elseif (isset($PAGE->theme->layouts['moodec'])) {
+    $PAGE->set_pagelayout('moodec');
+} else {
+    $PAGE->set_pagelayout('standard');
 }
 
-/// Read all the data from PayPal and get it ready for later;
-/// we expect only valid UTF-8 encoding, it is the responsibility
-/// of user to set it up properly in PayPal business account,
-/// it is documented in docs wiki.
+$PAGE->requires->jquery();
+$PAGE->requires->js(new moodle_url('/local/moodec/js/product.js'));
 
-$req = 'cmd=_notify-validate';
+$product = local_moodec_get_product($productid);
 
-$data = new stdClass();
-
-foreach ($_POST as $key => $value) {
-	$req .= "&$key=" . urlencode($value);
-	$data->$key = $value;
+if (!$product) {
+    throw new moodle_exception('courseunavailable', 'error');
 }
 
-// GET THE PAYPAL GATEWAY TO BE USED
-// THE CUSTOM FIELD IS THE TRANSACTION ID
-$gateway = new MoodecGatewayPaypal((int) $data->custom);
+$course = $DB->get_record('course', ['id' => $product->get_course_id()], '*', MUST_EXIST);
 
-// CONFIRM NOTIFICATION WITH PAYPAL
-$c = new curl();
-$options = array(
-	'returntransfer' => true,
-	'httpheader' => array('application/x-www-form-urlencoded', "Host: www.paypal.com"),
-	'timeout' => 30,
-	'CURLOPT_HTTP_VERSION' => CURL_HTTP_VERSION_1_1
-);
-$location = $gateway->get_url();
-$result = $c->post($location, $req, $options);
+$PAGE->set_title(get_string('product_title', 'local_moodec', ['coursename' => $product->get_fullname()]));
+$PAGE->set_heading(get_string('product_title', 'local_moodec', ['coursename' => $product->get_fullname()]));
 
-// Read the response from Paypal
-if (0 < strlen($result) && strcmp($result, "VERIFIED") == 0) {
-	// If we are here, it means the payment was a valid paypal transaction
-	// So now we get the gateway to validate and handle the transaction info
-	$gateway->handle($data);
+$renderer = $PAGE->get_renderer('local_moodec');
+
+echo $OUTPUT->header();
+echo $renderer->single_product($product);
+
+if (!empty(get_config('local_moodec', 'page_product_show_related_products'))) {
+    echo $renderer->related_products($product);
 }
 
-exit;
+echo $OUTPUT->footer();
