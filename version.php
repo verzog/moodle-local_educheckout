@@ -25,11 +25,11 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2026051700;
+$plugin->version = 2026051702;
 $plugin->requires = 2025041400; // Moodle 5.0.
 $plugin->component = 'local_moodec';
 $plugin->maturity = MATURITY_BETA;
-$plugin->release = '5.0.0';
+$plugin->release = '5.0.2';
 $plugin->dependencies = [
     'enrol_moodec' => 2026051700,
 ];

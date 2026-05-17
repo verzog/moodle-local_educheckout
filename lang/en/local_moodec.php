@@ -23,6 +23,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+$string['addedtocart'] = 'Added to your cart.';
 $string['addtocart'] = 'Add to cart';
 $string['alreadyenrolled'] = 'You are already enrolled in this course.';
 $string['cart_empty'] = 'Your cart is empty.';
@@ -35,6 +36,7 @@ $string['currency'] = 'Currency';
 $string['currency_desc'] = 'The currency in which courses are sold. Must match the currency of the configured Moodle payment account.';
 $string['free'] = 'Free';
 $string['gross'] = 'Total payable';
+$string['itemremoved'] = 'Item removed from your cart.';
 $string['messageprovider:order_receipt'] = 'Moodec order receipts';
 $string['moodec:viewallorders'] = 'View all Moodec orders';
 $string['nogateways'] = 'No payment gateway is configured. Please contact the site administrator.';
