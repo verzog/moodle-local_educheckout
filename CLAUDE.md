@@ -4,8 +4,12 @@ Guidance for Claude when developing Moodle plugins for Australian deployments.
 These rules are drawn from real mistakes and CI failures — treat them as a
 pre-flight checklist, not background reading.
 
-**Requirements:** PHP 8.1+, Moodle 4.5+, plugin with `version.php` and
+**Requirements:** PHP 8.2+, Moodle 5.0+, plugin with `version.php` and
 `$plugin->component`. CI via GitHub Actions only.
+
+> **Project baseline:** this codebase targets **Moodle 5.0 onwards only**. Moodle
+> 5.0 drops PHP 8.1, so the PHP floor is **8.2**. No Moodle 4.x or PHP 8.1
+> compatibility is built, tested, or supported.
 
 ---
 
@@ -19,13 +23,15 @@ GitHub Actions (GHA) is the only supported CI provider. No Travis CI references.
   `.github/workflows/moodle-ci.yml`.
 - **AU timezone:** Add `TZ: Australia/Sydney` to the workflow `env` section so
   date/time tests respect AEST/AWST offsets.
-- **Matrix:** Test across PHP 8.1, 8.2, 8.3 and databases `mysqli` + `pgsql`.
+- **Matrix:** Test across PHP 8.2 and 8.3 (and 8.4 where the target Moodle
+  release supports it) and databases `mysqli` + `pgsql`, against Moodle 5.0+
+  branches only.
 
 ### CI Commands
 
 | Command        | Purpose                        | AU Compliance Note                                    |
 |----------------|--------------------------------|-------------------------------------------------------|
-| `phplint`      | PHP syntax errors              | PHP 8.1+ compatibility                                |
+| `phplint`      | PHP syntax errors              | PHP 8.2+ compatibility                                |
 | `codechecker`  | Moodle Coding Standards        | 4-space indent; new line before `{` on classes/fns    |
 | `phpdoc`       | PHPDoc checker                 | Requires `@package`, `@copyright`, `@license`         |
 | `validate`     | Plugin structure               | Checks `version.php` and Frankenstyle component name  |
