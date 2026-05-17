@@ -32,7 +32,8 @@ $context = context_system::instance();
 $PAGE->set_context($context);
 $PAGE->set_url(new moodle_url('/local/moodec/product.php', ['id' => $productid]));
 $PAGE->set_pagelayout('standard');
-$PAGE->requires->js(new moodle_url('/local/moodec/js/cart.js'));
+$PAGE->requires->js(new moodle_url('/local/moodec/js/cart.js',
+    ['v' => get_config('local_moodec', 'version')]));
 
 $product = new \local_moodec\product($productid);
 $PAGE->set_title($product->get_fullname());
