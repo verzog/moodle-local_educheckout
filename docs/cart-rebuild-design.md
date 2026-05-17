@@ -141,8 +141,8 @@ failure recorded (not swallowed) on delivery error; `fullname()` fed via
   (`CLAUDE.md` §2), 2-decimal display via the currency's minor-unit rules. The
   store operates in one configured currency that matches the core payment
   account; the order records its currency. Per-shopper currency switching
-  (per-currency price lists + per-currency payment accounts) is **out of scope**
-  for this build — flagged as a possible later phase (Remaining Item C).
+  (per-currency price lists + per-currency payment accounts) is a **confirmed
+  later phase**, not v1 (§11 Remaining Item C).
 
 ### 8.2 Tax
 
@@ -161,8 +161,8 @@ New tax capability (addresses the consumer/tax-law gap previously flagged):
 - **Display**: cart, checkout and the emailed/HTML receipt show a net + tax
   (label + rate) + gross breakdown; invoice-style receipt suitable as a tax
   receipt.
-- Per-product/per-category tax classes are **out of scope** for v1 (global rate
-  + optional per-country override only) — Remaining Item C.
+- Per-product/per-category tax classes are a **confirmed later phase**, not v1
+  (global rate + optional per-country override only) — §11 Remaining Item C.
 - This is operator-configurable tooling, not tax advice; the README states the
   operator is responsible for correct rates and registration.
 
@@ -179,10 +179,10 @@ New tax capability (addresses the consumer/tax-law gap previously flagged):
   no longer displayed, remaining untouched in the DB (Decision 3); (b) the
   operator is responsible for configuring correct tax rates and for tax/GST/VAT
   registration and compliance in their jurisdiction.
-- **`enrol_moodec`** is a separate plugin, must also conform to `CLAUDE.md` and
-  target Moodle 5.0+ (own CI, version.php, privacy provider). It still ships
-  2014 metadata and will not install on 5.0+; the cart cannot function without
-  it (see Remaining Item A).
+- **`enrol_moodec`** rebuild is **authorised and designed** — see
+  `verzog/moodle-enrol_moodec` PR #1 (`docs/enrol-rebuild-design.md`): a
+  minimal, conformant Moodle 5.0+ enrolment plugin. The two rebuilds and their
+  version dependency are coordinated across the two PRs.
 
 ## 10. CLAUDE.md compliance — what it changed / pinned
 
@@ -215,16 +215,18 @@ New tax capability (addresses the consumer/tax-law gap previously flagged):
 6. **Tax** — **configurable tax capability added**: enable flag, label, base
    rate, inclusive/exclusive mode, optional per-country override; net/tax/gross
    recorded per order and shown on an invoice-style receipt.
+7. **`enrol_moodec` rebuild** — **authorised.** Minimal conformant Moodle 5.0+
+   rebuild designed in `verzog/moodle-enrol_moodec` PR #1.
 
-### Remaining items (not blocking the design, but needed before/with build)
+### Remaining items
 
-- **A. `enrol_moodec` go-ahead** — authorise a parallel conforming rebuild/fix
-  of `enrol_moodec` (own branch + PR, Moodle 5.0+). The cart is non-functional
-  until `enrol_moodec` installs on 5.0+. **Recommended: yes.**
+- **A. `enrol_moodec`** — ✅ authorised and designed (PR #1 in
+  `moodle-enrol_moodec`). Has its own 3 open questions (self-unenrol, target
+  branch, bulk ops) tracked there.
 - **B. Branch naming** — repo default is `master`; `CLAUDE.md` §8/§9 reference
   `main`. With Decision 1 fixing the merge target to `Moodle-Local_moodle5.0`,
   CI/rebase use that branch; `CLAUDE.md`'s `main` is read as "the integration
   branch". Confirm acceptable.
-- **C. Future phases (flagged, not in v1)** — per-shopper multi-currency
+- **C. Future phases (confirmed later, not v1)** — per-shopper multi-currency
   (per-currency price lists + payment accounts) and per-product/category tax
-  classes. Confirm these are acceptable as later phases.
+  classes are deferred to a later phase by reviewer decision.
