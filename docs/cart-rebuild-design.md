@@ -45,6 +45,8 @@ with a copy of the product page, so that branch cannot confirm payment at all.)
   `local_moodec_transaction*` **tables and their data are left untouched in the
   database but are no longer surfaced** (Decision 3 — no migration).
 - All `sprintf()`-built SQL → parameterised Moodle DML (`CLAUDE.md` §4).
+- The legacy hardcoded 13-currency list (`local_moodec_get_currencies()`) →
+  full supported currency set (Decision 5).
 - Non-standard file headers / `require_once config.php` in class files →
   standard Moodle header + autoloading + `MOODLE_INTERNAL` guard.
 
@@ -53,7 +55,7 @@ with a copy of the product page, so that branch cannot confirm payment at all.)
 The new cart does **not** hand-roll any gateway, IPN, or PCI-sensitive code.
 Checkout delegates to Moodle's built-in **Payments subsystem** (`core_payment`):
 
-- Moodec defines a *payable* = the cart total in the configured currency.
+- Moodec defines a *payable* = the cart total (incl. tax) in the order currency.
 - Both **core** gateway subplugins — `paygw_paypal` **and** `paygw_stripe`,
   which ship with Moodle core — are enabled on the payment account (Decision 2).
   The user picks PayPal or Stripe at the core-rendered pay step.
@@ -76,18 +78,21 @@ cart per user; guest carts keyed by `sessionkey`.
 unitprice (display only), timecreated`. Authoritative pricing recomputed at
 checkout.
 
-`local_moodec_order` — `id, userid, cartid, currency, amount, status
+`local_moodec_order` — `id, userid, cartid, currency, netamount, taxamount,
+taxrate, taxinclusive, amount (gross = net + tax), status
 (pending|paid|delivered|failed|cancelled), paymentid (FK core {payments}),
 timecreated, timemodified`.
 
 `local_moodec_order_item` — `id, orderid, productid, variationid, courseid,
-unitprice, enrolled (0/1, idempotent delivery)`.
+unitprice, nettax (per-item tax for the invoice breakdown), enrolled (0/1,
+idempotent delivery)`.
 
 `db/install.xml` adds these; `db/upgrade.php` uses incrementing savepoints
 (`CLAUDE.md` §3.5). **No upgrade step migrates legacy `local_moodec_transaction*`
 data** (Decision 3). A Moodle **privacy provider**
 (`privacy/classes/provider.php`) covers the four new tables for APP compliance
-(`CLAUDE.md` §2).
+(`CLAUDE.md` §2); customer country used for tax is read from the existing Moodle
+user profile (not separately collected).
 
 ## 6. Components & flow
 
@@ -98,21 +103,21 @@ data** (Decision 3). A Moodle **privacy provider**
    guest cart merges into the user's open cart (dedupe by product/variation;
    drop courses already actively enrolled). JS sets text via `textContent`,
    never `innerHTML` (`CLAUDE.md` §4).
-2. **Checkout** — `pages/checkout.php`: `require_login()` (login forced here,
-   after the guest cart has been built and merged), load open cart, drop
-   disabled products / already-enrolled courses, recompute prices, create
-   `local_moodec_order` (pending), render the core_payment pay region for the
-   order. Any `moodleform` action targets an explicit `index.php`
-   (`CLAUDE.md` §3.7).
+2. **Checkout** — `pages/checkout.php`: `require_login()`, load open cart, drop
+   disabled products / already-enrolled courses, recompute prices, **compute tax
+   (§8.2)**, create `local_moodec_order` (pending) recording net/tax/gross +
+   currency, render the core_payment pay region for the gross amount. Any
+   `moodleform` action targets an explicit `index.php` (`CLAUDE.md` §3.7).
 3. **Payment** — entirely core_payment + the chosen gateway (PayPal or Stripe).
    No moodec payment code.
 4. **Delivery** — `classes/payment/service_provider.php` implementing
-   `\core_payment\local\callback\service_provider`: `get_payable`,
-   `get_success_url`, `deliver_order` (enrol via `enrol_moodec`/`manual`, correct
-   duration incl. 0 = unlimited, group add, **idempotent** via
-   `order_item.enrolled`, fire events, send receipt). Dates via `userdate()`;
-   product summaries rendered through `file_rewrite_pluginfile_urls()` + a
-   `local_moodec_pluginfile()` whitelist (`CLAUDE.md` §3.3).
+   `\core_payment\local\callback\service_provider`: `get_payable` (returns gross
+   + order currency), `get_success_url`, `deliver_order` (enrol via
+   `enrol_moodec`/`manual`, correct duration incl. 0 = unlimited, group add,
+   **idempotent** via `order_item.enrolled`, fire events, send a tax-itemised
+   receipt). Dates via `userdate()`; product summaries rendered through
+   `file_rewrite_pluginfile_urls()` + a `local_moodec_pluginfile()` whitelist
+   (`CLAUDE.md` §3.3).
 
 ## 7. Observability & security
 
@@ -121,28 +126,59 @@ Parameterised DML only; capability checks everywhere; events
 failure recorded (not swallowed) on delivery error; `fullname()` fed via
 `\core_user\fields::for_name()` on the orders/receipt report (`CLAUDE.md` §3.2).
 
-## 8. Locale (AU) — `CLAUDE.md` §2
+## 8. Locale, currency & tax — `CLAUDE.md` §2
+
+### 8.1 Locale & currency
 
 - All user-facing text in `lang/en/local_moodec.php`, **ascending byte order,
   no interspersed comments** (§3.1). Legacy lang files use US spellings
-  (e.g. "Enrollment") and section-comment dividers — both eliminated in the
-  rebuilt file. Audit for `-ize/-or` → `-ise/-our`.
-- Dates via `userdate()` (DD/MM/YYYY). **Selling currency = AUD**: the Moodle
-  payment account is configured in AUD and moodec displays/validates AUD,
-  2-decimal. (Resolves the prior currency question via the `CLAUDE.md` §2
-  default — no separate decision needed.)
+  (e.g. "Enrollment") and section-comment dividers — both eliminated. Audit for
+  `-ize/-or` → `-ise/-our`.
+- Dates via `userdate()` (DD/MM/YYYY).
+- **All currencies supported** (Decision 5): the store currency is admin-chosen
+  from the full ISO-4217 set that the configured core payment gateway(s)
+  support (sourced from core, not a hardcoded list). **Default = AUD**
+  (`CLAUDE.md` §2), 2-decimal display via the currency's minor-unit rules. The
+  store operates in one configured currency that matches the core payment
+  account; the order records its currency. Per-shopper currency switching
+  (per-currency price lists + per-currency payment accounts) is **out of scope**
+  for this build — flagged as a possible later phase (Remaining Item C).
+
+### 8.2 Tax
+
+New tax capability (addresses the consumer/tax-law gap previously flagged):
+
+- **Settings** (site admin → plugin settings): `tax_enable` (bool);
+  `tax_label` (string, default "GST"); `tax_rate` (decimal %, default 10.0);
+  `tax_mode` = `inclusive` (displayed prices already include tax) or
+  `exclusive` (tax added at checkout); optional per-country override map
+  (`country → rate`) for VAT/GST destinations, defaulting to the base rate.
+- **Computation** at checkout: resolve the applicable rate (per-country override
+  → base rate; customer country from the Moodle user profile), compute per-item
+  and order-level net/tax/gross, persist on `local_moodec_order` /
+  `local_moodec_order_item`. Rate 0 / `tax_enable=off` ⇒ pure net (covers
+  tax-exempt education jurisdictions).
+- **Display**: cart, checkout and the emailed/HTML receipt show a net + tax
+  (label + rate) + gross breakdown; invoice-style receipt suitable as a tax
+  receipt.
+- Per-product/per-category tax classes are **out of scope** for v1 (global rate
+  + optional per-country override only) — Remaining Item C.
+- This is operator-configurable tooling, not tax advice; the README states the
+  operator is responsible for correct rates and registration.
 
 ## 9. Migration & packaging
 
 - Remove all legacy classes + `payment/`; drop their `require_once`s from
-  `lib.php`; remove PayPal/DPS settings from `settings.php` (replaced by core
-  Payments admin). `version.php`: standard header, bump `version`,
+  `lib.php`; remove PayPal/DPS + old currency settings from `settings.php`
+  (replaced by core Payments admin + new currency/tax settings).
+  `version.php`: standard header, bump `version`,
   **`requires` = the Moodle 5.0 baseline version**, set `maturity`, bump the
   `enrol_moodec` dependency to the rebuilt enrol plugin's new version.
 - **README** rebuilt to the `tool_pluginskel` template, and **must explicitly
-  state**: existing `local_moodec_transaction*` data from the old plugin is
-  **not migrated** and is no longer displayed; it remains in the database
-  untouched for any manual/external reporting (Decision 3).
+  state**: (a) existing `local_moodec_transaction*` data is **not migrated** and
+  no longer displayed, remaining untouched in the DB (Decision 3); (b) the
+  operator is responsible for configuring correct tax rates and for tax/GST/VAT
+  registration and compliance in their jurisdiction.
 - **`enrol_moodec`** is a separate plugin, must also conform to `CLAUDE.md` and
   target Moodle 5.0+ (own CI, version.php, privacy provider). It still ships
   2014 metadata and will not install on 5.0+; the cart cannot function without
@@ -150,17 +186,16 @@ failure recorded (not swallowed) on delivery error; `fullname()` fed via
 
 ## 10. CLAUDE.md compliance — what it changed / pinned
 
-- **Target Moodle 5.0+ / PHP 8.2+** — deliberate project narrowing of the
-  generic 4.5+ baseline; `CLAUDE.md` updated to match. No 4.x built or tested.
+- **Target Moodle 5.0+ / PHP 8.2+** — deliberate project narrowing; `CLAUDE.md`
+  updated to match. No 4.x built or tested.
 - **CI workstream added**: `.github/workflows/moodle-ci.yml` from
   `moodle-plugin-ci` `gha.dist.yml`, `env: TZ: Australia/Sydney`, matrix PHP
   8.2/8.3 × mysqli/pgsql against Moodle 5.0+ branches, warnings-as-failures.
-  Neither repo currently has CI.
-- **No retained legacy PHP on the CI branch**: `phpcs --max-warnings 0` would
-  fail on the 2015 code. The old Transactions report is therefore **removed,
-  not retained**; with no data migration (Decision 3) historical data simply
-  stays in the old tables, unsurfaced, and this is documented in the README.
-- **Default/selling currency AUD.**
+- **No retained legacy PHP**: old Transactions report removed; with no data
+  migration historical data stays unsurfaced and is documented in the README.
+- **Currency**: AUD remains the `CLAUDE.md` §2 default, but all
+  gateway-supported currencies are selectable (Decision 5).
+- **Tax**: new configurable tax subsystem; receipt doubles as a tax receipt.
 - **Two-plugin scope**: `CLAUDE.md` applies independently to `local_moodec` and
   `enrol_moodec`, both targeting Moodle 5.0+.
 
@@ -168,14 +203,18 @@ failure recorded (not swallowed) on delivery error; `fullname()` fed via
 
 1. **Target branch** — implementation merges into **`Moodle-Local_moodle5.0`**.
 2. **Gateways** — **both** PayPal and Stripe, via the **core** `paygw_paypal`
-   and `paygw_stripe` subplugins on a Moodle payment account. No custom gateway
-   code.
-3. **Legacy data** — **no migration.** Old `local_moodec_transaction*` tables/
-   data are left in place, untouched and unsurfaced; the old report is removed;
-   this is flagged in the README.
+   and `paygw_stripe` subplugins. No custom gateway code.
+3. **Legacy data** — **no migration.** Old tables/data left untouched and
+   unsurfaced; old report removed; flagged in README.
 4. **Guest cart** — **guest cart that merges on login.** Session-keyed cart for
    anonymous users, merged into the user's DB cart at login; checkout still
    forces login before payment.
+5. **Currency** — **all currencies supported**, admin-selected from the full
+   gateway-supported set; **default AUD**; single store currency matching the
+   core payment account (no per-shopper currency switching in v1).
+6. **Tax** — **configurable tax capability added**: enable flag, label, base
+   rate, inclusive/exclusive mode, optional per-country override; net/tax/gross
+   recorded per order and shown on an invoice-style receipt.
 
 ### Remaining items (not blocking the design, but needed before/with build)
 
@@ -184,5 +223,8 @@ failure recorded (not swallowed) on delivery error; `fullname()` fed via
   until `enrol_moodec` installs on 5.0+. **Recommended: yes.**
 - **B. Branch naming** — repo default is `master`; `CLAUDE.md` §8/§9 reference
   `main`. With Decision 1 fixing the merge target to `Moodle-Local_moodle5.0`,
-  CI triggers/rebase instructions will use that branch; `CLAUDE.md`'s `main` is
-  read as "the integration branch". Confirm acceptable.
+  CI/rebase use that branch; `CLAUDE.md`'s `main` is read as "the integration
+  branch". Confirm acceptable.
+- **C. Future phases (flagged, not in v1)** — per-shopper multi-currency
+  (per-currency price lists + payment accounts) and per-product/category tax
+  classes. Confirm these are acceptable as later phases.
