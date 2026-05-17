@@ -1,8 +1,8 @@
 # Moodec Cart Rebuild — Design (for review)
 
-Status: **DESIGN ONLY — no implementation in this PR.** Core decisions are now
-locked (§11). Governed by the repo-root `CLAUDE.md` (AU Moodle plugin standard),
-with one deliberate project narrowing: **Moodle 5.0+ only**.
+Status: **DESIGN ONLY — no implementation in this PR.** All decisions locked
+(§11). Governed by the repo-root `CLAUDE.md` (AU Moodle plugin standard), with
+one deliberate project narrowing: **Moodle 5.0+ only**.
 
 ## 1. Goal
 
@@ -10,8 +10,8 @@ Replace the dead Moodec purchase flow with a new shopping cart and checkout buil
 from scratch, reusing the existing product catalogue and the `enrol_moodec`
 enrolment leg. **Target: Moodle 5.0+ / PHP 8.2+.** (Moodle 5.0 drops PHP 8.1, so
 the PHP floor is 8.2; CI matrix PHP 8.2/8.3 × `mysqli`/`pgsql`.) The Moodle 5.1+
-`public/` directory layout must be accounted for. Implementation PRs target the
-**`Moodle-Local_moodle5.0`** branch (Decision 1).
+`public/` directory layout must be accounted for. Implementation integrates on
+the **`main`** branch (Decision 1).
 
 ## 2. Why the old flow is dead (recap)
 
@@ -181,8 +181,9 @@ New tax capability (addresses the consumer/tax-law gap previously flagged):
   registration and compliance in their jurisdiction.
 - **`enrol_moodec`** rebuild is **authorised and designed** — see
   `verzog/moodle-enrol_moodec` PR #1 (`docs/enrol-rebuild-design.md`): a
-  minimal, conformant Moodle 5.0+ enrolment plugin. The two rebuilds and their
-  version dependency are coordinated across the two PRs.
+  minimal, conformant Moodle 5.0+ enrolment plugin (admin-only unenrol, no bulk
+  ops in v1). The two rebuilds and their version dependency are coordinated
+  across the two PRs, both integrating on `main`.
 
 ## 10. CLAUDE.md compliance — what it changed / pinned
 
@@ -190,18 +191,22 @@ New tax capability (addresses the consumer/tax-law gap previously flagged):
   updated to match. No 4.x built or tested.
 - **CI workstream added**: `.github/workflows/moodle-ci.yml` from
   `moodle-plugin-ci` `gha.dist.yml`, `env: TZ: Australia/Sydney`, matrix PHP
-  8.2/8.3 × mysqli/pgsql against Moodle 5.0+ branches, warnings-as-failures.
+  8.2/8.3 × mysqli/pgsql against Moodle 5.0+ branches, warnings-as-failures,
+  triggered on `main`.
 - **No retained legacy PHP**: old Transactions report removed; with no data
   migration historical data stays unsurfaced and is documented in the README.
 - **Currency**: AUD remains the `CLAUDE.md` §2 default, but all
   gateway-supported currencies are selectable (Decision 5).
 - **Tax**: new configurable tax subsystem; receipt doubles as a tax receipt.
 - **Two-plugin scope**: `CLAUDE.md` applies independently to `local_moodec` and
-  `enrol_moodec`, both targeting Moodle 5.0+.
+  `enrol_moodec`, both targeting Moodle 5.0+ and integrating on `main`.
 
 ## 11. Decisions (locked)
 
-1. **Target branch** — implementation merges into **`Moodle-Local_moodle5.0`**.
+1. **Integration branch** — both repos standardise on **`main`** as the
+   Moodle 5.0+ integration line and CI trigger; making `main` the repo default
+   is a one-off GitHub admin step at implementation start. (Supersedes the
+   earlier `Moodle-Local_moodle5.0` / `moodle_enrol_moodec50` target names.)
 2. **Gateways** — **both** PayPal and Stripe, via the **core** `paygw_paypal`
    and `paygw_stripe` subplugins. No custom gateway code.
 3. **Legacy data** — **no migration.** Old tables/data left untouched and
@@ -216,17 +221,18 @@ New tax capability (addresses the consumer/tax-law gap previously flagged):
    rate, inclusive/exclusive mode, optional per-country override; net/tax/gross
    recorded per order and shown on an invoice-style receipt.
 7. **`enrol_moodec` rebuild** — **authorised.** Minimal conformant Moodle 5.0+
-   rebuild designed in `verzog/moodle-enrol_moodec` PR #1.
+   rebuild (admin-only unenrol, no v1 bulk ops) designed in
+   `verzog/moodle-enrol_moodec` PR #1.
 
 ### Remaining items
 
-- **A. `enrol_moodec`** — ✅ authorised and designed (PR #1 in
-  `moodle-enrol_moodec`). Has its own 3 open questions (self-unenrol, target
-  branch, bulk ops) tracked there.
-- **B. Branch naming** — repo default is `master`; `CLAUDE.md` §8/§9 reference
-  `main`. With Decision 1 fixing the merge target to `Moodle-Local_moodle5.0`,
-  CI/rebase use that branch; `CLAUDE.md`'s `main` is read as "the integration
-  branch". Confirm acceptable.
+- **A. `enrol_moodec`** — ✅ authorised, designed, and its open questions
+  resolved (admin-only unenrol; `main` branch; no v1 bulk ops) in PR #1 of
+  `moodle-enrol_moodec`.
+- **B. Branch naming** — ✅ resolved: standardise on **`main`** (Decision 1).
 - **C. Future phases (confirmed later, not v1)** — per-shopper multi-currency
   (per-currency price lists + payment accounts) and per-product/category tax
   classes are deferred to a later phase by reviewer decision.
+
+All open decisions are now closed; the design is ready for an
+implementation go-ahead.
