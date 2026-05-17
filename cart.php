@@ -34,7 +34,7 @@ $PAGE->set_url(new moodle_url('/local/moodec/cart.php'));
 $PAGE->set_pagelayout('standard');
 $PAGE->set_title(get_string('cart_title', 'local_moodec'));
 $PAGE->set_heading(get_string('cart_title', 'local_moodec'));
-$PAGE->requires->js_call_amd('local_moodec/cart', 'init');
+$PAGE->requires->js(new moodle_url('/local/moodec/js/cart.js'));
 
 $isguest = !isloggedin() || isguestuser();
 $cart = \local_moodec\cart::get_open($isguest ? 0 : (int) $USER->id, $isguest ? sesskey() : null);

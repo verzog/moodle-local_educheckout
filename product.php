@@ -32,11 +32,11 @@ $context = context_system::instance();
 $PAGE->set_context($context);
 $PAGE->set_url(new moodle_url('/local/moodec/product.php', ['id' => $productid]));
 $PAGE->set_pagelayout('standard');
+$PAGE->requires->js(new moodle_url('/local/moodec/js/cart.js'));
 
 $product = new \local_moodec\product($productid);
 $PAGE->set_title($product->get_fullname());
 $PAGE->set_heading($product->get_fullname());
-$PAGE->requires->js_call_amd('local_moodec/cart', 'init');
 
 $variations = [];
 foreach ($product->get_enabled_variations() as $variation) {
