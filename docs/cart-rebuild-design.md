@@ -2,14 +2,15 @@
 
 Status: **DESIGN ONLY — no implementation in this PR.** Review and approve/redirect
 before any code is written. Governed by the repo-root `CLAUDE.md` (AU Moodle
-plugin standard).
+plugin standard), with one deliberate project narrowing: **Moodle 5.0+ only**.
 
 ## 1. Goal
 
 Replace the dead Moodec purchase flow with a new shopping cart and checkout built
 from scratch, reusing the existing product catalogue and the `enrol_moodec`
-enrolment leg. Target per `CLAUDE.md`: **PHP 8.1+, Moodle 4.5+** (CI matrix PHP
-8.1/8.2/8.3 × `mysqli`/`pgsql`), mindful of the Moodle 5.1+ `public/` layout.
+enrolment leg. **Target: Moodle 5.0+ / PHP 8.2+.** (Moodle 5.0 drops PHP 8.1, so
+the PHP floor is 8.2; CI matrix PHP 8.2/8.3 × `mysqli`/`pgsql`.) The Moodle 5.1+
+`public/` directory layout must be accounted for.
 
 ## 2. Why the old flow is dead (recap)
 
@@ -48,7 +49,7 @@ with a copy of the product page, so that branch cannot confirm payment at all.)
 
 The new cart does **not** hand-roll any gateway, IPN, or PCI-sensitive code.
 Checkout delegates to Moodle's built-in **Payments subsystem** (`core_payment`,
-stable since Moodle 4.0 — within the 4.5+ target):
+long stable and fully available across the Moodle 5.0+ target):
 
 - Moodec defines a *payable* = the cart total in the configured currency.
 - Moodle's **maintained** gateway subplugins (`paygw_paypal`, `paygw_stripe`)
@@ -130,23 +131,26 @@ failure recorded (not swallowed) on delivery error; `fullname()` fed via
 - Remove all legacy classes + `payment/`; drop their `require_once`s from
   `lib.php`; remove PayPal/DPS settings from `settings.php` (replaced by core
   Payments admin). `version.php`: standard header, bump `version`,
-  `requires` = Moodle 4.5 baseline, set `maturity`, bump the `enrol_moodec`
-  dependency to the rebuilt enrol plugin's new version. README rebuilt to the
-  `tool_pluginskel` template (`CLAUDE.md` §5).
+  **`requires` = the Moodle 5.0 baseline version** (no 4.x compatibility), set
+  `maturity`, bump the `enrol_moodec` dependency to the rebuilt enrol plugin's
+  new version. README rebuilt to the `tool_pluginskel` template
+  (`CLAUDE.md` §5).
 - Legacy `local_moodec_transaction*` data: see Open Decision 4.
 - **`enrol_moodec`** is a separate plugin and must also conform to `CLAUDE.md`
-  (its own CI workflow, version.php, privacy provider). It still ships 2014
-  metadata and will not install on 4.5+. The cart depends on it — see Open
-  Decision 5.
+  and target Moodle 5.0+ (its own CI workflow, version.php, privacy provider).
+  It still ships 2014 metadata and will not install on 5.0+. The cart depends
+  on it — see Open Decision 5.
 
 ## 10. CLAUDE.md compliance — what it changed / pinned
 
-- **Target** is now **Moodle 4.5+ / PHP 8.1+** (was "5.0"); resolves the prior
-  "which version" open decision.
+- **Target is Moodle 5.0+ / PHP 8.2+.** This is a deliberate project narrowing
+  of `CLAUDE.md`'s generic "Moodle 4.5+ / PHP 8.1+" baseline; `CLAUDE.md`'s
+  Requirements line and CI matrix are updated to match so the standard and this
+  project do not contradict. No 4.x support is built or tested.
 - **CI workstream added**: `.github/workflows/moodle-ci.yml` from
   `moodle-plugin-ci` `gha.dist.yml`, `env: TZ: Australia/Sydney`, matrix PHP
-  8.1/8.2/8.3 × mysqli/pgsql, warnings-as-failures. Neither repo currently has
-  CI.
+  8.2/8.3 × mysqli/pgsql against the Moodle 5.0+ branches, warnings-as-failures.
+  Neither repo currently has CI.
 - **No retained legacy PHP on the CI branch**: `phpcs --max-warnings 0` would
   fail on the 2015 code (tabs, headers, `sprintf` SQL, lang comments).
   Therefore any kept feature (e.g. the Transactions report) must be
@@ -154,7 +158,8 @@ failure recorded (not swallowed) on delivery error; `fullname()` fed via
   Open Decision 4 toward "migrate + reimplement", not "keep old code read-only".
 - **Default currency AUD** (was "from payment account / Stripe default").
 - **Two-plugin scope**: `CLAUDE.md` applies independently to `local_moodec` and
-  `enrol_moodec` (each: header, version.php, lang ordering, privacy, own CI).
+  `enrol_moodec` (each: header, version.php, lang ordering, privacy, own CI),
+  both targeting Moodle 5.0+.
 
 ## 11. Open decisions for reviewer
 
@@ -172,7 +177,7 @@ failure recorded (not swallowed) on delivery error; `fullname()` fed via
    order tables and reimplement the report to standard (recommended, given the
    no-legacy-PHP CI rule), or drop the historical report entirely?
 5. **`enrol_moodec`**: authorise a parallel conforming rebuild/fix of
-   `enrol_moodec` (its own branch + PR), since the cart cannot function without
-   it installing on 4.5+.
+   `enrol_moodec` (its own branch + PR), targeting Moodle 5.0+, since the cart
+   cannot function without it installing on 5.0+.
 6. **Guest cart**: require login to add to cart (simplest, matches old checkout)
    or support a session cart that merges on login?
