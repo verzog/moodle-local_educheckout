@@ -23,15 +23,35 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+$string['addtocart'] = 'Add to cart';
+$string['alreadyenrolled'] = 'You are already enrolled in this course.';
+$string['cart_empty'] = 'Your cart is empty.';
+$string['cart_title'] = 'Shopping cart';
 $string['catalogue'] = 'Course store';
+$string['checkout'] = 'Checkout';
+$string['checkout_title'] = 'Checkout';
+$string['continueshopping'] = 'Continue shopping';
 $string['currency'] = 'Currency';
 $string['currency_desc'] = 'The currency in which courses are sold. Must match the currency of the configured Moodle payment account.';
+$string['free'] = 'Free';
+$string['gross'] = 'Total payable';
 $string['messageprovider:order_receipt'] = 'Moodec order receipts';
 $string['moodec:viewallorders'] = 'View all Moodec orders';
+$string['nogateways'] = 'No payment gateway is configured. Please contact the site administrator.';
+$string['order_complete'] = 'Thank you. Your enrolment is complete.';
+$string['order_pending'] = 'Your payment is being processed. Enrolment will complete once payment is confirmed.';
+$string['ordersummary'] = 'Order summary';
 $string['pagination'] = 'Courses per page';
 $string['pagination_desc'] = 'Number of courses shown per page in the catalogue before pagination.';
+$string['pay'] = 'Pay now';
+$string['paymentaccount'] = 'Payment account';
+$string['paymentaccount_desc'] = 'The Moodle payment account (Site administration > Payments) used to take storefront payments.';
 $string['pluginname'] = 'Moodec storefront';
+$string['price'] = 'Price';
 $string['privacy:metadata'] = 'The Moodec storefront stores shopping cart and order records associated with a user.';
+$string['remove'] = 'Remove';
+$string['subtotal'] = 'Subtotal';
+$string['tax'] = 'Tax';
 $string['tax_enable'] = 'Enable tax';
 $string['tax_enable_desc'] = 'Apply tax to orders. When disabled, orders are recorded with no tax.';
 $string['tax_label'] = 'Tax label';
@@ -44,3 +64,5 @@ $string['tax_rate'] = 'Default tax rate (%)';
 $string['tax_rate_desc'] = 'Default tax percentage applied when no country-specific override matches.';
 $string['taxcountryoverrides'] = 'Tax rate overrides by country';
 $string['taxcountryoverrides_desc'] = 'Optional JSON map of ISO country code to tax percentage, for example {"NZ": 15, "GB": 20}. Falls back to the default rate.';
+$string['total'] = 'Total';
+$string['viewproduct'] = 'View course';

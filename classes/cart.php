@@ -74,6 +74,26 @@ class cart {
     }
 
     /**
+     * Find an open guest cart for a session key without creating one.
+     *
+     * @param string|null $sessionkey the guest session key
+     * @return cart|null
+     */
+    public static function find_guest(?string $sessionkey): ?cart {
+        global $DB;
+
+        if ($sessionkey === null || $sessionkey === '') {
+            return null;
+        }
+        $record = $DB->get_record('local_moodec_cart', [
+            'userid' => 0,
+            'sessionkey' => $sessionkey,
+            'status' => 'open',
+        ]);
+        return $record ? new self($record) : null;
+    }
+
+    /**
      * Return the cart id.
      *
      * @return int
@@ -171,15 +191,18 @@ class cart {
     }
 
     /**
-     * Merge a guest cart into this (user) cart, then close the guest cart.
+     * Merge another cart's items into this one, then cancel the source cart.
      *
-     * @param cart $guest the guest cart to absorb
+     * @param cart $other the cart to absorb
      * @return void
      */
-    public function merge_from(cart $guest): void {
+    public function merge_from(cart $other): void {
         global $DB;
 
-        foreach ($guest->get_items() as $item) {
+        if ($other->get_id() === $this->get_id()) {
+            return;
+        }
+        foreach ($other->get_items() as $item) {
             $this->add_item(
                 (int) $item->productid,
                 (int) $item->variationid,
@@ -187,8 +210,8 @@ class cart {
                 (float) $item->unitprice
             );
         }
-        $DB->delete_records('local_moodec_cart_item', ['cartid' => $guest->get_id()]);
-        $DB->set_field('local_moodec_cart', 'status', 'cancelled', ['id' => $guest->get_id()]);
+        $DB->delete_records('local_moodec_cart_item', ['cartid' => $other->get_id()]);
+        $DB->set_field('local_moodec_cart', 'status', 'cancelled', ['id' => $other->get_id()]);
     }
 
     /**

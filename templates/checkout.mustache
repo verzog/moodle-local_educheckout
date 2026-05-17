@@ -1,0 +1,47 @@
+{{!
+    This file is part of Moodle - https://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_moodec/checkout
+
+    Checkout page with the core payment trigger button.
+
+    Example context (json):
+    {
+        "amount": "10.00",
+        "currency": "AUD",
+        "cost": "$10.00",
+        "component": "local_moodec",
+        "paymentarea": "cart",
+        "itemid": 1,
+        "description": "Checkout",
+        "successurl": "https://example.com/local/moodec/receipt.php?id=1"
+    }
+}}
+<div class="local-moodec-checkout">
+    <p class="local-moodec-total">{{#str}}gross, local_moodec{{/str}}: {{cost}}</p>
+    <button
+        class="btn btn-primary"
+        type="button"
+        data-action="core_payment/triggerPayment"
+        data-component="{{component}}"
+        data-paymentarea="{{paymentarea}}"
+        data-itemid="{{itemid}}"
+        data-cost="{{cost}}"
+        data-successurl="{{successurl}}"
+        data-description="{{description}}"
+    >{{#str}}pay, local_moodec{{/str}}</button>
+</div>

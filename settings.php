@@ -29,6 +29,16 @@ if ($hassiteconfig) {
     $settings = new admin_settingpage('local_moodec', get_string('pluginname', 'local_moodec'));
     $ADMIN->add('localplugins', $settings);
 
+    $accounts = \core_payment\helper::get_payment_accounts_menu(context_system::instance());
+    $setting = new admin_setting_configselect(
+        'local_moodec/paymentaccount',
+        get_string('paymentaccount', 'local_moodec'),
+        get_string('paymentaccount_desc', 'local_moodec'),
+        0,
+        $accounts ?: [0 => get_string('none')]
+    );
+    $settings->add($setting);
+
     $currencies = get_string_manager()->get_list_of_currencies();
     $setting = new admin_setting_configselect(
         'local_moodec/currency',

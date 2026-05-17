@@ -25,7 +25,7 @@
 namespace local_moodec;
 
 /**
- * Creates orders from carts and tracks their payment/delivery status.
+ * Creates orders from carts, tracks payment status and delivers enrolments.
  */
 class order {
     /** @var \stdClass the order record */
@@ -38,6 +38,18 @@ class order {
      */
     protected function __construct(\stdClass $record) {
         $this->record = $record;
+    }
+
+    /**
+     * Load an existing order by id.
+     *
+     * @param int $id the order id
+     * @return order
+     */
+    public static function instance(int $id): order {
+        global $DB;
+        $record = $DB->get_record('local_moodec_order', ['id' => $id], '*', MUST_EXIST);
+        return new self($record);
     }
 
     /**
@@ -125,6 +137,15 @@ class order {
     }
 
     /**
+     * Whether the order has been delivered (enrolments completed).
+     *
+     * @return bool
+     */
+    public function is_delivered(): bool {
+        return $this->record->status === 'delivered';
+    }
+
+    /**
      * Return the order line items.
      *
      * @return array records from {local_moodec_order_item}
@@ -153,13 +174,59 @@ class order {
     }
 
     /**
-     * Mark a single order item as delivered (enrolled).
+     * Deliver the order: enrol the buyer into each purchased course.
      *
-     * @param int $itemid the order item id
+     * Idempotent - items already marked enrolled are skipped, so a repeated
+     * payment callback cannot double-enrol.
+     *
+     * @param int $userid the user to enrol
      * @return void
      */
-    public function mark_item_enrolled(int $itemid): void {
+    public function deliver(int $userid): void {
         global $DB;
-        $DB->set_field('local_moodec_order_item', 'enrolled', 1, ['id' => $itemid, 'orderid' => $this->get_id()]);
+
+        $plugin = enrol_get_plugin('moodec');
+        if (!$plugin) {
+            $plugin = enrol_get_plugin('manual');
+        }
+        $enrolname = $plugin->get_name();
+
+        foreach ($this->get_items() as $item) {
+            if ((int) $item->enrolled === 1) {
+                continue;
+            }
+
+            $instance = $DB->get_record('enrol', [
+                'courseid' => $item->courseid,
+                'enrol' => $enrolname,
+            ]);
+            if (!$instance) {
+                $course = get_course($item->courseid);
+                $plugin->add_instance($course);
+                $instance = $DB->get_record('enrol', [
+                    'courseid' => $item->courseid,
+                    'enrol' => $enrolname,
+                ]);
+            }
+
+            if ($instance) {
+                $plugin->enrol_user(
+                    $instance,
+                    $userid,
+                    $instance->roleid,
+                    time() - 60,
+                    0,
+                    ENROL_USER_ACTIVE
+                );
+                $DB->set_field(
+                    'local_moodec_order_item',
+                    'enrolled',
+                    1,
+                    ['id' => $item->id, 'orderid' => $this->get_id()]
+                );
+            }
+        }
+
+        $this->set_status('delivered');
     }
 }
