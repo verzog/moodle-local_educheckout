@@ -1,13 +1,15 @@
 # Moodec Cart Rebuild — Design (for review)
 
 Status: **DESIGN ONLY — no implementation in this PR.** Review and approve/redirect
-before any code is written.
+before any code is written. Governed by the repo-root `CLAUDE.md` (AU Moodle
+plugin standard).
 
 ## 1. Goal
 
 Replace the dead Moodec purchase flow with a new shopping cart and checkout built
-from scratch for **Moodle 5.0 / PHP 8.2**, reusing the existing product catalogue
-and the `enrol_moodec` enrolment leg.
+from scratch, reusing the existing product catalogue and the `enrol_moodec`
+enrolment leg. Target per `CLAUDE.md`: **PHP 8.1+, Moodle 4.5+** (CI matrix PHP
+8.1/8.2/8.3 × `mysqli`/`pgsql`), mindful of the Moodle 5.1+ `public/` layout.
 
 ## 2. Why the old flow is dead (recap)
 
@@ -17,154 +19,160 @@ POSTs `payment/paypal/ipn.php`, which posts back `cmd=_notify-validate` and on
 `VERIFIED` enrols the user.
 
 This is **PayPal Payments Standard + IPN**. PayPal has retired the classic `webscr`
-endpoints and is phasing out IPN in favour of the Orders v2 REST API + webhooks, so
-the pay/confirm leg no longer functions. (On the `Moodle-Local_moodle5.0` branch the
-AI port additionally overwrote `ipn.php` with a copy of the product page, so that
-branch cannot confirm payment at all.)
+endpoints and is phasing out IPN, so the pay/confirm leg no longer functions. (On
+the `Moodle-Local_moodle5.0` branch the AI port additionally overwrote `ipn.php`
+with a copy of the product page, so that branch cannot confirm payment at all.)
 
 ## 3. What is kept vs replaced
 
 **Kept / reused**
 - Product model: `local_moodec_product`, `local_moodec_variation` tables and the
-  `MoodecProduct*` classes (simple + variable/variation pricing, durations, groups).
-- Enrolment leg: enrolment via the `enrol_moodec` plugin (fallback to `manual`),
-  group assignment, and duration handling — logic lifted from the old
+  product classes (simple + variable/variation pricing, durations, groups),
+  reimplemented as autoloaded `\local_moodec\` namespaced classes.
+- Enrolment leg: enrolment via the `enrol_moodec` plugin (fallback `manual`),
+  group assignment, duration handling — logic lifted from the old
   `MoodecGateway::complete_enrolment()`, modernised.
-- Catalogue/product pages (minor link changes only).
+- Catalogue/product pages (rebuilt to standard; link changes).
 
-**Replaced / removed**
-- `classes/cart.php` — serialized session+cookie blob cart. Replaced with a
-  DB-backed cart.
-- `classes/gateway.php`, `gateway_paypal.php`, `gateway_dps.php` and the entire
-  `payment/` directory — removed. Payment is delegated to Moodle core.
-- `classes/transaction.php` / `transaction_item.php` and the
-  `local_moodec_transaction*` tables — superseded by a new order model that
-  references core payment records (old tables retained read-only for historical
-  reporting; see Migration).
-- All `sprintf()`-built SQL in the touched code (currently SQL-injection-prone) —
-  replaced with parameterised Moodle DML.
+**Replaced / removed (all legacy PHP goes — see §10 CI note)**
+- `classes/cart.php` — serialized session+cookie blob cart → DB-backed cart.
+- `classes/gateway*.php` and the entire `payment/` directory → removed; payment
+  delegated to Moodle core.
+- `classes/transaction*.php` and the `local_moodec_transaction*` tables →
+  superseded by a new order model referencing core payment records.
+- All `sprintf()`-built SQL → parameterised Moodle DML (`CLAUDE.md` §4).
+- Non-standard file headers / `require_once config.php` in class files →
+  standard Moodle header + autoloading + `MOODLE_INTERNAL` guard.
 
 ## 4. Architectural decision: build on Moodle `core_payment`
 
 The new cart does **not** hand-roll any gateway, IPN, or PCI-sensitive code.
 Checkout delegates to Moodle's built-in **Payments subsystem** (`core_payment`,
-stable since Moodle 4.0):
+stable since Moodle 4.0 — within the 4.5+ target):
 
 - Moodec defines a *payable* = the cart total in the configured currency.
 - Moodle's **maintained** gateway subplugins (`paygw_paypal`, `paygw_stripe`)
   perform the actual payment and verification.
-- On a successful payment, core_payment invokes our
-  `service_provider::deliver_order()`, which performs the enrolment and marks the
-  order paid.
+- On success, core_payment invokes our `service_provider::deliver_order()`,
+  which enrols the user and marks the order paid.
 
-Consequence: PayPal vs Stripe becomes a site-admin configuration choice (which
-gateway subplugin is enabled on the payment account) — **no moodec code change**
-either way. Recommended: enable both, default to Stripe for reliability. This
-supersedes the old per-plugin PayPal/DPS settings.
+Consequence: PayPal vs Stripe is a site-admin config choice (which gateway
+subplugin is enabled on the payment account) — **no moodec code change** either
+way, and **no bundled SDK** (so no `thirdpartylibs.xml` and a smaller PCI/security
+surface, satisfying `CLAUDE.md` §5).
 
 `core_payment` models one payable per `(component, paymentarea, itemid)`. A Moodec
-cart holds multiple courses, so **the cart/order is the payable**:
-`component = local_moodec`, `paymentarea = cart`, `itemid = local_moodec_order.id`,
-`amount = order total`.
+cart holds multiple courses, so **the order is the payable**:
+`component = local_moodec`, `paymentarea = cart`, `itemid = local_moodec_order.id`.
 
 ## 5. Data model (new tables)
 
-`local_moodec_cart`
-- `id`, `userid`, `currency`, `status` (open|ordered|cancelled),
-  `timecreated`, `timemodified`. One `open` cart per user (unique index on
-  `userid` where status=open enforced in code).
+`local_moodec_cart` — `id, userid, currency, status (open|ordered|cancelled),
+timecreated, timemodified`. One `open` cart per user.
 
-`local_moodec_cart_item`
-- `id`, `cartid`, `productid`, `variationid` (0 for simple), `courseid`,
-  `unitprice` (last-known, for display only), `timecreated`.
-  Authoritative pricing is recomputed from the product/variation at checkout.
+`local_moodec_cart_item` — `id, cartid, productid, variationid, courseid,
+unitprice (display only), timecreated`. Authoritative pricing recomputed at
+checkout.
 
-`local_moodec_order`
-- `id`, `userid`, `cartid`, `currency`, `amount` (authoritative total at
-  checkout), `status` (pending|paid|delivered|failed|cancelled),
-  `paymentid` (FK to core `{payments}`), `timecreated`, `timemodified`.
+`local_moodec_order` — `id, userid, cartid, currency, amount, status
+(pending|paid|delivered|failed|cancelled), paymentid (FK core {payments}),
+timecreated, timemodified`.
 
-`local_moodec_order_item`
-- `id`, `orderid`, `productid`, `variationid`, `courseid`, `unitprice`,
-  `enrolled` (0/1, for idempotent delivery).
+`local_moodec_order_item` — `id, orderid, productid, variationid, courseid,
+unitprice, enrolled (0/1, idempotent delivery)`.
 
-A Moodle **privacy provider** is added for the cart/order tables (the legacy
-plugin predates the Privacy API; required for Moodle 5.0).
+`db/install.xml` adds these; `db/upgrade.php` uses incrementing savepoints
+(`CLAUDE.md` §3.5, CI `savepoints`). A Moodle **privacy provider**
+(`privacy/classes/provider.php`) covers all four tables for APP compliance
+(`CLAUDE.md` §2).
 
 ## 6. Components & flow
 
-1. **Add/remove/view cart** — server-rendered `pages/cart.php` plus an AMD module
-   calling new Moodle external (web service) functions in
-   `classes/external/` (`cart_add`, `cart_remove`, `cart_get`). All require login,
-   capability checks, and `sesskey`/external token. Add-to-cart requires login
-   (self-registration already recommended in the plugin README).
-2. **Checkout** — `pages/checkout.php`:
-   - `require_login()`, load the user's open cart.
-   - `refresh()` equivalent: drop disabled products, drop courses the user is
-     already actively enrolled in, recompute prices, surface a "these changed"
-     notice.
-   - Create a `local_moodec_order` (status `pending`) snapshotting items + total.
-   - Render the core_payment pay region for
-     `component=local_moodec, paymentarea=cart, itemid=order.id`.
-3. **Payment** — handled entirely by core_payment + the enabled gateway subplugin
-   (hosted/redirect or embedded per gateway). No moodec payment code.
+1. **Cart ops** — `cart.php` (server-rendered, Mustache, `{{#str}}` only) plus an
+   AMD module in `amd/src/` (built to `amd/build/`, `CLAUDE.md` §3.4) calling new
+   external functions in `classes/external/` (`cart_add/remove/get`). Login +
+   capability + sesskey enforced. JS sets text via `textContent`, never
+   `innerHTML` (`CLAUDE.md` §4).
+2. **Checkout** — `pages/checkout.php`: `require_login()`, load open cart, drop
+   disabled products / already-enrolled courses, recompute prices, create
+   `local_moodec_order` (pending), render the core_payment pay region for the
+   order. Any `moodleform` action targets an explicit `index.php`
+   (`CLAUDE.md` §3.7).
+3. **Payment** — entirely core_payment + the enabled gateway. No moodec payment
+   code.
 4. **Delivery** — `classes/payment/service_provider.php` implementing
-   `\core_payment\local\callback\service_provider`:
-   - `get_payable($paymentarea, $itemid)` → amount + currency + payment account.
-   - `get_success_url(...)` → receipt page.
-   - `deliver_order(...)` → for each order item: enrol via
-     `enrol_get_plugin('moodec')` (fallback `manual`) with correct
-     start/end (simple vs variation duration; 0 = unlimited), add to group if set,
-     set `order_item.enrolled=1`. **Idempotent**: skip already-enrolled items so a
-     repeated callback cannot double-enrol. Mark order `delivered`, close the cart
-     (`status=ordered`), fire events, send receipt to user.
+   `\core_payment\local\callback\service_provider`: `get_payable`,
+   `get_success_url`, `deliver_order` (enrol via `enrol_moodec`/`manual`, correct
+   duration incl. 0 = unlimited, group add, **idempotent** via
+   `order_item.enrolled`, fire events, send receipt). Dates shown via
+   `userdate()`; product summaries rendered through
+   `file_rewrite_pluginfile_urls()` + a `local_moodec_pluginfile()` whitelist
+   (`CLAUDE.md` §3.3).
 
-## 7. Observability, security, correctness
+## 7. Observability & security
 
-- Parameterised DML everywhere; no string-built SQL.
-- Capability checks on every page/WS; `context_system` for store, `context_course`
-  for enrolment.
-- Moodle events: `\local_moodec\event\cart_updated`,
-  `\local_moodec\event\order_paid`, `\local_moodec\event\order_delivery_failed`.
-- Admin notified on delivery failure (course missing, enrol method absent);
-  failures recorded on the order, not silently swallowed.
-- Currency taken from the core payment account / order, validated against the
-  cart currency.
+Parameterised DML only; capability checks everywhere; events
+(`cart_updated`, `order_paid`, `order_delivery_failed`); admin notified and
+failure recorded (not swallowed) on delivery error; `fullname()` fed via
+`\core_user\fields::for_name()` on the orders/receipt report (`CLAUDE.md` §3.2).
 
-## 8. Migration & packaging
+## 8. Locale (AU) — `CLAUDE.md` §2
 
-- `db/install.xml`: add the four new tables.
-- `db/upgrade.php`: create new tables; leave `local_moodec_transaction*` in place
-  read-only so the existing Transactions report keeps working for historical data.
-  (Optional later step: backfill old transactions into `local_moodec_order` — out
-  of scope for the first cut; flag for decision.)
-- Delete `payment/`, `classes/gateway*.php`, `classes/cart.php`,
-  `classes/transaction*.php`; remove their `require_once`s from `lib.php`; remove
-  the PayPal/DPS settings from `settings.php` (replaced by core Payments admin).
-- `version.php`: bump `version`, set `requires` to the Moodle 5.0 baseline, set
-  `maturity`, and bump the `enrol_moodec` dependency to the rebuilt enrol plugin's
-  new version.
-- **`enrol_moodec`**: out of scope for the cart rebuild itself, but it must be
-  installable on Moodle 5.0 first — its `version.php` still declares 2014 metadata
-  (tracked separately). The new cart depends on a working `enrol_moodec`.
+- All user-facing text in `lang/en/local_moodec.php`, **ascending byte order,
+  no interspersed comments** (§3.1). Legacy lang files use US spellings
+  (e.g. "Enrollment") and section-comment dividers — both must be eliminated in
+  the rebuilt file. Audit for `-ize/-or` → `-ise/-our`.
+- Dates via `userdate()` (DD/MM/YYYY). **Default currency AUD**, 2-decimal —
+  see Open Decision 3 re: relationship to the core payment account currency.
 
-## 9. Testing
+## 9. Migration & packaging
 
-- PHPUnit: cart add/remove/dedupe, price recompute, order creation,
-  `service_provider::get_payable()`, idempotent `deliver_order()` (incl.
-  already-enrolled and unlimited-duration cases).
-- Behat: browse → add to cart → checkout → pay via a sandbox/test gateway →
-  user enrolled + receipt shown; and the "item disabled / already enrolled at
-  checkout" path.
-- Manual: full run against a real gateway sandbox before go-live.
+- Remove all legacy classes + `payment/`; drop their `require_once`s from
+  `lib.php`; remove PayPal/DPS settings from `settings.php` (replaced by core
+  Payments admin). `version.php`: standard header, bump `version`,
+  `requires` = Moodle 4.5 baseline, set `maturity`, bump the `enrol_moodec`
+  dependency to the rebuilt enrol plugin's new version. README rebuilt to the
+  `tool_pluginskel` template (`CLAUDE.md` §5).
+- Legacy `local_moodec_transaction*` data: see Open Decision 4.
+- **`enrol_moodec`** is a separate plugin and must also conform to `CLAUDE.md`
+  (its own CI workflow, version.php, privacy provider). It still ships 2014
+  metadata and will not install on 4.5+. The cart depends on it — see Open
+  Decision 5.
 
-## 10. Open decisions for reviewer
+## 10. CLAUDE.md compliance — what it changed / pinned
 
-1. Confirm target is the **Moodle 5.0** line and which branch this work should
-   eventually merge into (`master` vs `Moodle-Local_moodle5.0`).
-2. Gateway(s) to enable: **Stripe**, **PayPal**, or both (no code impact; affects
+- **Target** is now **Moodle 4.5+ / PHP 8.1+** (was "5.0"); resolves the prior
+  "which version" open decision.
+- **CI workstream added**: `.github/workflows/moodle-ci.yml` from
+  `moodle-plugin-ci` `gha.dist.yml`, `env: TZ: Australia/Sydney`, matrix PHP
+  8.1/8.2/8.3 × mysqli/pgsql, warnings-as-failures. Neither repo currently has
+  CI.
+- **No retained legacy PHP on the CI branch**: `phpcs --max-warnings 0` would
+  fail on the 2015 code (tabs, headers, `sprintf` SQL, lang comments).
+  Therefore any kept feature (e.g. the Transactions report) must be
+  **reimplemented** as conforming code, not left as legacy files. This pushes
+  Open Decision 4 toward "migrate + reimplement", not "keep old code read-only".
+- **Default currency AUD** (was "from payment account / Stripe default").
+- **Two-plugin scope**: `CLAUDE.md` applies independently to `local_moodec` and
+  `enrol_moodec` (each: header, version.php, lang ordering, privacy, own CI).
+
+## 11. Open decisions for reviewer
+
+1. **Branch/workflow naming**: repo default branch is `master`; `CLAUDE.md` §8/§9
+   say branch/rebase off `main`. Rename default to `main`, or keep `master` and
+   read `CLAUDE.md`'s `main` as "the default branch"? (Affects the CI workflow
+   triggers and rebase instructions.)
+2. **Gateway(s)** to enable: Stripe, PayPal, or both (no code impact; affects
    test setup and go-live).
-3. Historical-data backfill into the new order tables: do it, or leave the old
-   Transactions report read-only over the legacy tables?
-4. Guest browsing: keep "must be logged in to add to cart" (simplest, matches old
-   checkout behaviour) or add a session cart that merges on login?
+3. **Currency**: `CLAUDE.md` mandates AUD default. core_payment charges in the
+   payment *account's* currency. Confirm AUD is the live selling currency, or
+   define the rule when the account currency differs from the AUD display
+   default.
+4. **Legacy transactions**: migrate `local_moodec_transaction*` into the new
+   order tables and reimplement the report to standard (recommended, given the
+   no-legacy-PHP CI rule), or drop the historical report entirely?
+5. **`enrol_moodec`**: authorise a parallel conforming rebuild/fix of
+   `enrol_moodec` (its own branch + PR), since the cart cannot function without
+   it installing on 4.5+.
+6. **Guest cart**: require login to add to cart (simplest, matches old checkout)
+   or support a session cart that merges on login?
