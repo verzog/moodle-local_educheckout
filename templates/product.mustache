@@ -17,23 +17,39 @@
 {{!
     @template local_moodec/product
 
-    Single product page with an add-to-cart form.
+    Single product page with a variation chooser and add-to-cart form.
 
     Example context (json):
     {
         "id": 1,
         "fullname": "Course A",
         "price": "10.00",
+        "hasvariations": true,
+        "variations": [{"id": 5, "name": "Standard", "price": "10.00"}],
         "addurl": "https://example.com/local/moodec/cart.php",
         "sesskey": "abc123"
     }
 }}
 <div class="local-moodec-product-detail">
-    <p class="local-moodec-price">{{#str}}price, local_moodec{{/str}}: {{price}}</p>
     <form method="post" action="{{addurl}}">
         <input type="hidden" name="action" value="add">
         <input type="hidden" name="product" value="{{id}}">
         <input type="hidden" name="sesskey" value="{{sesskey}}">
+        {{#hasvariations}}
+        <fieldset class="local-moodec-variations">
+            <legend>{{#str}}selectvariation, local_moodec{{/str}}</legend>
+            {{#variations}}
+            <label class="local-moodec-variation">
+                <input type="radio" name="variation" value="{{id}}">
+                {{name}} &mdash; {{price}}
+            </label>
+            {{/variations}}
+        </fieldset>
+        {{/hasvariations}}
+        {{^hasvariations}}
+        <p class="local-moodec-price">{{#str}}price, local_moodec{{/str}}: {{price}}</p>
+        <input type="hidden" name="variation" value="0">
+        {{/hasvariations}}
         <button type="submit" class="btn btn-primary">{{#str}}addtocart, local_moodec{{/str}}</button>
     </form>
 </div>

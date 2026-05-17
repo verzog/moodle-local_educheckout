@@ -47,14 +47,16 @@ if (!$isguest) {
 
 if ($action === 'add' && confirm_sesskey()) {
     $productid = required_param('product', PARAM_INT);
+    $variationid = optional_param('variation', 0, PARAM_INT);
     $product = new \local_moodec\product($productid);
-    $variations = $product->get_variations();
-    $variation = reset($variations);
+    if ($variationid > 0 && !$product->get_variation($variationid)) {
+        $variationid = 0;
+    }
     $cart->add_item(
         $product->get_id(),
-        $variation ? (int) $variation->id : 0,
+        $variationid,
         $product->get_course_id(),
-        $product->get_price()
+        $product->get_price($variationid)
     );
     redirect(new moodle_url('/local/moodec/cart.php'));
 }
@@ -67,9 +69,16 @@ if ($action === 'remove' && confirm_sesskey()) {
 
 $items = [];
 foreach ($cart->get_items() as $item) {
+    $coursename = '';
+    try {
+        $course = get_course($item->courseid);
+        $coursename = format_string($course->fullname);
+    } catch (\dml_missing_record_exception $e) {
+        $coursename = '';
+    }
     $items[] = [
         'id' => $item->id,
-        'name' => format_string($item->coursename ?? ''),
+        'name' => $coursename,
         'unitprice' => format_float((float) $item->unitprice, 2),
         'sesskey' => sesskey(),
         'removeurl' => (new moodle_url('/local/moodec/cart.php'))->out(false),

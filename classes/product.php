@@ -101,12 +101,27 @@ class product {
     }
 
     /**
-     * Return the variation records keyed by id.
+     * Return all variation records keyed by id.
      *
      * @return array
      */
     public function get_variations(): array {
         return $this->variations;
+    }
+
+    /**
+     * Return only the enabled variations.
+     *
+     * @return array variation records keyed by id
+     */
+    public function get_enabled_variations(): array {
+        $enabled = [];
+        foreach ($this->variations as $id => $variation) {
+            if (!empty($variation->is_enabled)) {
+                $enabled[$id] = $variation;
+            }
+        }
+        return $enabled;
     }
 
     /**
@@ -120,13 +135,17 @@ class product {
     }
 
     /**
-     * Return the lowest variation price for the product.
+     * Return the price for a specific variation, or the lowest price if none given.
      *
+     * @param int $variationid the variation id, or 0 for the lowest price
      * @return float
      */
-    public function get_price(): float {
+    public function get_price(int $variationid = 0): float {
+        if ($variationid > 0 && isset($this->variations[$variationid])) {
+            return (float) $this->variations[$variationid]->price;
+        }
         $prices = [];
-        foreach ($this->variations as $variation) {
+        foreach ($this->get_enabled_variations() as $variation) {
             $prices[] = (float) $variation->price;
         }
         return $prices ? min($prices) : 0.0;

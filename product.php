@@ -37,10 +37,21 @@ $product = new \local_moodec\product($productid);
 $PAGE->set_title($product->get_fullname());
 $PAGE->set_heading($product->get_fullname());
 
+$variations = [];
+foreach ($product->get_enabled_variations() as $variation) {
+    $variations[] = [
+        'id' => (int) $variation->id,
+        'name' => format_string($variation->name),
+        'price' => format_float((float) $variation->price, 2),
+    ];
+}
+
 $data = [
     'id' => $product->get_id(),
     'fullname' => $product->get_fullname(),
     'price' => format_float($product->get_price(), 2),
+    'hasvariations' => !empty($variations),
+    'variations' => $variations,
     'addurl' => (new moodle_url('/local/moodec/cart.php'))->out(false),
     'sesskey' => sesskey(),
 ];
