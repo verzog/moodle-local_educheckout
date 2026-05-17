@@ -1,0 +1,28 @@
+.local-moodec-catalogue .local-moodec-products {
+    list-style: none;
+    padding: 0;
+}
+
+.local-moodec-catalogue .local-moodec-product {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #ddd;
+}
+
+.local-moodec-cart .local-moodec-cart-items {
+    list-style: none;
+    padding: 0;
+}
+
+.local-moodec-cart .local-moodec-cart-items li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #ddd;
+}
+
+.local-moodec-total {
+    font-weight: bold;
+}
