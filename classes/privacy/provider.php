@@ -36,8 +36,8 @@ use core_privacy\local\request\writer;
  */
 class provider implements
     \core_privacy\local\metadata\provider,
-    \core_privacy\local\request\plugin\provider,
-    \core_privacy\local\request\core_userlist_provider {
+    \core_privacy\local\request\core_userlist_provider,
+    \core_privacy\local\request\plugin\provider {
     /**
      * Describe the personal data stored by this plugin.
      *
@@ -188,7 +188,7 @@ class provider implements
         if (empty($userids)) {
             return;
         }
-        list($insql, $params) = $db->get_in_or_equal($userids, SQL_PARAMS_NAMED);
+        [$insql, $params] = $db->get_in_or_equal($userids, SQL_PARAMS_NAMED);
 
         $db->delete_records_select(
             'local_moodec_cart_item',
