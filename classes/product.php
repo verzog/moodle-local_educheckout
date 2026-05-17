@@ -1,283 +1,150 @@
-<?php 
+<?php
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
 /**
- * Moodec Product
+ * Product model for the Moodec storefront.
  *
- * @package     local
- * @subpackage  local_moodec
- * @author   	Thomas Threadgold
- * @copyright   2015 LearningWorks Ltd
- * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    local_moodec
+ * @copyright  2026 LearningWorks Ltd
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// Load Moodle config
-require_once dirname(__FILE__) . '/../../../config.php';
-// Load Moodec lib
-require_once dirname(__FILE__) . '/../lib.php';
+namespace local_moodec;
 
-class MoodecProduct {
+/**
+ * Read-only representation of a saleable course (product) and its variations.
+ */
+class product {
+    /** @var int the product id */
+    protected $id;
 
-	/**
-	 * The Moodec product id
-	 * @var int
-	 */
-	protected $_id;
+    /** @var int the Moodle course id */
+    protected $courseid;
 
-	/**
-	 * The Moodle course id
-	 * @var int
-	 */
-	protected $_courseid;
+    /** @var bool whether the product is enabled for sale */
+    protected $enabled;
 
-	/**
-	 * Whether the product is enabled
-	 * @var bool
-	 */
-	protected $_enabled;
+    /** @var string the course full name */
+    protected $fullname;
 
-	/**
-	 * The product type
-	 * @var string
-	 */
-	protected $_type;
+    /** @var array variation records keyed by variation id */
+    protected $variations;
 
-	/**
-	 * The course fullname
-	 * @var string
-	 */
-	protected $_fullname;
+    /**
+     * Load a product by id.
+     *
+     * @param int $id the product id
+     */
+    public function __construct(int $id) {
+        global $DB;
 
-	/**
-	 * The course shortname
-	 * @var string
-	 */	
-	protected $_shortname;
+        $sql = 'SELECT p.id, p.course_id, p.is_enabled, c.fullname
+                  FROM {local_moodec_product} p
+                  JOIN {course} c ON c.id = p.course_id
+                 WHERE p.id = :id';
+        $record = $DB->get_record_sql($sql, ['id' => $id], MUST_EXIST);
 
-	/**
-	 * The Moodle category id the course belongs to
-	 * @var int
-	 */
-	protected $_categoryid;
+        $this->id = (int) $record->id;
+        $this->courseid = (int) $record->course_id;
+        $this->enabled = (bool) $record->is_enabled;
+        $this->fullname = (string) $record->fullname;
+        $this->variations = $DB->get_records('local_moodec_variation', ['product_id' => $this->id]);
+    }
 
-	/**
-	 * The moodle course summary
-	 * @var string
-	 */
-	protected $_summary;
+    /**
+     * Return the product id.
+     *
+     * @return int
+     */
+    public function get_id(): int {
+        return $this->id;
+    }
 
-	/**
-	 * The moodle course summary format
-	 * @var int
-	 */
-	protected $_summaryFormat;
+    /**
+     * Return the associated course id.
+     *
+     * @return int
+     */
+    public function get_course_id(): int {
+        return $this->courseid;
+    }
 
-	/**
-	 * Additional product information
-	 * @var [type]
-	 */
-	protected $_description;
+    /**
+     * Whether the product is enabled for sale.
+     *
+     * @return bool
+     */
+    public function is_enabled(): bool {
+        return $this->enabled;
+    }
 
-	/**
-	 * List of tags 
-	 * @var array
-	 */
-	protected $_tags;
+    /**
+     * Return the course full name.
+     *
+     * @return string
+     */
+    public function get_fullname(): string {
+        return $this->fullname;
+    }
 
-	function __construct($id = null){
+    /**
+     * Return the variation records keyed by id.
+     *
+     * @return array
+     */
+    public function get_variations(): array {
+        return $this->variations;
+    }
 
-		if(!is_null($id) && is_int($id)) {
-			$this->load($id);
-		}
+    /**
+     * Return a single variation record, or null if it does not belong to this product.
+     *
+     * @param int $variationid the variation id
+     * @return \stdClass|null
+     */
+    public function get_variation(int $variationid): ?\stdClass {
+        return $this->variations[$variationid] ?? null;
+    }
 
-	}
+    /**
+     * Return the lowest variation price for the product.
+     *
+     * @return float
+     */
+    public function get_price(): float {
+        $prices = [];
+        foreach ($this->variations as $variation) {
+            $prices[] = (float) $variation->price;
+        }
+        return $prices ? min($prices) : 0.0;
+    }
 
-	/**
-	 * Loads the product from the DB
-	 * @param  int 		$id		MoodecProduct id
-	 * @return [type]     		[description]
-	 */
-	public function load($id){
-		global $DB;
+    /**
+     * Return all enabled products.
+     *
+     * @return product[]
+     */
+    public static function get_enabled(): array {
+        global $DB;
 
-		$query = sprintf(
-			'SELECT 
-				lmp.id, 
-				c.id as course_id,
-				fullname,
-				shortname,
-				is_enabled,
-				category,
-				summary,
-				c.summaryformat as summary_format,
-				type,
-				description,
-				tags,
-				timecreated
-			FROM {local_moodec_product} lmp, {course} c
-			WHERE lmp.course_id = c.id
-			AND lmp.id = %d',
-			$id
-		);
-
-		// run the query
-		$product = $DB->get_record_sql($query);
-
-		// return the products
-		if (!!$product) {
-			$this->_id = (int) $product->id;
-			$this->_courseid = (int) $product->course_id;
-			$this->_enabled = (bool) $product->is_enabled;
-			$this->_fullname = $product->fullname;
-			$this->_shortname = $product->shortname;
-			$this->_type = $product->type;
-			$this->_categoryid = (int) $product->category;
-			$this->_summary = $product->summary;
-			$this->_summaryFormat = (int) $product->summary_format;
-			$this->_description = $product->description;
-			$this->_tags = explode(',', $product->tags);
-		} else {
-        	throw new Exception('Unable to load product using identifier: ' . $id);
-   		}
-	}
-
-	/**
-	 * Formats the product summary
-	 * @return string  formatted summary
-	 */
-	public function get_summary(){
-		global $CFG;
-
-		require_once $CFG->libdir . '/filelib.php';
-		require_once $CFG->libdir . '/weblib.php';
-
-		if (strlen($this->_summary) < 1) {
-			return '';
-		}
-
-		$context = context_course::instance($this->_courseid);
-
-		$options = array(
-			'para' => false,
-			'newlines' => true,
-			'overflowdiv' => false,
-		);
-
-		$summary = file_rewrite_pluginfile_urls($this->_summary, 'pluginfile.php', $context->id, 'course', 'summary', null);
-		return format_text($summary, $this->_summaryFormat, $options, $this->_courseid);
-	}
-
-	/**
-	 * Retrieves the image url for the Moodle course related to the product
-	 * @return string  		URL, or FALSE
-	 */			
-	public function get_image_url(){
-		global $CFG;
-
-		require_once $CFG->libdir . "/filelib.php";
-
-		$course = get_course($this->_courseid);
-
-		if ($course instanceof stdClass) {
-			require_once $CFG->libdir . '/coursecatlib.php';
-			$course = new course_in_list($course);
-		}
-
-		foreach ($course->get_course_overviewfiles() as $file) {
-			$isImage = $file->is_valid_image();
-
-			if ($isImage) {
-				return file_encode_url("$CFG->wwwroot/pluginfile.php",
-					'/' . $file->get_contextid() . '/' . $file->get_component() . '/' .
-					$file->get_filearea() . $file->get_filepath() . $file->get_filename(), !$isImage);
-			}
-		}
-
-		return false;
-	}
-
-	/**
-	 * Return array of related products
-	 * @param int 		$limit 		the max number of related products to be returned
-	 * @return array 				products
-	 */
-	public function get_related($limit = 3){
-
-		// TODO: 	Figure out where to set limit
-		// 			Perhaps plugin settings?
-		// 			Or just stay as parameter?
-		
-		// We get random products that are in the same category as this product
-		return local_moodec_get_random_products($limit, $this->_categoryid, $this->_id);
-	}
-
-	/**
-	 * Returns the visibility state of the product
-	 * @return boolean 		true if enabled
-	 */
-	public function is_enabled(){
-		return !!$this->_enabled;
-	}
-
-	/**
-	 * Retrieves the MoodecProduct id
-	 * @return int    id
-	 */
-	public function get_id(){
-		return $this->_id;
-	}
-
-	/**
-	 * Retrievs the Moodle course id associated with the product
-	 * @return int 		courseid
-	 */
-	public function get_course_id(){
-		return $this->_courseid;
-	}
-
-	/**
-	 * Returns the product type
-	 * @return string ('PRODUCT_TYPE_SIMPLE', 'PRODUCT_TYPE_VARIABLE', 'PRODUCT_TYPE_SUBSCRIPTION')
-	 */
-	public function get_type(){
-		return $this->_type;
-	}
-
-	/**
-	 * Returns the Moodle course fullname
-	 * @return string fullname
-	 */
-	public function get_fullname(){
-		return $this->_fullname;
-	}
-
-	/**
-	 * Returns the Moodle course shortname
-	 * @return string shortname
-	 */
-	public function get_shortname(){
-		return $this->_shortname;
-	}
-
-	/**
-	 * Returns the Moodle category relating to the product
-	 * @return int 	categoryid
-	 */
-	public function get_category_id(){
-		return $this->_categoryid;
-	}
-
-	/**
-	 * Returns the product description
-	 * @return string description
-	 */
-	public function get_description(){
-		return $this->_description;
-	}
-
-	/**
-	 * Returns true if the product has a description
-	 * @return boolean 
-	 */
-	public function has_description(){
-		return 0 < strlen($this->_description);
-	}
+        $ids = $DB->get_fieldset_select('local_moodec_product', 'id', 'is_enabled = :enabled', ['enabled' => 1]);
+        $products = [];
+        foreach ($ids as $id) {
+            $products[(int) $id] = new self((int) $id);
+        }
+        return $products;
+    }
 }

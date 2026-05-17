@@ -1,22 +1,35 @@
 <?php
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
 /**
- * Moodec Version file
+ * Version details for the Moodec storefront plugin.
  *
- * @package     local
- * @subpackage  local_moodec
- * @author   	Thomas Threadgold
- * @copyright   2015 LearningWorks Ltd
- * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    local_moodec
+ * @copyright  2015 LearningWorks Ltd
+ * @copyright  2026 LearningWorks Ltd
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die;
+defined('MOODLE_INTERNAL') || die();
 
+$plugin->version = 2026051700;
+$plugin->requires = 2025041400; // Moodle 5.0.
 $plugin->component = 'local_moodec';
-$plugin->version = 2015100600;
-$plugin->release = '2.8 (Build: 2015012900)';
-$plugin->requires = 2014051200;
-//$plugin->requires = 2014111000;
 $plugin->maturity = MATURITY_BETA;
-$plugin->dependencies = array(
-	'enrol_moodec' => 2014111000,
-);
+$plugin->release = '5.0.0';
+$plugin->dependencies = [
+    'enrol_moodec' => 2026051700,
+];
