@@ -36,6 +36,7 @@ $PAGE->set_pagelayout('standard');
 $product = new \local_moodec\product($productid);
 $PAGE->set_title($product->get_fullname());
 $PAGE->set_heading($product->get_fullname());
+$PAGE->requires->js_call_amd('local_moodec/cart', 'init');
 
 $variations = [];
 foreach ($product->get_enabled_variations() as $variation) {

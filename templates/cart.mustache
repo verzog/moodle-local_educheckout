@@ -39,7 +39,7 @@
         <li>
             <span>{{name}}</span>
             <span class="local-moodec-price">{{unitprice}}</span>
-            <form method="post" action="{{removeurl}}">
+            <form method="post" action="{{removeurl}}" data-moodec="remove-form">
                 <input type="hidden" name="action" value="remove">
                 <input type="hidden" name="item" value="{{id}}">
                 <input type="hidden" name="sesskey" value="{{sesskey}}">
@@ -48,7 +48,7 @@
         </li>
         {{/items}}
     </ul>
-    <p class="local-moodec-total">{{#str}}total, local_moodec{{/str}}: {{total}}</p>
+    <p class="local-moodec-total">{{#str}}total, local_moodec{{/str}}: <span data-moodec="total">{{total}}</span></p>
     <p><a class="btn btn-primary" href="{{checkouturl}}">{{#str}}checkout, local_moodec{{/str}}</a></p>
     {{/isempty}}
 </div>
