@@ -79,7 +79,7 @@ if ($hassiteconfig) {
         'local_moodec/tax_rate',
         get_string('tax_rate', 'local_moodec'),
         get_string('tax_rate_desc', 'local_moodec'),
-        '10.0',
+        '10',
         PARAM_FLOAT
     );
     $settings->add($setting);
