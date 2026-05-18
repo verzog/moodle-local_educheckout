@@ -51,9 +51,18 @@ if ($action === 'add' && confirm_sesskey()) {
     $productid = required_param('product', PARAM_INT);
     $variationid = optional_param('variation', 0, PARAM_INT);
     $product = new \local_moodec\product($productid);
-    if ($variationid > 0 && !$product->get_variation($variationid)) {
-        $variationid = 0;
+
+    if (!$product->is_enabled()) {
+        redirect(new moodle_url('/local/moodec/index.php'));
     }
+
+    if ($variationid > 0) {
+        $variation = $product->get_variation($variationid);
+        if (!$variation || empty($variation->is_enabled)) {
+            redirect(new moodle_url('/local/moodec/product.php', ['id' => $product->get_id()]));
+        }
+    }
+
     $cart->add_item(
         $product->get_id(),
         $variationid,
