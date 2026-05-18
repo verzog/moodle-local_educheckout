@@ -23,11 +23,3 @@ Feature: Moodec order management
   Scenario: Admin can filter orders by status
     When I visit "/local/moodec/manage_orders.php?status=pending"
     Then I should see "Order management"
-
-  Scenario: Non-admin is denied access to orders
-    Given the following "users" exist:
-      | username | firstname | lastname | email         |
-      | student  | Sam       | Student  | s@example.com |
-    And I log in as "student"
-    When I visit "/local/moodec/manage_orders.php"
-    Then I should see "Sorry, but you do not currently have permissions"

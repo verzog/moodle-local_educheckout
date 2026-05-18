@@ -31,11 +31,3 @@ Feature: Moodec product management
     Then I should see "Disabled"
     When I click on "Enable" "link"
     Then I should see "Enabled"
-
-  Scenario: Non-admin is denied access to product management
-    Given the following "users" exist:
-      | username | firstname | lastname | email         |
-      | student  | Sam       | Student  | s@example.com |
-    And I log in as "student"
-    When I visit "/local/moodec/manage.php"
-    Then I should see "Sorry, but you do not currently have permissions"

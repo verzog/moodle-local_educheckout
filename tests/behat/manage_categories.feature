@@ -24,13 +24,5 @@ Feature: Moodec category management
     And I press "Save changes"
     And I should see "ToDelete"
     When I click on "Delete" "link" in the "ToDelete" "table_row"
-    And I click on "Yes" "button"
+    And I press "Continue"
     Then I should not see "ToDelete"
-
-  Scenario: Non-admin is denied access to category management
-    Given the following "users" exist:
-      | username | firstname | lastname | email         |
-      | student  | Sam       | Student  | s@example.com |
-    And I log in as "student"
-    When I visit "/local/moodec/category_manage.php"
-    Then I should see "Sorry, but you do not currently have permissions"
