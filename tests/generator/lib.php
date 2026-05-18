@@ -45,7 +45,6 @@ class local_moodec_generator extends component_generator_base {
 
         $course = $DB->get_record('course', ['shortname' => $record['course']], 'id', MUST_EXIST);
 
-        $now = time();
         $row = (object) [
             'course_id'          => (int) $course->id,
             'is_enabled'         => isset($record['is_enabled']) ? (int) $record['is_enabled'] : 1,
@@ -55,8 +54,6 @@ class local_moodec_generator extends component_generator_base {
             'tags'               => $record['tags'] ?? '',
             'description'        => $record['description'] ?? '',
             'description_format' => FORMAT_HTML,
-            'timecreated'        => $now,
-            'timemodified'       => $now,
         ];
         $row->id = $DB->insert_record('local_moodec_product', $row);
         return $row;
