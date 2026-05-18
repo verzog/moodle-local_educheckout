@@ -65,7 +65,6 @@ foreach ($categories as $cat) {
     $categoryoptions[$cat->get_id()] = $cat->get_name();
 }
 
-// ---- Product form ----
 $productform = new \local_moodec\form\product_form(
     new moodle_url('/local/moodec/product_edit.php', ['id' => $id]),
     ['productid' => $id, 'categoryoptions' => $categoryoptions]
@@ -134,7 +133,6 @@ if (!$isnew && $product !== null && !$productform->is_submitted()) {
     ]);
 }
 
-// ---- Variation form ----
 $varform = null;
 if (!$isnew && $product !== null) {
     $editvarid = optional_param('editvarid', 0, PARAM_INT);
@@ -185,12 +183,11 @@ if (!$isnew && $product !== null) {
     }
 }
 
-// ---- Render ----
 echo $OUTPUT->header();
-echo $OUTPUT->heading($isnew
+$headingtitle = $isnew
     ? get_string('product_add_title', 'local_moodec')
-    : get_string('product_edit_title', 'local_moodec')
-);
+    : get_string('product_edit_title', 'local_moodec');
+echo $OUTPUT->heading($headingtitle);
 
 $productform->display();
 

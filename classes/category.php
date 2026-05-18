@@ -24,8 +24,6 @@
 
 namespace local_moodec;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Represents a storefront category.
  */

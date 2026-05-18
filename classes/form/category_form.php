@@ -32,7 +32,6 @@ require_once($CFG->libdir . '/formslib.php');
  * Form for creating or editing a storefront category.
  */
 class category_form extends \moodleform {
-
     /**
      * Define the form fields.
      */

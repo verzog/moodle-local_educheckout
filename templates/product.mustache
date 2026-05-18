@@ -73,6 +73,14 @@
         </div>
         {{/hasdescription}}
 
+        {{#alreadyenrolled}}
+        <div class="alert alert-success">
+            {{#str}}alreadyenrolled, local_moodec{{/str}}
+            <a href="{{courseurl}}" class="alert-link">{{#str}}gotocourse, local_moodec{{/str}}</a>
+        </div>
+        {{/alreadyenrolled}}
+
+        {{^alreadyenrolled}}
         <form method="post" action="{{addurl}}" data-moodec="add-form">
             <input type="hidden" name="action" value="add">
             <input type="hidden" name="product" value="{{id}}">
@@ -98,5 +106,6 @@
 
             <button type="submit" class="btn btn-primary btn-lg">{{#str}}addtocart, local_moodec{{/str}}</button>
         </form>
+        {{/alreadyenrolled}}
     </div>
 </div>

@@ -71,6 +71,15 @@ if ($product->get_description() !== '') {
     );
 }
 
+// Check if the student is already enrolled in this course.
+$alreadyenrolled = false;
+if (isloggedin() && !isguestuser()) {
+    $coursecontext = context_course::instance($product->get_course_id(), IGNORE_MISSING);
+    if ($coursecontext && is_enrolled($coursecontext, $USER)) {
+        $alreadyenrolled = true;
+    }
+}
+
 $data = [
     'id' => $product->get_id(),
     'fullname' => format_string($product->get_fullname()),
@@ -84,6 +93,8 @@ $data = [
     'hascategoryname' => $categoryname !== '',
     'hasvariations' => !empty($variations),
     'variations' => $variations,
+    'alreadyenrolled' => $alreadyenrolled,
+    'courseurl' => (new moodle_url('/course/view.php', ['id' => $product->get_course_id()]))->out(false),
     'addurl' => (new moodle_url('/local/moodec/cart.php'))->out(false),
     'catalogueurl' => (new moodle_url('/local/moodec/index.php'))->out(false),
     'sesskey' => sesskey(),

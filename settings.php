@@ -43,6 +43,13 @@ if ($hassiteconfig) {
         'local/moodec:manageproducts'
     ));
 
+    $ADMIN->add('localplugins', new admin_externalpage(
+        'local_moodec_orders',
+        get_string('orders_title', 'local_moodec'),
+        new moodle_url('/local/moodec/manage_orders.php'),
+        'local/moodec:viewallorders'
+    ));
+
     $accounts = \core_payment\helper::get_payment_accounts_menu(context_system::instance());
     $setting = new admin_setting_configselect(
         'local_moodec/paymentaccount',

@@ -15,18 +15,23 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Version details for the Moodec storefront plugin.
+ * Scheduled task definitions for the Moodec storefront plugin.
  *
  * @package    local_moodec
- * @copyright  2015 LearningWorks Ltd
  * @copyright  2026 LearningWorks Ltd
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2026051900;
-$plugin->requires = 2025041400; // Moodle 5.0.
-$plugin->component = 'local_moodec';
-$plugin->maturity = MATURITY_BETA;
-$plugin->release = '5.0.4';
+$tasks = [
+    [
+        'classname' => \local_moodec\task\cleanup_carts::class,
+        'blocking' => 0,
+        'minute' => '0',
+        'hour' => '3',
+        'day' => '*',
+        'month' => '*',
+        'dayofweek' => '*',
+    ],
+];
