@@ -52,10 +52,10 @@ class cleanup_carts extends \core\task\scheduled_task {
         $guestcutoff = $now - (7 * DAYSECS);
         $usercutoff = $now - (30 * DAYSECS);
 
-        // Guest carts older than 7 days.
+        // Guest carts with no activity for 7 days.
         $guestcarts = $DB->get_records_select(
             'local_moodec_cart',
-            "status = 'open' AND userid = 0 AND timecreated < :cutoff",
+            "status = 'open' AND userid = 0 AND timemodified < :cutoff",
             ['cutoff' => $guestcutoff],
             '',
             'id'
@@ -65,10 +65,10 @@ class cleanup_carts extends \core\task\scheduled_task {
             $DB->delete_records('local_moodec_cart', ['id' => $cart->id]);
         }
 
-        // User carts open for more than 30 days (abandoned).
+        // User carts with no activity for 30 days (abandoned).
         $usercarts = $DB->get_records_select(
             'local_moodec_cart',
-            "status = 'open' AND userid > 0 AND timecreated < :cutoff",
+            "status = 'open' AND userid > 0 AND timemodified < :cutoff",
             ['cutoff' => $usercutoff],
             '',
             'id'

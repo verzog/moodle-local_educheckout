@@ -51,10 +51,9 @@ if (in_array($status, $validstatuses, true)) {
 $countsql = "SELECT COUNT(o.id) FROM {local_moodec_order} o $where";
 $total = (int) $DB->count_records_sql($countsql, $params);
 
-$namefields = \core_user\fields::for_name()->get_sql('u', true, '', '', false)->selects;
+$namefields = \core_user\fields::for_name()->get_sql('u', true)->selects;
 
-$sql = "SELECT o.id, o.userid, o.status, o.amount, o.currency, o.timecreated,
-               u.id AS uid {$namefields}
+$sql = "SELECT o.id, o.userid, o.status, o.amount, o.currency, o.timecreated{$namefields}
           FROM {local_moodec_order} o
           JOIN {user} u ON u.id = o.userid
                $where
@@ -64,11 +63,6 @@ $records = $DB->get_records_sql($sql, $params, $page * $perpage, $perpage);
 
 $orders = [];
 foreach ($records as $rec) {
-    $fakeuser = (object) ['id' => $rec->uid];
-    foreach (\core_user\fields::for_name()->get_required_fields() as $field) {
-        $fakeuser->$field = $rec->$field ?? '';
-    }
-
     // Collect course names for this order's items.
     $items = $DB->get_records('local_moodec_order_item', ['orderid' => $rec->id]);
     $coursenames = [];
@@ -83,7 +77,7 @@ foreach ($records as $rec) {
 
     $orders[] = [
         'id' => (int) $rec->id,
-        'username' => fullname($fakeuser),
+        'username' => fullname($rec),
         'status' => $rec->status,
         'amount' => format_float((float) $rec->amount, 2),
         'currency' => $rec->currency,
