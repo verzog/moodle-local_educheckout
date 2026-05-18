@@ -24,13 +24,10 @@
 
 namespace local_moodec\task;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Deletes open guest carts older than 7 days and open user carts older than 30 days.
  */
 class cleanup_carts extends \core\task\scheduled_task {
-
     /**
      * Return the task name shown in admin.
      *

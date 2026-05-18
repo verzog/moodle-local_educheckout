@@ -24,8 +24,6 @@
 
 namespace local_moodec;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Representation of a saleable course (product) and its variations.
  */
@@ -87,10 +85,6 @@ class product {
         $this->descriptionformat = (int) ($record->description_format ?? FORMAT_HTML);
         $this->variations = $DB->get_records('local_moodec_variation', ['product_id' => $this->id]);
     }
-
-    // -------------------------------------------------------------------------
-    // Getters
-    // -------------------------------------------------------------------------
 
     /**
      * Return the product id.
@@ -259,10 +253,6 @@ class product {
         );
     }
 
-    // -------------------------------------------------------------------------
-    // Write operations
-    // -------------------------------------------------------------------------
-
     /**
      * Create a new product record for a course.
      *
@@ -424,10 +414,6 @@ class product {
         $context = \context_system::instance();
         $fs->delete_area_files($context->id, 'local_moodec', 'product_image', $this->id);
     }
-
-    // -------------------------------------------------------------------------
-    // Static queries
-    // -------------------------------------------------------------------------
 
     /**
      * Return all enabled products, optionally filtered by category.

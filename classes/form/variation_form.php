@@ -32,7 +32,6 @@ require_once($CFG->libdir . '/formslib.php');
  * Form for creating or editing a product variation.
  */
 class variation_form extends \moodleform {
-
     /**
      * Define the form fields.
      */
