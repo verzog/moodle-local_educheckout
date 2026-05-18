@@ -1,0 +1,63 @@
+{{!
+    This file is part of Moodle - https://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_moodec/variation_list
+
+    Table of product variations on the product edit page.
+
+    Example context (json):
+    {
+        "hasvariations": true,
+        "variations": [{"id":1,"name":"Standard","price":"99.00","duration":365,"is_enabled":true,"editurl":"","deleteurl":""}]
+    }
+}}
+{{#hasvariations}}
+<table class="table table-sm table-bordered mb-3">
+    <thead class="thead-light">
+        <tr>
+            <th>{{#str}}variation_name, local_moodec{{/str}}</th>
+            <th>{{#str}}variation_price, local_moodec{{/str}}</th>
+            <th>{{#str}}variation_duration, local_moodec{{/str}}</th>
+            <th>{{#str}}product_status, local_moodec{{/str}}</th>
+            <th>{{#str}}actions, local_moodec{{/str}}</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{#variations}}
+        <tr>
+            <td>{{name}}</td>
+            <td>{{price}}</td>
+            <td>{{duration}}</td>
+            <td>
+                {{#is_enabled}}<span class="badge badge-success">{{#str}}product_enabled_yes, local_moodec{{/str}}</span>{{/is_enabled}}
+                {{^is_enabled}}<span class="badge badge-secondary">{{#str}}product_enabled_no, local_moodec{{/str}}</span>{{/is_enabled}}
+            </td>
+            <td class="d-flex gap-1">
+                <a href="{{editurl}}" class="btn btn-sm btn-outline-primary">{{#str}}edit{{/str}}</a>
+                <a href="{{deleteurl}}" class="btn btn-sm btn-outline-danger"
+                   onclick="return confirm('{{#str}}variation_delete_confirm, local_moodec{{/str}}')">
+                    {{#str}}delete{{/str}}
+                </a>
+            </td>
+        </tr>
+        {{/variations}}
+    </tbody>
+</table>
+{{/hasvariations}}
+{{^hasvariations}}
+<p class="text-muted">{{#str}}variations_none, local_moodec{{/str}}</p>
+{{/hasvariations}}

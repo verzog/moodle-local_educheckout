@@ -24,8 +24,10 @@
 
 namespace local_moodec;
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
- * Read-only representation of a saleable course (product) and its variations.
+ * Representation of a saleable course (product) and its variations.
  */
 class product {
     /** @var int the product id */
@@ -34,11 +36,26 @@ class product {
     /** @var int the Moodle course id */
     protected $courseid;
 
+    /** @var int|null the category id */
+    protected $categoryid;
+
     /** @var bool whether the product is enabled for sale */
     protected $enabled;
 
+    /** @var int sort order within the catalogue */
+    protected $sortorder;
+
     /** @var string the course full name */
     protected $fullname;
+
+    /** @var string comma-separated tags */
+    protected $tags;
+
+    /** @var string custom description (may be empty; falls back to course summary) */
+    protected $description;
+
+    /** @var int description text format */
+    protected $descriptionformat;
 
     /** @var array variation records keyed by variation id */
     protected $variations;
@@ -51,7 +68,9 @@ class product {
     public function __construct(int $id) {
         global $DB;
 
-        $sql = 'SELECT p.id, p.course_id, p.is_enabled, c.fullname
+        $sql = 'SELECT p.id, p.course_id, p.category_id, p.is_enabled, p.sort_order,
+                       p.tags, p.description, p.description_format,
+                       c.fullname
                   FROM {local_moodec_product} p
                   JOIN {course} c ON c.id = p.course_id
                  WHERE p.id = :id';
@@ -59,10 +78,19 @@ class product {
 
         $this->id = (int) $record->id;
         $this->courseid = (int) $record->course_id;
+        $this->categoryid = $record->category_id !== null ? (int) $record->category_id : null;
         $this->enabled = (bool) $record->is_enabled;
+        $this->sortorder = (int) ($record->sort_order ?? 0);
         $this->fullname = (string) $record->fullname;
+        $this->tags = (string) ($record->tags ?? '');
+        $this->description = (string) ($record->description ?? '');
+        $this->descriptionformat = (int) ($record->description_format ?? FORMAT_HTML);
         $this->variations = $DB->get_records('local_moodec_variation', ['product_id' => $this->id]);
     }
+
+    // -------------------------------------------------------------------------
+    // Getters
+    // -------------------------------------------------------------------------
 
     /**
      * Return the product id.
@@ -83,6 +111,15 @@ class product {
     }
 
     /**
+     * Return the category id, or null if uncategorised.
+     *
+     * @return int|null
+     */
+    public function get_category_id(): ?int {
+        return $this->categoryid;
+    }
+
+    /**
      * Whether the product is enabled for sale.
      *
      * @return bool
@@ -92,12 +129,60 @@ class product {
     }
 
     /**
+     * Return the sort order.
+     *
+     * @return int
+     */
+    public function get_sort_order(): int {
+        return $this->sortorder;
+    }
+
+    /**
      * Return the course full name.
      *
      * @return string
      */
     public function get_fullname(): string {
         return $this->fullname;
+    }
+
+    /**
+     * Return the comma-separated tag string.
+     *
+     * @return string
+     */
+    public function get_tags(): string {
+        return $this->tags;
+    }
+
+    /**
+     * Return tags as a trimmed array (empty strings filtered out).
+     *
+     * @return string[]
+     */
+    public function get_tags_array(): array {
+        if ($this->tags === '') {
+            return [];
+        }
+        return array_values(array_filter(array_map('trim', explode(',', $this->tags))));
+    }
+
+    /**
+     * Return the custom description HTML (may be empty).
+     *
+     * @return string
+     */
+    public function get_description(): string {
+        return $this->description;
+    }
+
+    /**
+     * Return the description text format.
+     *
+     * @return int
+     */
+    public function get_description_format(): int {
+        return $this->descriptionformat;
     }
 
     /**
@@ -135,7 +220,7 @@ class product {
     }
 
     /**
-     * Return the price for a specific variation, or the lowest price if none given.
+     * Return the price for a specific variation, or the lowest enabled price if none given.
      *
      * @param int $variationid the variation id, or 0 for the lowest price
      * @return float
@@ -152,18 +237,262 @@ class product {
     }
 
     /**
-     * Return all enabled products.
+     * Return the URL for the product image, or null if none is stored.
      *
+     * @param \context $context system context
+     * @return \moodle_url|null
+     */
+    public function get_image_url(\context $context): ?\moodle_url {
+        $fs = get_file_storage();
+        $files = $fs->get_area_files($context->id, 'local_moodec', 'product_image', $this->id, '', false);
+        if (empty($files)) {
+            return null;
+        }
+        $file = reset($files);
+        return \moodle_url::make_pluginfile_url(
+            $context->id,
+            'local_moodec',
+            'product_image',
+            $this->id,
+            $file->get_filepath(),
+            $file->get_filename()
+        );
+    }
+
+    // -------------------------------------------------------------------------
+    // Write operations
+    // -------------------------------------------------------------------------
+
+    /**
+     * Create a new product record for a course.
+     *
+     * @param int $courseid
+     * @return product
+     */
+    public static function create(int $courseid): product {
+        global $DB;
+        $id = $DB->insert_record('local_moodec_product', (object) [
+            'course_id' => $courseid,
+            'category_id' => null,
+            'is_enabled' => 0,
+            'variation_count' => 0,
+            'sort_order' => 0,
+            'type' => '',
+            'tags' => '',
+            'description' => '',
+            'description_format' => FORMAT_HTML,
+        ]);
+        return new self((int) $id);
+    }
+
+    /**
+     * Save product metadata (everything except enabled flag and variations).
+     *
+     * @param int|null $categoryid
+     * @param string $tags
+     * @param string $description
+     * @param int $descriptionformat
+     * @param int $sortorder
+     * @return void
+     */
+    public function save(
+        ?int $categoryid,
+        string $tags,
+        string $description,
+        int $descriptionformat,
+        int $sortorder = 0
+    ): void {
+        global $DB;
+        $DB->update_record('local_moodec_product', (object) [
+            'id' => $this->id,
+            'category_id' => $categoryid,
+            'tags' => $tags,
+            'description' => $description,
+            'description_format' => $descriptionformat,
+            'sort_order' => $sortorder,
+        ]);
+        $this->categoryid = $categoryid;
+        $this->tags = $tags;
+        $this->description = $description;
+        $this->descriptionformat = $descriptionformat;
+        $this->sortorder = $sortorder;
+    }
+
+    /**
+     * Enable or disable this product.
+     *
+     * @param bool $enabled
+     * @return void
+     */
+    public function set_enabled(bool $enabled): void {
+        global $DB;
+        $DB->set_field('local_moodec_product', 'is_enabled', (int) $enabled, ['id' => $this->id]);
+        $this->enabled = $enabled;
+    }
+
+    /**
+     * Add a variation to this product.
+     *
+     * @param string $name
+     * @param float $price
+     * @param int $duration days until enrolment expires (0 = no limit)
+     * @param int $groupid Moodle group to enrol into (0 = none)
+     * @param bool $enabled
+     * @return \stdClass the new variation record
+     */
+    public function add_variation(
+        string $name,
+        float $price,
+        int $duration = 0,
+        int $groupid = 0,
+        bool $enabled = true
+    ): \stdClass {
+        global $DB;
+        $record = (object) [
+            'product_id' => $this->id,
+            'is_enabled' => (int) $enabled,
+            'name' => $name,
+            'price' => $price,
+            'duration' => $duration,
+            'group_id' => $groupid,
+        ];
+        $record->id = $DB->insert_record('local_moodec_variation', $record);
+        $this->variations[(int) $record->id] = $record;
+        $DB->set_field('local_moodec_product', 'variation_count', count($this->variations), ['id' => $this->id]);
+        return $record;
+    }
+
+    /**
+     * Update an existing variation.
+     *
+     * @param int $variationid
+     * @param string $name
+     * @param float $price
+     * @param int $duration
+     * @param int $groupid
+     * @param bool $enabled
+     * @return void
+     */
+    public function update_variation(
+        int $variationid,
+        string $name,
+        float $price,
+        int $duration = 0,
+        int $groupid = 0,
+        bool $enabled = true
+    ): void {
+        global $DB;
+        if (!isset($this->variations[$variationid])) {
+            return;
+        }
+        $record = $this->variations[$variationid];
+        $record->name = $name;
+        $record->price = $price;
+        $record->duration = $duration;
+        $record->group_id = $groupid;
+        $record->is_enabled = (int) $enabled;
+        $DB->update_record('local_moodec_variation', $record);
+        $this->variations[$variationid] = $record;
+    }
+
+    /**
+     * Delete a variation.
+     *
+     * @param int $variationid
+     * @return void
+     */
+    public function delete_variation(int $variationid): void {
+        global $DB;
+        if (!isset($this->variations[$variationid])) {
+            return;
+        }
+        $DB->delete_records('local_moodec_variation', ['id' => $variationid]);
+        unset($this->variations[$variationid]);
+        $DB->set_field('local_moodec_product', 'variation_count', count($this->variations), ['id' => $this->id]);
+    }
+
+    /**
+     * Delete this product and all its variations.
+     *
+     * @return void
+     */
+    public function delete(): void {
+        global $DB;
+        $DB->delete_records('local_moodec_variation', ['product_id' => $this->id]);
+        $DB->delete_records('local_moodec_product', ['id' => $this->id]);
+        $fs = get_file_storage();
+        $context = \context_system::instance();
+        $fs->delete_area_files($context->id, 'local_moodec', 'product_image', $this->id);
+    }
+
+    // -------------------------------------------------------------------------
+    // Static queries
+    // -------------------------------------------------------------------------
+
+    /**
+     * Return all enabled products, optionally filtered by category.
+     *
+     * @param int|null $categoryid filter to a category, or null for all
+     * @param int $page zero-based page index
+     * @param int $perpage records per page (0 = no limit)
      * @return product[]
      */
-    public static function get_enabled(): array {
+    public static function get_enabled(?int $categoryid = null, int $page = 0, int $perpage = 0): array {
         global $DB;
 
-        $ids = $DB->get_fieldset_select('local_moodec_product', 'id', 'is_enabled = :enabled', ['enabled' => 1]);
+        $params = ['enabled' => 1];
+        $where = 'is_enabled = :enabled';
+        if ($categoryid !== null) {
+            $where .= ' AND category_id = :categoryid';
+            $params['categoryid'] = $categoryid;
+        }
+
+        $limitfrom = ($perpage > 0) ? ($page * $perpage) : 0;
+        $limitnum = ($perpage > 0) ? $perpage : 0;
+
+        $ids = $DB->get_fieldset_select(
+            'local_moodec_product',
+            'id',
+            $where,
+            $params,
+            'sort_order ASC, id ASC',
+            $limitfrom,
+            $limitnum
+        );
+
         $products = [];
         foreach ($ids as $id) {
             $products[(int) $id] = new self((int) $id);
         }
         return $products;
+    }
+
+    /**
+     * Count enabled products, optionally filtered by category.
+     *
+     * @param int|null $categoryid
+     * @return int
+     */
+    public static function count_enabled(?int $categoryid = null): int {
+        global $DB;
+        $params = ['enabled' => 1];
+        $where = 'is_enabled = :enabled';
+        if ($categoryid !== null) {
+            $where .= ' AND category_id = :categoryid';
+            $params['categoryid'] = $categoryid;
+        }
+        return (int) $DB->count_records_select('local_moodec_product', $where, $params);
+    }
+
+    /**
+     * Return the product for a given course id, or null if none exists.
+     *
+     * @param int $courseid
+     * @return product|null
+     */
+    public static function get_by_course(int $courseid): ?product {
+        global $DB;
+        $id = $DB->get_field('local_moodec_product', 'id', ['course_id' => $courseid]);
+        return $id ? new self((int) $id) : null;
     }
 }

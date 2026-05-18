@@ -32,8 +32,6 @@ $context = context_system::instance();
 $PAGE->set_context($context);
 $PAGE->set_url(new moodle_url('/local/moodec/product.php', ['id' => $productid]));
 $PAGE->set_pagelayout('standard');
-$cartjsurl = new moodle_url('/local/moodec/js/cart.js', ['v' => get_config('local_moodec', 'version')]);
-$PAGE->requires->js($cartjsurl);
 
 $product = new \local_moodec\product($productid);
 $PAGE->set_title($product->get_fullname());
@@ -48,13 +46,46 @@ foreach ($product->get_enabled_variations() as $variation) {
     ];
 }
 
+$imageurl = $product->get_image_url($context);
+
+$tagsarray = $product->get_tags_array();
+$tagdata = array_map(fn($t) => ['label' => $t], $tagsarray);
+
+$categoryname = '';
+$catid = $product->get_category_id();
+if ($catid) {
+    try {
+        $cat = \local_moodec\category::get($catid);
+        $categoryname = format_string($cat->get_name());
+    } catch (\dml_missing_record_exception $e) {
+        $categoryname = '';
+    }
+}
+
+$description = '';
+if ($product->get_description() !== '') {
+    $description = format_text(
+        $product->get_description(),
+        $product->get_description_format(),
+        ['context' => $context]
+    );
+}
+
 $data = [
     'id' => $product->get_id(),
-    'fullname' => $product->get_fullname(),
+    'fullname' => format_string($product->get_fullname()),
     'price' => format_float($product->get_price(), 2),
+    'imageurl' => $imageurl ? $imageurl->out(false) : '',
+    'hasdescription' => $description !== '',
+    'description' => $description,
+    'hastags' => !empty($tagdata),
+    'tags' => $tagdata,
+    'categoryname' => $categoryname,
+    'hascategoryname' => $categoryname !== '',
     'hasvariations' => !empty($variations),
     'variations' => $variations,
     'addurl' => (new moodle_url('/local/moodec/cart.php'))->out(false),
+    'catalogueurl' => (new moodle_url('/local/moodec/index.php'))->out(false),
     'sesskey' => sesskey(),
 ];
 
