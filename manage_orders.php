@@ -30,7 +30,7 @@ $context = context_system::instance();
 require_capability('local/moodec:viewallorders', $context);
 
 $status = optional_param('status', '', PARAM_ALPHA);
-$page   = optional_param('page', 0, PARAM_INT);
+$page = optional_param('page', 0, PARAM_INT);
 
 $PAGE->set_context($context);
 $PAGE->set_url(new moodle_url('/local/moodec/manage_orders.php', ['status' => $status, 'page' => $page]));
@@ -88,7 +88,10 @@ foreach ($records as $rec) {
 }
 
 // Build status filter links.
-$statusfilters = [['label' => get_string('orders_all', 'local_moodec'), 'url' => (new moodle_url('/local/moodec/manage_orders.php'))->out(false), 'active' => $status === '']];
+$allordersurl = (new moodle_url('/local/moodec/manage_orders.php'))->out(false);
+$statusfilters = [
+    ['label' => get_string('orders_all', 'local_moodec'), 'url' => $allordersurl, 'active' => $status === ''],
+];
 foreach ($validstatuses as $s) {
     $statusfilters[] = [
         'label' => get_string('order_status_' . $s, 'local_moodec'),
@@ -107,7 +110,10 @@ $data = [
     'page' => $page + 1,
     'totalpages' => $totalpages,
     'hasprev' => $page > 0,
-    'prevurl' => (new moodle_url('/local/moodec/manage_orders.php', ['status' => $status, 'page' => max(0, $page - 1)]))->out(false),
+    'prevurl' => (new moodle_url(
+        '/local/moodec/manage_orders.php',
+        ['status' => $status, 'page' => max(0, $page - 1)]
+    ))->out(false),
     'hasnext' => ($page + 1) < $totalpages,
     'nexturl' => (new moodle_url('/local/moodec/manage_orders.php', ['status' => $status, 'page' => $page + 1]))->out(false),
     'manageurl' => (new moodle_url('/local/moodec/manage.php'))->out(false),
