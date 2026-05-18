@@ -37,6 +37,10 @@ $PAGE->set_heading(get_string('ordersummary', 'local_moodec'));
 
 $order = \local_moodec\order::instance($orderid);
 
+if ($order->get_userid() !== (int) $USER->id) {
+    require_capability('local/moodec:viewallorders', $context);
+}
+
 $data = [
     'delivered' => $order->is_delivered(),
     'amount' => format_float($order->get_amount(), 2),

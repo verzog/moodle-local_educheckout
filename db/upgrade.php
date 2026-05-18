@@ -52,5 +52,43 @@ function xmldb_local_moodec_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026051700, 'local', 'moodec');
     }
 
+    if ($oldversion < 2026051800) {
+        // Create the category table.
+        $table = new xmldb_table('local_moodec_category');
+        if (!$dbman->table_exists($table)) {
+            $dbman->install_one_table_from_xmldb_file(
+                $CFG->dirroot . '/local/moodec/db/install.xml',
+                'local_moodec_category'
+            );
+        }
+
+        // Add category_id to product table.
+        $table = new xmldb_table('local_moodec_product');
+        $field = new xmldb_field('category_id', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'course_id');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Add sort_order to product table.
+        $field = new xmldb_field('sort_order', XMLDB_TYPE_INTEGER, '4', null, XMLDB_NOTNULL, null, '0', 'variation_count');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Add description_format to product table.
+        $field = new xmldb_field('description_format', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, '1', 'description');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Add index on category_id.
+        $index = new xmldb_index('category_id', XMLDB_INDEX_NOTUNIQUE, ['category_id']);
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        upgrade_plugin_savepoint(true, 2026051800, 'local', 'moodec');
+    }
+
     return true;
 }

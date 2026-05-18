@@ -29,6 +29,20 @@ if ($hassiteconfig) {
     $settings = new admin_settingpage('local_moodec', get_string('pluginname', 'local_moodec'));
     $ADMIN->add('localplugins', $settings);
 
+    $ADMIN->add('localplugins', new admin_externalpage(
+        'local_moodec_manage',
+        get_string('manage_title', 'local_moodec'),
+        new moodle_url('/local/moodec/manage.php'),
+        'local/moodec:manageproducts'
+    ));
+
+    $ADMIN->add('localplugins', new admin_externalpage(
+        'local_moodec_categories',
+        get_string('categories_title', 'local_moodec'),
+        new moodle_url('/local/moodec/category_manage.php'),
+        'local/moodec:manageproducts'
+    ));
+
     $accounts = \core_payment\helper::get_payment_accounts_menu(context_system::instance());
     $setting = new admin_setting_configselect(
         'local_moodec/paymentaccount',

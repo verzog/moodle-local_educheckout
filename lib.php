@@ -24,12 +24,15 @@
  */
 
 /**
- * Add the storefront entry to the global navigation.
+ * Add the storefront entry to the global navigation for logged-in users.
  *
  * @param global_navigation $navigation
  * @return void
  */
 function local_moodec_extend_navigation(global_navigation $navigation) {
+    if (!isloggedin() || isguestuser()) {
+        return;
+    }
     $node = $navigation->add(
         get_string('catalogue', 'local_moodec'),
         new moodle_url('/local/moodec/index.php'),
@@ -38,4 +41,41 @@ function local_moodec_extend_navigation(global_navigation $navigation) {
         'local_moodec'
     );
     $node->showinflatnavigation = true;
+}
+
+/**
+ * Serve product image files from the product_image file area.
+ *
+ * @param \stdClass $course not used
+ * @param \stdClass $cm not used
+ * @param \context $context
+ * @param string $filearea
+ * @param array $args
+ * @param bool $forcedownload
+ * @param array $options
+ * @return bool false if not found
+ */
+function local_moodec_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options = []) {
+    if ($context->contextlevel !== CONTEXT_SYSTEM) {
+        return false;
+    }
+
+    if ($filearea !== 'product_image') {
+        return false;
+    }
+
+    require_login(null, true);
+
+    $itemid = (int) array_shift($args);
+    $filename = array_pop($args);
+    $filepath = $args ? ('/' . implode('/', $args) . '/') : '/';
+
+    $fs = get_file_storage();
+    $file = $fs->get_file($context->id, 'local_moodec', 'product_image', $itemid, $filepath, $filename);
+
+    if (!$file || $file->is_directory()) {
+        return false;
+    }
+
+    send_stored_file($file, 0, 0, $forcedownload, $options);
 }

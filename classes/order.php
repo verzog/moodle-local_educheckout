@@ -128,6 +128,15 @@ class order {
     }
 
     /**
+     * Return the user id who placed the order.
+     *
+     * @return int
+     */
+    public function get_userid(): int {
+        return (int) $this->record->userid;
+    }
+
+    /**
      * Return the order currency code.
      *
      * @return string
@@ -210,12 +219,19 @@ class order {
             }
 
             if ($instance) {
+                $timeend = 0;
+                if ((int) $item->variationid > 0) {
+                    $var = $DB->get_record('local_moodec_variation', ['id' => (int) $item->variationid]);
+                    if ($var && (int) $var->duration > 0) {
+                        $timeend = time() + ((int) $var->duration * DAYSECS);
+                    }
+                }
                 $plugin->enrol_user(
                     $instance,
                     $userid,
                     $instance->roleid,
                     time() - 60,
-                    0,
+                    $timeend,
                     ENROL_USER_ACTIVE
                 );
                 $DB->set_field(
