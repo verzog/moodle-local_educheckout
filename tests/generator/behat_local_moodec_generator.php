@@ -21,6 +21,10 @@
  * @copyright  2026 LearningWorks Ltd
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+/**
+ * Generates Moodec Behat test data.
+ */
 class behat_local_moodec_generator extends behat_generator_base {
     /**
      * Declare entities that can be created via "the following ... exist:" steps.

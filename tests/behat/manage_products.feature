@@ -15,6 +15,7 @@ Feature: Moodec product management
     Then I should see "Manage products"
     And I should see "Add product"
 
+  @javascript
   Scenario: Admin can navigate to the add product form
     Given I visit "/local/moodec/manage.php"
     When I click on "Add product" "link"

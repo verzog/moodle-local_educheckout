@@ -38,7 +38,7 @@ $PAGE->set_pagelayout('admin');
 $PAGE->set_title(get_string('categories_title', 'local_moodec'));
 $PAGE->set_heading(get_string('categories_title', 'local_moodec'));
 
-// Handle delete — two-step: show confirmation page, then perform on confirm.
+// Handle delete: show confirmation page first, then perform on confirm.
 if ($action === 'delete' && $id > 0) {
     $confirmed = optional_param('confirmed', 0, PARAM_INT);
     if ($confirmed) {
