@@ -5,7 +5,7 @@ Feature: Moodec order management
   I need to be able to view orders
 
   Background:
-    And I log in as "admin"
+    Given I log in as "admin"
 
   Scenario: Admin can view the orders page
     When I visit "/local/moodec/manage_orders.php"

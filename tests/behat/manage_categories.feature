@@ -5,7 +5,7 @@ Feature: Moodec category management
   I need to be able to create and delete categories
 
   Background:
-    And I log in as "admin"
+    Given I log in as "admin"
 
   Scenario: Admin can view the category management page
     When I visit "/local/moodec/category_manage.php"
