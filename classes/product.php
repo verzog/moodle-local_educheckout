@@ -239,18 +239,35 @@ class product {
     public function get_image_url(\context $context): ?\moodle_url {
         $fs = get_file_storage();
         $files = $fs->get_area_files($context->id, 'local_moodec', 'product_image', $this->id, '', false);
-        if (empty($files)) {
-            return null;
+        if (!empty($files)) {
+            $file = reset($files);
+            return \moodle_url::make_pluginfile_url(
+                $context->id,
+                'local_moodec',
+                'product_image',
+                $this->id,
+                $file->get_filepath(),
+                $file->get_filename()
+            );
         }
-        $file = reset($files);
-        return \moodle_url::make_pluginfile_url(
-            $context->id,
-            'local_moodec',
-            'product_image',
-            $this->id,
-            $file->get_filepath(),
-            $file->get_filename()
-        );
+
+        $coursecontext = \context_course::instance($this->course_id, IGNORE_MISSING);
+        if ($coursecontext) {
+            $files = $fs->get_area_files($coursecontext->id, 'course', 'overviewfiles', 0, '', false);
+            if (!empty($files)) {
+                $file = reset($files);
+                return \moodle_url::make_pluginfile_url(
+                    $coursecontext->id,
+                    'course',
+                    'overviewfiles',
+                    0,
+                    $file->get_filepath(),
+                    $file->get_filename()
+                );
+            }
+        }
+
+        return null;
     }
 
     /**
