@@ -38,12 +38,26 @@ $PAGE->set_pagelayout('admin');
 $PAGE->set_title(get_string('categories_title', 'local_moodec'));
 $PAGE->set_heading(get_string('categories_title', 'local_moodec'));
 
-// Handle delete.
+// Handle delete: show confirmation page first, then perform on confirm.
 if ($action === 'delete' && $id > 0) {
-    require_sesskey();
-    $cat = \local_moodec\category::get($id);
-    $cat->delete();
-    redirect(new moodle_url('/local/moodec/category_manage.php'));
+    $confirmed = optional_param('confirmed', 0, PARAM_INT);
+    if ($confirmed) {
+        require_sesskey();
+        $cat = \local_moodec\category::get($id);
+        $cat->delete();
+        redirect(new moodle_url('/local/moodec/category_manage.php'));
+    }
+    $confirmurl = new moodle_url('/local/moodec/category_manage.php', [
+        'action' => 'delete',
+        'id' => $id,
+        'confirmed' => 1,
+        'sesskey' => sesskey(),
+    ]);
+    $cancelurl = new moodle_url('/local/moodec/category_manage.php');
+    echo $OUTPUT->header();
+    echo $OUTPUT->confirm(get_string('category_delete_confirm', 'local_moodec'), $confirmurl, $cancelurl);
+    echo $OUTPUT->footer();
+    exit;
 }
 
 // Category form (handles both create and edit).
@@ -96,7 +110,6 @@ foreach ($categories as $cat) {
         'deleteurl' => (new moodle_url('/local/moodec/category_manage.php', [
             'action' => 'delete',
             'id' => $cat->get_id(),
-            'sesskey' => sesskey(),
         ]))->out(false),
     ];
 }
