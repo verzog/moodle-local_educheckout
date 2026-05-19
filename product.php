@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Moodec single product page.
+ * EduCheckout single product page.
  *
- * @package    local_moodec
+ * @package    local_educheckout
  * @copyright  2026 LearningWorks Ltd
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -30,10 +30,10 @@ require_login(null, true);
 
 $context = context_system::instance();
 $PAGE->set_context($context);
-$PAGE->set_url(new moodle_url('/local/moodec/product.php', ['id' => $productid]));
+$PAGE->set_url(new moodle_url('/local/educheckout/product.php', ['id' => $productid]));
 $PAGE->set_pagelayout('standard');
 
-$product = new \local_moodec\product($productid);
+$product = new \local_educheckout\product($productid);
 $PAGE->set_title($product->get_fullname());
 $PAGE->set_heading($product->get_fullname());
 
@@ -55,7 +55,7 @@ $categoryname = '';
 $catid = $product->get_category_id();
 if ($catid) {
     try {
-        $cat = \local_moodec\category::get($catid);
+        $cat = \local_educheckout\category::get($catid);
         $categoryname = format_string($cat->get_name());
     } catch (\dml_missing_record_exception $e) {
         $categoryname = '';
@@ -95,11 +95,11 @@ $data = [
     'variations' => $variations,
     'alreadyenrolled' => $alreadyenrolled,
     'courseurl' => (new moodle_url('/course/view.php', ['id' => $product->get_course_id()]))->out(false),
-    'addurl' => (new moodle_url('/local/moodec/cart.php'))->out(false),
-    'catalogueurl' => (new moodle_url('/local/moodec/index.php'))->out(false),
+    'addurl' => (new moodle_url('/local/educheckout/cart.php'))->out(false),
+    'catalogueurl' => (new moodle_url('/local/educheckout/index.php'))->out(false),
     'sesskey' => sesskey(),
 ];
 
 echo $OUTPUT->header();
-echo $OUTPUT->render_from_template('local_moodec/product', $data);
+echo $OUTPUT->render_from_template('local_educheckout/product', $data);
 echo $OUTPUT->footer();

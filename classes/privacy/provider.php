@@ -15,14 +15,14 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Privacy provider for the Moodec storefront plugin.
+ * Privacy provider for the EduCheckout storefront plugin.
  *
- * @package    local_moodec
+ * @package    local_educheckout
  * @copyright  2026 LearningWorks Ltd
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace local_moodec\privacy;
+namespace local_educheckout\privacy;
 
 use core_privacy\local\metadata\collection;
 use core_privacy\local\request\approved_contextlist;
@@ -32,7 +32,7 @@ use core_privacy\local\request\userlist;
 use core_privacy\local\request\writer;
 
 /**
- * Describes and serves the personal data stored by the Moodec storefront.
+ * Describes and serves the personal data stored by the EduCheckout storefront.
  */
 class provider implements
     \core_privacy\local\metadata\provider,
@@ -45,19 +45,19 @@ class provider implements
      * @return collection
      */
     public static function get_metadata(collection $collection): collection {
-        $collection->add_database_table('local_moodec_cart', [
-            'userid' => 'privacy:metadata:local_moodec_cart:userid',
-            'status' => 'privacy:metadata:local_moodec_cart:status',
-            'timecreated' => 'privacy:metadata:local_moodec_cart:timecreated',
-        ], 'privacy:metadata:local_moodec_cart');
+        $collection->add_database_table('local_educheckout_cart', [
+            'userid' => 'privacy:metadata:local_educheckout_cart:userid',
+            'status' => 'privacy:metadata:local_educheckout_cart:status',
+            'timecreated' => 'privacy:metadata:local_educheckout_cart:timecreated',
+        ], 'privacy:metadata:local_educheckout_cart');
 
-        $collection->add_database_table('local_moodec_order', [
-            'userid' => 'privacy:metadata:local_moodec_order:userid',
-            'currency' => 'privacy:metadata:local_moodec_order:currency',
-            'amount' => 'privacy:metadata:local_moodec_order:amount',
-            'status' => 'privacy:metadata:local_moodec_order:status',
-            'timecreated' => 'privacy:metadata:local_moodec_order:timecreated',
-        ], 'privacy:metadata:local_moodec_order');
+        $collection->add_database_table('local_educheckout_order', [
+            'userid' => 'privacy:metadata:local_educheckout_order:userid',
+            'currency' => 'privacy:metadata:local_educheckout_order:currency',
+            'amount' => 'privacy:metadata:local_educheckout_order:amount',
+            'status' => 'privacy:metadata:local_educheckout_order:status',
+            'timecreated' => 'privacy:metadata:local_educheckout_order:timecreated',
+        ], 'privacy:metadata:local_educheckout_order');
 
         $collection->add_subsystem_link('core_payment', [], 'privacy:metadata:core_payment');
 
@@ -75,8 +75,8 @@ class provider implements
         $sql = "SELECT c.id
                   FROM {context} c
                  WHERE c.contextlevel = :syscontext
-                   AND (EXISTS (SELECT 1 FROM {local_moodec_cart} mc WHERE mc.userid = :uid1)
-                        OR EXISTS (SELECT 1 FROM {local_moodec_order} mo WHERE mo.userid = :uid2))";
+                   AND (EXISTS (SELECT 1 FROM {local_educheckout_cart} mc WHERE mc.userid = :uid1)
+                        OR EXISTS (SELECT 1 FROM {local_educheckout_order} mo WHERE mo.userid = :uid2))";
         $contextlist->add_from_sql($sql, [
             'syscontext' => CONTEXT_SYSTEM,
             'uid1' => $userid,
@@ -95,8 +95,8 @@ class provider implements
         if (!$userlist->get_context() instanceof \context_system) {
             return;
         }
-        $userlist->add_from_sql('userid', 'SELECT userid FROM {local_moodec_cart}', []);
-        $userlist->add_from_sql('userid', 'SELECT userid FROM {local_moodec_order}', []);
+        $userlist->add_from_sql('userid', 'SELECT userid FROM {local_educheckout_cart}', []);
+        $userlist->add_from_sql('userid', 'SELECT userid FROM {local_educheckout_order}', []);
     }
 
     /**
@@ -113,14 +113,14 @@ class provider implements
             if (!$context instanceof \context_system) {
                 continue;
             }
-            $carts = $DB->get_records('local_moodec_cart', ['userid' => $userid]);
-            $orders = $DB->get_records('local_moodec_order', ['userid' => $userid]);
+            $carts = $DB->get_records('local_educheckout_cart', ['userid' => $userid]);
+            $orders = $DB->get_records('local_educheckout_order', ['userid' => $userid]);
             $data = (object) [
                 'carts' => array_values($carts),
                 'orders' => array_values($orders),
             ];
             writer::with_context($context)->export_data(
-                [get_string('pluginname', 'local_moodec')],
+                [get_string('pluginname', 'local_educheckout')],
                 $data
             );
         }
@@ -138,10 +138,10 @@ class provider implements
         if (!$context instanceof \context_system) {
             return;
         }
-        $DB->delete_records('local_moodec_cart_item');
-        $DB->delete_records('local_moodec_cart');
-        $DB->delete_records('local_moodec_order_item');
-        $DB->delete_records('local_moodec_order');
+        $DB->delete_records('local_educheckout_cart_item');
+        $DB->delete_records('local_educheckout_cart');
+        $DB->delete_records('local_educheckout_order_item');
+        $DB->delete_records('local_educheckout_order');
     }
 
     /**
@@ -191,16 +191,16 @@ class provider implements
         [$insql, $params] = $db->get_in_or_equal($userids, SQL_PARAMS_NAMED);
 
         $db->delete_records_select(
-            'local_moodec_cart_item',
-            "cartid IN (SELECT id FROM {local_moodec_cart} WHERE userid $insql)",
+            'local_educheckout_cart_item',
+            "cartid IN (SELECT id FROM {local_educheckout_cart} WHERE userid $insql)",
             $params
         );
-        $db->delete_records_select('local_moodec_cart', "userid $insql", $params);
+        $db->delete_records_select('local_educheckout_cart', "userid $insql", $params);
         $db->delete_records_select(
-            'local_moodec_order_item',
-            "orderid IN (SELECT id FROM {local_moodec_order} WHERE userid $insql)",
+            'local_educheckout_order_item',
+            "orderid IN (SELECT id FROM {local_educheckout_order} WHERE userid $insql)",
             $params
         );
-        $db->delete_records_select('local_moodec_order', "userid $insql", $params);
+        $db->delete_records_select('local_educheckout_order', "userid $insql", $params);
     }
 }

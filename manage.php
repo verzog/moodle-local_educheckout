@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Moodec product management page.
+ * EduCheckout product management page.
  *
- * @package    local_moodec
+ * @package    local_educheckout
  * @copyright  2026 LearningWorks Ltd
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -25,36 +25,36 @@
 require_once(__DIR__ . '/../../config.php');
 
 require_login();
-require_capability('local/moodec:manageproducts', context_system::instance());
+require_capability('local/educheckout:manageproducts', context_system::instance());
 
 $action = optional_param('action', '', PARAM_ALPHA);
 $productid = optional_param('productid', 0, PARAM_INT);
 
 $context = context_system::instance();
 $PAGE->set_context($context);
-$PAGE->set_url(new moodle_url('/local/moodec/manage.php'));
+$PAGE->set_url(new moodle_url('/local/educheckout/manage.php'));
 $PAGE->set_pagelayout('admin');
-$PAGE->set_title(get_string('manage_title', 'local_moodec'));
-$PAGE->set_heading(get_string('manage_title', 'local_moodec'));
+$PAGE->set_title(get_string('manage_title', 'local_educheckout'));
+$PAGE->set_heading(get_string('manage_title', 'local_educheckout'));
 
 // Handle toggle enable/disable.
 if ($action === 'enable' || $action === 'disable') {
     require_sesskey();
     if ($productid > 0) {
-        $product = new \local_moodec\product($productid);
+        $product = new \local_educheckout\product($productid);
         $product->set_enabled($action === 'enable');
     }
-    redirect(new moodle_url('/local/moodec/manage.php'));
+    redirect(new moodle_url('/local/educheckout/manage.php'));
 }
 
 // Handle delete.
 if ($action === 'delete') {
     require_sesskey();
     if ($productid > 0) {
-        $product = new \local_moodec\product($productid);
+        $product = new \local_educheckout\product($productid);
         $product->delete();
     }
-    redirect(new moodle_url('/local/moodec/manage.php'));
+    redirect(new moodle_url('/local/educheckout/manage.php'));
 }
 
 // Build the product list from all courses that have a product record,
@@ -63,7 +63,7 @@ $products = [];
 $productrecords = $DB->get_records_sql(
     'SELECT p.id, p.course_id, p.is_enabled, p.sort_order, p.category_id,
             c.fullname, p.tags
-       FROM {local_moodec_product} p
+       FROM {local_educheckout_product} p
        JOIN {course} c ON c.id = p.course_id
       ORDER BY p.sort_order ASC, c.fullname ASC'
 );
@@ -74,16 +74,16 @@ foreach ($productrecords as $record) {
         'is_enabled' => (bool) $record->is_enabled,
         'enabled_class' => $record->is_enabled ? 'badge-success' : 'badge-secondary',
         'tags' => (string) ($record->tags ?? ''),
-        'editurl' => (new moodle_url('/local/moodec/product_edit.php', ['id' => $record->id]))->out(false),
-        'toggleurl' => (new moodle_url('/local/moodec/manage.php', [
+        'editurl' => (new moodle_url('/local/educheckout/product_edit.php', ['id' => $record->id]))->out(false),
+        'toggleurl' => (new moodle_url('/local/educheckout/manage.php', [
             'action' => $record->is_enabled ? 'disable' : 'enable',
             'productid' => $record->id,
             'sesskey' => sesskey(),
         ]))->out(false),
         'togglelabel' => $record->is_enabled
-            ? get_string('product_disable', 'local_moodec')
-            : get_string('product_enable', 'local_moodec'),
-        'deleteurl' => (new moodle_url('/local/moodec/manage.php', [
+            ? get_string('product_disable', 'local_educheckout')
+            : get_string('product_enable', 'local_educheckout'),
+        'deleteurl' => (new moodle_url('/local/educheckout/manage.php', [
             'action' => 'delete',
             'productid' => $record->id,
             'sesskey' => sesskey(),
@@ -94,10 +94,10 @@ foreach ($productrecords as $record) {
 $data = [
     'hasproducts' => !empty($products),
     'products' => array_values($products),
-    'addurl' => (new moodle_url('/local/moodec/product_edit.php'))->out(false),
-    'categoryurl' => (new moodle_url('/local/moodec/category_manage.php'))->out(false),
+    'addurl' => (new moodle_url('/local/educheckout/product_edit.php'))->out(false),
+    'categoryurl' => (new moodle_url('/local/educheckout/category_manage.php'))->out(false),
 ];
 
 echo $OUTPUT->header();
-echo $OUTPUT->render_from_template('local_moodec/manage', $data);
+echo $OUTPUT->render_from_template('local_educheckout/manage', $data);
 echo $OUTPUT->footer();

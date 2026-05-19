@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * External web service definitions for the Moodec storefront plugin.
+ * External web service definitions for the EduCheckout storefront plugin.
  *
- * @package    local_moodec
+ * @package    local_educheckout
  * @copyright  2026 LearningWorks Ltd
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -25,24 +25,24 @@
 defined('MOODLE_INTERNAL') || die();
 
 $functions = [
-    'local_moodec_cart_add' => [
-        'classname' => 'local_moodec\\external\\cart_add',
+    'local_educheckout_cart_add' => [
+        'classname' => 'local_educheckout\\external\\cart_add',
         'methodname' => 'execute',
         'description' => 'Add a product to the current cart.',
         'type' => 'write',
         'ajax' => true,
         'loginrequired' => true,
     ],
-    'local_moodec_cart_remove' => [
-        'classname' => 'local_moodec\\external\\cart_remove',
+    'local_educheckout_cart_remove' => [
+        'classname' => 'local_educheckout\\external\\cart_remove',
         'methodname' => 'execute',
         'description' => 'Remove an item from the current cart.',
         'type' => 'write',
         'ajax' => true,
         'loginrequired' => true,
     ],
-    'local_moodec_cart_get' => [
-        'classname' => 'local_moodec\\external\\cart_get',
+    'local_educheckout_cart_get' => [
+        'classname' => 'local_educheckout\\external\\cart_get',
         'methodname' => 'execute',
         'description' => 'Get the current cart contents.',
         'type' => 'read',

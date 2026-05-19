@@ -15,19 +15,19 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Tests for the Moodec cart.
+ * Tests for the EduCheckout cart.
  *
- * @package    local_moodec
+ * @package    local_educheckout
  * @copyright  2026 LearningWorks Ltd
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace local_moodec;
+namespace local_educheckout;
 
 /**
- * Unit tests for \local_moodec\cart.
+ * Unit tests for \local_educheckout\cart.
  *
- * @covers \local_moodec\cart
+ * @covers \local_educheckout\cart
  */
 final class cart_test extends \advanced_testcase {
     /**

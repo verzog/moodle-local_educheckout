@@ -15,14 +15,14 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Scheduled task to purge stale Moodec carts.
+ * Scheduled task to purge stale EduCheckout carts.
  *
- * @package    local_moodec
+ * @package    local_educheckout
  * @copyright  2026 LearningWorks Ltd
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace local_moodec\task;
+namespace local_educheckout\task;
 
 /**
  * Deletes open guest carts older than 7 days and open user carts older than 30 days.
@@ -34,7 +34,7 @@ class cleanup_carts extends \core\task\scheduled_task {
      * @return string
      */
     public function get_name(): string {
-        return get_string('task_cleanup_carts', 'local_moodec');
+        return get_string('task_cleanup_carts', 'local_educheckout');
     }
 
     /**
@@ -51,30 +51,30 @@ class cleanup_carts extends \core\task\scheduled_task {
 
         // Guest carts with no activity for 7 days.
         $guestcarts = $DB->get_records_select(
-            'local_moodec_cart',
+            'local_educheckout_cart',
             "status = 'open' AND userid = 0 AND timemodified < :cutoff",
             ['cutoff' => $guestcutoff],
             '',
             'id'
         );
         foreach ($guestcarts as $cart) {
-            $DB->delete_records('local_moodec_cart_item', ['cartid' => $cart->id]);
-            $DB->delete_records('local_moodec_cart', ['id' => $cart->id]);
+            $DB->delete_records('local_educheckout_cart_item', ['cartid' => $cart->id]);
+            $DB->delete_records('local_educheckout_cart', ['id' => $cart->id]);
         }
 
         // User carts with no activity for 30 days (abandoned).
         $usercarts = $DB->get_records_select(
-            'local_moodec_cart',
+            'local_educheckout_cart',
             "status = 'open' AND userid > 0 AND timemodified < :cutoff",
             ['cutoff' => $usercutoff],
             '',
             'id'
         );
         foreach ($usercarts as $cart) {
-            $DB->delete_records('local_moodec_cart_item', ['cartid' => $cart->id]);
-            $DB->delete_records('local_moodec_cart', ['id' => $cart->id]);
+            $DB->delete_records('local_educheckout_cart_item', ['cartid' => $cart->id]);
+            $DB->delete_records('local_educheckout_cart', ['id' => $cart->id]);
         }
 
-        mtrace('Moodec: removed ' . count($guestcarts) . ' guest and ' . count($usercarts) . ' abandoned user carts.');
+        mtrace('EduCheckout: removed ' . count($guestcarts) . ' guest and ' . count($usercarts) . ' abandoned user carts.');
     }
 }

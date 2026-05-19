@@ -15,55 +15,55 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Upgrade steps for the Moodec storefront plugin.
+ * Upgrade steps for the EduCheckout storefront plugin.
  *
- * @package    local_moodec
+ * @package    local_educheckout
  * @copyright  2026 LearningWorks Ltd
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 /**
- * Upgrade the Moodec storefront plugin.
+ * Upgrade the EduCheckout storefront plugin.
  *
  * @param int $oldversion the version we are upgrading from
  * @return bool
  */
-function xmldb_local_moodec_upgrade($oldversion) {
+function xmldb_local_educheckout_upgrade($oldversion) {
     global $CFG, $DB;
 
     $dbman = $DB->get_manager();
 
     if ($oldversion < 2026051700) {
         $newtables = [
-            'local_moodec_cart',
-            'local_moodec_cart_item',
-            'local_moodec_order',
-            'local_moodec_order_item',
+            'local_educheckout_cart',
+            'local_educheckout_cart_item',
+            'local_educheckout_order',
+            'local_educheckout_order_item',
         ];
         foreach ($newtables as $tablename) {
             $table = new xmldb_table($tablename);
             if (!$dbman->table_exists($table)) {
                 $dbman->install_one_table_from_xmldb_file(
-                    $CFG->dirroot . '/local/moodec/db/install.xml',
+                    $CFG->dirroot . '/local/educheckout/db/install.xml',
                     $tablename
                 );
             }
         }
-        upgrade_plugin_savepoint(true, 2026051700, 'local', 'moodec');
+        upgrade_plugin_savepoint(true, 2026051700, 'local', 'educheckout');
     }
 
     if ($oldversion < 2026051800) {
         // Create the category table.
-        $table = new xmldb_table('local_moodec_category');
+        $table = new xmldb_table('local_educheckout_category');
         if (!$dbman->table_exists($table)) {
             $dbman->install_one_table_from_xmldb_file(
-                $CFG->dirroot . '/local/moodec/db/install.xml',
-                'local_moodec_category'
+                $CFG->dirroot . '/local/educheckout/db/install.xml',
+                'local_educheckout_category'
             );
         }
 
         // Add category_id to product table.
-        $table = new xmldb_table('local_moodec_product');
+        $table = new xmldb_table('local_educheckout_product');
         $field = new xmldb_field('category_id', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'course_id');
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
@@ -87,7 +87,7 @@ function xmldb_local_moodec_upgrade($oldversion) {
             $dbman->add_index($table, $index);
         }
 
-        upgrade_plugin_savepoint(true, 2026051800, 'local', 'moodec');
+        upgrade_plugin_savepoint(true, 2026051800, 'local', 'educheckout');
     }
 
     return true;

@@ -15,14 +15,14 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Order model for the Moodec storefront.
+ * Order model for the EduCheckout storefront.
  *
- * @package    local_moodec
+ * @package    local_educheckout
  * @copyright  2026 LearningWorks Ltd
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace local_moodec;
+namespace local_educheckout;
 
 /**
  * Creates orders from carts, tracks payment status and delivers enrolments.
@@ -34,7 +34,7 @@ class order {
     /**
      * Wrap an order record.
      *
-     * @param \stdClass $record a row from {local_moodec_order}
+     * @param \stdClass $record a row from {local_educheckout_order}
      */
     protected function __construct(\stdClass $record) {
         $this->record = $record;
@@ -48,7 +48,7 @@ class order {
      */
     public static function instance(int $id): order {
         global $DB;
-        $record = $DB->get_record('local_moodec_order', ['id' => $id], '*', MUST_EXIST);
+        $record = $DB->get_record('local_educheckout_order', ['id' => $id], '*', MUST_EXIST);
         return new self($record);
     }
 
@@ -92,18 +92,18 @@ class order {
             'netamount' => round($net, 2),
             'taxamount' => round($taxtotal, 2),
             'taxrate' => $rate,
-            'taxinclusive' => get_config('local_moodec', 'tax_mode') === 'inclusive' ? 1 : 0,
+            'taxinclusive' => get_config('local_educheckout', 'tax_mode') === 'inclusive' ? 1 : 0,
             'amount' => round($gross, 2),
             'status' => 'pending',
             'paymentid' => null,
             'timecreated' => $now,
             'timemodified' => $now,
         ];
-        $order->id = $DB->insert_record('local_moodec_order', $order);
+        $order->id = $DB->insert_record('local_educheckout_order', $order);
 
         foreach ($lines as $line) {
             $line->orderid = $order->id;
-            $DB->insert_record('local_moodec_order_item', $line);
+            $DB->insert_record('local_educheckout_order_item', $line);
         }
 
         return new self($order);
@@ -157,11 +157,11 @@ class order {
     /**
      * Return the order line items.
      *
-     * @return array records from {local_moodec_order_item}
+     * @return array records from {local_educheckout_order_item}
      */
     public function get_items(): array {
         global $DB;
-        return $DB->get_records('local_moodec_order_item', ['orderid' => $this->get_id()]);
+        return $DB->get_records('local_educheckout_order_item', ['orderid' => $this->get_id()]);
     }
 
     /**
@@ -179,7 +179,7 @@ class order {
         if ($paymentid !== null) {
             $this->record->paymentid = $paymentid;
         }
-        $DB->update_record('local_moodec_order', $this->record);
+        $DB->update_record('local_educheckout_order', $this->record);
     }
 
     /**
@@ -194,7 +194,7 @@ class order {
     public function deliver(int $userid): void {
         global $DB;
 
-        $plugin = enrol_get_plugin('moodec');
+        $plugin = enrol_get_plugin('educheckout');
         if (!$plugin) {
             $plugin = enrol_get_plugin('manual');
         }
@@ -221,7 +221,7 @@ class order {
             if ($instance) {
                 $timeend = 0;
                 if ((int) $item->variationid > 0) {
-                    $var = $DB->get_record('local_moodec_variation', ['id' => (int) $item->variationid]);
+                    $var = $DB->get_record('local_educheckout_variation', ['id' => (int) $item->variationid]);
                     if ($var && (int) $var->duration > 0) {
                         $timeend = time() + ((int) $var->duration * DAYSECS);
                     }
@@ -235,7 +235,7 @@ class order {
                     ENROL_USER_ACTIVE
                 );
                 $DB->set_field(
-                    'local_moodec_order_item',
+                    'local_educheckout_order_item',
                     'enrolled',
                     1,
                     ['id' => $item->id, 'orderid' => $this->get_id()]

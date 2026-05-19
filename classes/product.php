@@ -15,14 +15,14 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Product model for the Moodec storefront.
+ * Product model for the EduCheckout storefront.
  *
- * @package    local_moodec
+ * @package    local_educheckout
  * @copyright  2026 LearningWorks Ltd
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace local_moodec;
+namespace local_educheckout;
 
 /**
  * Representation of a saleable course (product) and its variations.
@@ -69,7 +69,7 @@ class product {
         $sql = 'SELECT p.id, p.course_id, p.category_id, p.is_enabled, p.sort_order,
                        p.tags, p.description, p.description_format,
                        c.fullname
-                  FROM {local_moodec_product} p
+                  FROM {local_educheckout_product} p
                   JOIN {course} c ON c.id = p.course_id
                  WHERE p.id = :id';
         $record = $DB->get_record_sql($sql, ['id' => $id], MUST_EXIST);
@@ -83,7 +83,7 @@ class product {
         $this->tags = (string) ($record->tags ?? '');
         $this->description = (string) ($record->description ?? '');
         $this->descriptionformat = (int) ($record->description_format ?? FORMAT_HTML);
-        $this->variations = $DB->get_records('local_moodec_variation', ['product_id' => $this->id]);
+        $this->variations = $DB->get_records('local_educheckout_variation', ['product_id' => $this->id]);
     }
 
     /**
@@ -238,12 +238,12 @@ class product {
      */
     public function get_image_url(\context $context): ?\moodle_url {
         $fs = get_file_storage();
-        $files = $fs->get_area_files($context->id, 'local_moodec', 'product_image', $this->id, '', false);
+        $files = $fs->get_area_files($context->id, 'local_educheckout', 'product_image', $this->id, '', false);
         if (!empty($files)) {
             $file = reset($files);
             return \moodle_url::make_pluginfile_url(
                 $context->id,
-                'local_moodec',
+                'local_educheckout',
                 'product_image',
                 $this->id,
                 $file->get_filepath(),
@@ -278,7 +278,7 @@ class product {
      */
     public static function create(int $courseid): product {
         global $DB;
-        $id = $DB->insert_record('local_moodec_product', (object) [
+        $id = $DB->insert_record('local_educheckout_product', (object) [
             'course_id' => $courseid,
             'category_id' => null,
             'is_enabled' => 0,
@@ -310,7 +310,7 @@ class product {
         int $sortorder = 0
     ): void {
         global $DB;
-        $DB->update_record('local_moodec_product', (object) [
+        $DB->update_record('local_educheckout_product', (object) [
             'id' => $this->id,
             'category_id' => $categoryid,
             'tags' => $tags,
@@ -333,7 +333,7 @@ class product {
      */
     public function set_enabled(bool $enabled): void {
         global $DB;
-        $DB->set_field('local_moodec_product', 'is_enabled', (int) $enabled, ['id' => $this->id]);
+        $DB->set_field('local_educheckout_product', 'is_enabled', (int) $enabled, ['id' => $this->id]);
         $this->enabled = $enabled;
     }
 
@@ -363,9 +363,9 @@ class product {
             'duration' => $duration,
             'group_id' => $groupid,
         ];
-        $record->id = $DB->insert_record('local_moodec_variation', $record);
+        $record->id = $DB->insert_record('local_educheckout_variation', $record);
         $this->variations[(int) $record->id] = $record;
-        $DB->set_field('local_moodec_product', 'variation_count', count($this->variations), ['id' => $this->id]);
+        $DB->set_field('local_educheckout_product', 'variation_count', count($this->variations), ['id' => $this->id]);
         return $record;
     }
 
@@ -398,7 +398,7 @@ class product {
         $record->duration = $duration;
         $record->group_id = $groupid;
         $record->is_enabled = (int) $enabled;
-        $DB->update_record('local_moodec_variation', $record);
+        $DB->update_record('local_educheckout_variation', $record);
         $this->variations[$variationid] = $record;
     }
 
@@ -413,9 +413,9 @@ class product {
         if (!isset($this->variations[$variationid])) {
             return;
         }
-        $DB->delete_records('local_moodec_variation', ['id' => $variationid]);
+        $DB->delete_records('local_educheckout_variation', ['id' => $variationid]);
         unset($this->variations[$variationid]);
-        $DB->set_field('local_moodec_product', 'variation_count', count($this->variations), ['id' => $this->id]);
+        $DB->set_field('local_educheckout_product', 'variation_count', count($this->variations), ['id' => $this->id]);
     }
 
     /**
@@ -425,11 +425,11 @@ class product {
      */
     public function delete(): void {
         global $DB;
-        $DB->delete_records('local_moodec_variation', ['product_id' => $this->id]);
-        $DB->delete_records('local_moodec_product', ['id' => $this->id]);
+        $DB->delete_records('local_educheckout_variation', ['product_id' => $this->id]);
+        $DB->delete_records('local_educheckout_product', ['id' => $this->id]);
         $fs = get_file_storage();
         $context = \context_system::instance();
-        $fs->delete_area_files($context->id, 'local_moodec', 'product_image', $this->id);
+        $fs->delete_area_files($context->id, 'local_educheckout', 'product_image', $this->id);
     }
 
     /**
@@ -454,7 +454,7 @@ class product {
         $limitnum = ($perpage > 0) ? $perpage : 0;
 
         $ids = $DB->get_fieldset_select(
-            'local_moodec_product',
+            'local_educheckout_product',
             'id',
             $where,
             $params,
@@ -484,7 +484,7 @@ class product {
             $where .= ' AND category_id = :categoryid';
             $params['categoryid'] = $categoryid;
         }
-        return (int) $DB->count_records_select('local_moodec_product', $where, $params);
+        return (int) $DB->count_records_select('local_educheckout_product', $where, $params);
     }
 
     /**
@@ -495,7 +495,7 @@ class product {
      */
     public static function get_by_course(int $courseid): ?product {
         global $DB;
-        $id = $DB->get_field('local_moodec_product', 'id', ['course_id' => $courseid]);
+        $id = $DB->get_field('local_educheckout_product', 'id', ['course_id' => $courseid]);
         return $id ? new self((int) $id) : null;
     }
 }

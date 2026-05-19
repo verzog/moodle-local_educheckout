@@ -15,7 +15,7 @@
     along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 }}
 {{!
-    @template local_moodec/checkout
+    @template local_educheckout/checkout
 
     Checkout page with the core payment trigger button.
 
@@ -24,15 +24,15 @@
         "amount": "10.00",
         "currency": "AUD",
         "cost": "$10.00",
-        "component": "local_moodec",
+        "component": "local_educheckout",
         "paymentarea": "cart",
         "itemid": 1,
         "description": "Checkout",
-        "successurl": "https://example.com/local/moodec/receipt.php?id=1"
+        "successurl": "https://example.com/local/educheckout/receipt.php?id=1"
     }
 }}
-<div class="local-moodec-checkout">
-    <p class="local-moodec-total">{{#str}}gross, local_moodec{{/str}}: {{cost}}</p>
+<div class="local-educheckout-checkout">
+    <p class="local-educheckout-total">{{#str}}gross, local_educheckout{{/str}}: {{cost}}</p>
     <button
         class="btn btn-primary"
         type="button"
@@ -43,5 +43,5 @@
         data-cost="{{cost}}"
         data-successurl="{{successurl}}"
         data-description="{{description}}"
-    >{{#str}}pay, local_moodec{{/str}}</button>
+    >{{#str}}pay, local_educheckout{{/str}}</button>
 </div>

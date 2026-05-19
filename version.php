@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Version details for the Moodec storefront plugin.
+ * Version details for the EduCheckout storefront plugin.
  *
- * @package    local_moodec
+ * @package    local_educheckout
  * @copyright  2015 LearningWorks Ltd
  * @copyright  2026 LearningWorks Ltd
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -25,9 +25,9 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2026051901;
+$plugin->version = 2026051902;
 $plugin->requires = 2025041400; // Moodle 5.0.
-$plugin->component = 'local_moodec';
-$plugin->dependencies = ['enrol_moodec' => ANY_VERSION];
+$plugin->component = 'local_educheckout';
+$plugin->dependencies = ['enrol_educheckout' => ANY_VERSION];
 $plugin->maturity = MATURITY_BETA;
-$plugin->release = '5.0.4';
+$plugin->release = '1.0.0';

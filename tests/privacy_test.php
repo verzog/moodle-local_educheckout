@@ -15,23 +15,23 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Tests for the Moodec privacy provider.
+ * Tests for the EduCheckout privacy provider.
  *
- * @package    local_moodec
+ * @package    local_educheckout
  * @copyright  2026 LearningWorks Ltd
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace local_moodec;
+namespace local_educheckout;
 
-use local_moodec\privacy\provider;
+use local_educheckout\privacy\provider;
 use core_privacy\local\request\writer;
 use core_privacy\local\request\approved_contextlist;
 
 /**
- * Unit tests for \local_moodec\privacy\provider.
+ * Unit tests for \local_educheckout\privacy\provider.
  *
- * @covers \local_moodec\privacy\provider
+ * @covers \local_educheckout\privacy\provider
  */
 final class privacy_test extends \advanced_testcase {
     /**
@@ -43,7 +43,7 @@ final class privacy_test extends \advanced_testcase {
         global $DB;
         $this->resetAfterTest();
 
-        $collection = new \core_privacy\local\metadata\collection('local_moodec');
+        $collection = new \core_privacy\local\metadata\collection('local_educheckout');
         $collection = provider::get_metadata($collection);
         $this->assertNotEmpty($collection->get_collection());
 
@@ -56,10 +56,10 @@ final class privacy_test extends \advanced_testcase {
         $contextlist = provider::get_contexts_for_userid((int) $user->id);
         $this->assertCount(1, $contextlist->get_contextids());
 
-        $approved = new approved_contextlist($user, 'local_moodec', $contextlist->get_contextids());
+        $approved = new approved_contextlist($user, 'local_educheckout', $contextlist->get_contextids());
         provider::delete_data_for_user($approved);
 
-        $this->assertFalse($DB->record_exists('local_moodec_cart', ['userid' => $user->id]));
-        $this->assertFalse($DB->record_exists('local_moodec_order', ['userid' => $user->id]));
+        $this->assertFalse($DB->record_exists('local_educheckout_cart', ['userid' => $user->id]));
+        $this->assertFalse($DB->record_exists('local_educheckout_order', ['userid' => $user->id]));
     }
 }
