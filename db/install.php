@@ -37,9 +37,14 @@ function xmldb_local_educheckout_install() {
 
     $dbman = $DB->get_manager();
 
+    // Child tables before parents — install.xml has FKs cart_item -> cart,
+    // order -> cart, order_item -> order, trans_item -> transaction,
+    // variation -> product, product -> category. Postgres rejects DROP of a
+    // referenced table without CASCADE, so drop children first.
     $tables = [
-        'category', 'product', 'variation', 'transaction', 'trans_item',
-        'cart', 'cart_item', 'order', 'order_item',
+        'cart_item', 'order_item', 'order', 'cart',
+        'trans_item', 'transaction',
+        'variation', 'product', 'category',
     ];
     foreach ($tables as $name) {
         $old = new xmldb_table('local_moodec_' . $name);

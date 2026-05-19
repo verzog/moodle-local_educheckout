@@ -56,12 +56,12 @@ jobs:
         with:
           path: plugin
 
-      - name: Check out enrol_moodec dependency
+      - name: Check out enrol_educheckout dependency
         uses: actions/checkout@v4
         with:
           repository: verzog/moodle-enrol_moodec
-          ref: master
-          path: extra/enrol_moodec
+          ref: claude/rename-to-educheckout
+          path: extra/enrol_educheckout
 
       - name: Setup PHP ${{ matrix.php }}
         uses: shivammathur/setup-php@v2
