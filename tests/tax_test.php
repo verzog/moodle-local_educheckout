@@ -15,19 +15,19 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Tests for the Moodec tax helper.
+ * Tests for the EduCheckout tax helper.
  *
- * @package    local_moodec
+ * @package    local_educheckout
  * @copyright  2026 LearningWorks Ltd
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace local_moodec;
+namespace local_educheckout;
 
 /**
- * Unit tests for \local_moodec\tax.
+ * Unit tests for \local_educheckout\tax.
  *
- * @covers \local_moodec\tax
+ * @covers \local_educheckout\tax
  */
 final class tax_test extends \advanced_testcase {
     /**
@@ -38,14 +38,14 @@ final class tax_test extends \advanced_testcase {
     public function test_resolve_rate(): void {
         $this->resetAfterTest();
 
-        set_config('tax_enable', 0, 'local_moodec');
-        set_config('tax_rate', '10.0', 'local_moodec');
+        set_config('tax_enable', 0, 'local_educheckout');
+        set_config('tax_rate', '10.0', 'local_educheckout');
         $this->assertEquals(0.0, tax::resolve_rate('AU'));
 
-        set_config('tax_enable', 1, 'local_moodec');
+        set_config('tax_enable', 1, 'local_educheckout');
         $this->assertEquals(10.0, tax::resolve_rate('AU'));
 
-        set_config('taxcountryoverrides', '{"NZ": 15}', 'local_moodec');
+        set_config('taxcountryoverrides', '{"NZ": 15}', 'local_educheckout');
         $this->assertEquals(15.0, tax::resolve_rate('NZ'));
         $this->assertEquals(10.0, tax::resolve_rate('AU'));
     }
@@ -58,13 +58,13 @@ final class tax_test extends \advanced_testcase {
     public function test_split(): void {
         $this->resetAfterTest();
 
-        set_config('tax_mode', 'exclusive', 'local_moodec');
+        set_config('tax_mode', 'exclusive', 'local_educheckout');
         $split = tax::split(100.0, 10.0);
         $this->assertEquals(100.0, $split['net']);
         $this->assertEquals(10.0, $split['tax']);
         $this->assertEquals(110.0, $split['gross']);
 
-        set_config('tax_mode', 'inclusive', 'local_moodec');
+        set_config('tax_mode', 'inclusive', 'local_educheckout');
         $split = tax::split(110.0, 10.0);
         $this->assertEquals(100.0, $split['net']);
         $this->assertEquals(10.0, $split['tax']);

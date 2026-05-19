@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Moodec product edit page (create / edit product + manage variations).
+ * EduCheckout product edit page (create / edit product + manage variations).
  *
- * @package    local_moodec
+ * @package    local_educheckout
  * @copyright  2026 LearningWorks Ltd
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -27,26 +27,26 @@ require_once(__DIR__ . '/../../config.php');
 require_login();
 
 $context = context_system::instance();
-require_capability('local/moodec:manageproducts', $context);
+require_capability('local/educheckout:manageproducts', $context);
 
 $id = optional_param('id', 0, PARAM_INT);
 $varaction = optional_param('varaction', '', PARAM_ALPHA);
 $varid = optional_param('varid', 0, PARAM_INT);
 
 $PAGE->set_context($context);
-$PAGE->set_url(new moodle_url('/local/moodec/product_edit.php', ['id' => $id]));
+$PAGE->set_url(new moodle_url('/local/educheckout/product_edit.php', ['id' => $id]));
 $PAGE->set_pagelayout('admin');
 
 $isnew = ($id === 0);
 $product = null;
 
 if (!$isnew) {
-    $product = new \local_moodec\product($id);
-    $PAGE->set_title(get_string('product_edit_title', 'local_moodec'));
-    $PAGE->set_heading(get_string('product_edit_title', 'local_moodec'));
+    $product = new \local_educheckout\product($id);
+    $PAGE->set_title(get_string('product_edit_title', 'local_educheckout'));
+    $PAGE->set_heading(get_string('product_edit_title', 'local_educheckout'));
 } else {
-    $PAGE->set_title(get_string('product_add_title', 'local_moodec'));
-    $PAGE->set_heading(get_string('product_add_title', 'local_moodec'));
+    $PAGE->set_title(get_string('product_add_title', 'local_educheckout'));
+    $PAGE->set_heading(get_string('product_add_title', 'local_educheckout'));
 }
 
 // Handle variation actions before rendering the form.
@@ -54,29 +54,29 @@ if (!$isnew && $product !== null) {
     if ($varaction === 'deletevar' && $varid > 0) {
         require_sesskey();
         $product->delete_variation($varid);
-        redirect(new moodle_url('/local/moodec/product_edit.php', ['id' => $id]));
+        redirect(new moodle_url('/local/educheckout/product_edit.php', ['id' => $id]));
     }
 }
 
 // Build category options for the product form.
-$categories = \local_moodec\category::get_all();
+$categories = \local_educheckout\category::get_all();
 $categoryoptions = [];
 foreach ($categories as $cat) {
     $categoryoptions[$cat->get_id()] = $cat->get_name();
 }
 
-$productform = new \local_moodec\form\product_form(
-    new moodle_url('/local/moodec/product_edit.php', ['id' => $id]),
+$productform = new \local_educheckout\form\product_form(
+    new moodle_url('/local/educheckout/product_edit.php', ['id' => $id]),
     ['productid' => $id, 'categoryoptions' => $categoryoptions]
 );
 
 if ($productform->is_cancelled()) {
-    redirect(new moodle_url('/local/moodec/manage.php'));
+    redirect(new moodle_url('/local/educheckout/manage.php'));
 }
 
 if ($formdata = $productform->get_data()) {
     if ($isnew) {
-        $product = \local_moodec\product::create((int) $formdata->course_id);
+        $product = \local_educheckout\product::create((int) $formdata->course_id);
         $id = $product->get_id();
     }
 
@@ -84,7 +84,7 @@ if ($formdata = $productform->get_data()) {
     file_save_draft_area_files(
         (int) $formdata->image,
         $context->id,
-        'local_moodec',
+        'local_educheckout',
         'product_image',
         $product->get_id(),
         ['subdirs' => 0, 'maxfiles' => 1]
@@ -102,8 +102,8 @@ if ($formdata = $productform->get_data()) {
     $product->set_type(clean_param($formdata->type ?? '', PARAM_ALPHA));
 
     redirect(
-        new moodle_url('/local/moodec/product_edit.php', ['id' => $product->get_id()]),
-        get_string('product_saved', 'local_moodec')
+        new moodle_url('/local/educheckout/product_edit.php', ['id' => $product->get_id()]),
+        get_string('product_saved', 'local_educheckout')
     );
 }
 
@@ -113,7 +113,7 @@ if (!$isnew && $product !== null && !$productform->is_submitted()) {
     file_prepare_draft_area(
         $draftitemid,
         $context->id,
-        'local_moodec',
+        'local_educheckout',
         'product_image',
         $product->get_id(),
         ['subdirs' => 0, 'maxfiles' => 1]
@@ -138,13 +138,13 @@ if (!$isnew && $product !== null && !$productform->is_submitted()) {
 $varform = null;
 if (!$isnew && $product !== null) {
     $editvarid = optional_param('editvarid', 0, PARAM_INT);
-    $varform = new \local_moodec\form\variation_form(
-        new moodle_url('/local/moodec/product_edit.php', ['id' => $id, 'editvarid' => $editvarid]),
+    $varform = new \local_educheckout\form\variation_form(
+        new moodle_url('/local/educheckout/product_edit.php', ['id' => $id, 'editvarid' => $editvarid]),
         ['is_session_product' => $product->is_session_type()]
     );
 
     if ($varform->is_cancelled()) {
-        redirect(new moodle_url('/local/moodec/product_edit.php', ['id' => $id]));
+        redirect(new moodle_url('/local/educheckout/product_edit.php', ['id' => $id]));
     }
 
     if ($vardata = $varform->get_data()) {
@@ -179,7 +179,7 @@ if (!$isnew && $product !== null) {
                 $sessioncapacity
             );
         }
-        redirect(new moodle_url('/local/moodec/product_edit.php', ['id' => $id]));
+        redirect(new moodle_url('/local/educheckout/product_edit.php', ['id' => $id]));
     }
 
     if ($editvarid > 0 && !$varform->is_submitted()) {
@@ -208,16 +208,16 @@ if (!$isnew && $product !== null) {
 
 echo $OUTPUT->header();
 $headingtitle = $isnew
-    ? get_string('product_add_title', 'local_moodec')
-    : get_string('product_edit_title', 'local_moodec');
+    ? get_string('product_add_title', 'local_educheckout')
+    : get_string('product_edit_title', 'local_educheckout');
 echo $OUTPUT->heading($headingtitle);
 
 $productform->display();
 
 if (!$isnew && $product !== null) {
     $varheading = $product->is_session_type()
-        ? get_string('sessions_heading', 'local_moodec')
-        : get_string('variations_heading', 'local_moodec');
+        ? get_string('sessions_heading', 'local_educheckout')
+        : get_string('variations_heading', 'local_educheckout');
     echo $OUTPUT->heading($varheading, 3);
 
     $issessionproduct = $product->is_session_type();
@@ -237,11 +237,11 @@ if (!$isnew && $product !== null) {
                 : '',
             'session_location' => format_string($var->session_location ?? ''),
             'session_capacity' => (int) ($var->session_capacity ?? 0),
-            'editurl' => (new moodle_url('/local/moodec/product_edit.php', [
+            'editurl' => (new moodle_url('/local/educheckout/product_edit.php', [
                 'id' => $id,
                 'editvarid' => $var->id,
             ]))->out(false),
-            'deleteurl' => (new moodle_url('/local/moodec/product_edit.php', [
+            'deleteurl' => (new moodle_url('/local/educheckout/product_edit.php', [
                 'id' => $id,
                 'varaction' => 'deletevar',
                 'varid' => $var->id,
@@ -250,7 +250,7 @@ if (!$isnew && $product !== null) {
         ];
     }
 
-    echo $OUTPUT->render_from_template('local_moodec/variation_list', [
+    echo $OUTPUT->render_from_template('local_educheckout/variation_list', [
         'hasvariations' => !empty($variations),
         'is_session_product' => $issessionproduct,
         'variations' => $variations,
@@ -258,8 +258,8 @@ if (!$isnew && $product !== null) {
 
     echo $OUTPUT->heading(
         empty(optional_param('editvarid', 0, PARAM_INT))
-            ? get_string('variation_add', 'local_moodec')
-            : get_string('variation_edit', 'local_moodec'),
+            ? get_string('variation_add', 'local_educheckout')
+            : get_string('variation_edit', 'local_educheckout'),
         4
     );
     $varform->display();

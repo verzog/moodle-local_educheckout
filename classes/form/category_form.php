@@ -15,14 +15,14 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Category editing form for the Moodec storefront.
+ * Category editing form for the EduCheckout storefront.
  *
- * @package    local_moodec
+ * @package    local_educheckout
  * @copyright  2026 LearningWorks Ltd
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace local_moodec\form;
+namespace local_educheckout\form;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -44,7 +44,7 @@ class category_form extends \moodleform {
         $mform->addElement(
             'text',
             'name',
-            get_string('category_name', 'local_moodec'),
+            get_string('category_name', 'local_educheckout'),
             ['size' => 60]
         );
         $mform->setType('name', PARAM_TEXT);
@@ -53,7 +53,7 @@ class category_form extends \moodleform {
         $mform->addElement(
             'textarea',
             'description',
-            get_string('category_description', 'local_moodec'),
+            get_string('category_description', 'local_educheckout'),
             ['rows' => 4, 'cols' => 60]
         );
         $mform->setType('description', PARAM_TEXT);
@@ -61,7 +61,7 @@ class category_form extends \moodleform {
         $mform->addElement(
             'text',
             'sortorder',
-            get_string('category_sortorder', 'local_moodec'),
+            get_string('category_sortorder', 'local_educheckout'),
             ['size' => 5]
         );
         $mform->setType('sortorder', PARAM_INT);
@@ -80,7 +80,7 @@ class category_form extends \moodleform {
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
         if (empty(trim($data['name'] ?? ''))) {
-            $errors['name'] = get_string('error_categorynamerequired', 'local_moodec');
+            $errors['name'] = get_string('error_categorynamerequired', 'local_educheckout');
         }
         return $errors;
     }

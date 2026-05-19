@@ -15,16 +15,16 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Payment service provider for the Moodec storefront.
+ * Payment service provider for the EduCheckout storefront.
  *
- * @package    local_moodec
+ * @package    local_educheckout
  * @copyright  2026 LearningWorks Ltd
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace local_moodec\payment;
+namespace local_educheckout\payment;
 
-use local_moodec\order;
+use local_educheckout\order;
 
 /**
  * Tells core_payment what a cart order costs and what to do once it is paid.
@@ -34,14 +34,14 @@ class service_provider implements \core_payment\local\callback\service_provider 
      * Return the payable for a given order.
      *
      * @param string $paymentarea the payment area (always 'cart')
-     * @param int $itemid the local_moodec_order id
+     * @param int $itemid the local_educheckout_order id
      * @return \core_payment\local\entities\payable
      */
     public static function get_payable(string $paymentarea, int $itemid): \core_payment\local\entities\payable {
         global $DB;
 
-        $record = $DB->get_record('local_moodec_order', ['id' => $itemid], '*', MUST_EXIST);
-        $accountid = (int) get_config('local_moodec', 'paymentaccount');
+        $record = $DB->get_record('local_educheckout_order', ['id' => $itemid], '*', MUST_EXIST);
+        $accountid = (int) get_config('local_educheckout', 'paymentaccount');
 
         return new \core_payment\local\entities\payable(
             (float) $record->amount,
@@ -54,18 +54,18 @@ class service_provider implements \core_payment\local\callback\service_provider 
      * Return the URL the user is sent to after a successful payment.
      *
      * @param string $paymentarea the payment area
-     * @param int $itemid the local_moodec_order id
+     * @param int $itemid the local_educheckout_order id
      * @return \moodle_url
      */
     public static function get_success_url(string $paymentarea, int $itemid): \moodle_url {
-        return new \moodle_url('/local/moodec/receipt.php', ['id' => $itemid]);
+        return new \moodle_url('/local/educheckout/receipt.php', ['id' => $itemid]);
     }
 
     /**
      * Deliver the order: enrol the buyer into each purchased course.
      *
      * @param string $paymentarea the payment area
-     * @param int $itemid the local_moodec_order id
+     * @param int $itemid the local_educheckout_order id
      * @param int $paymentid the core payment id
      * @param int $userid the paying user id
      * @return bool

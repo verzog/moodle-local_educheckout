@@ -15,7 +15,7 @@
     along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 }}
 {{!
-    @template local_moodec/receipt
+    @template local_educheckout/receipt
 
     Order receipt / confirmation.
 
@@ -24,16 +24,16 @@
         "delivered": true,
         "amount": "10.00",
         "currency": "AUD",
-        "shopurl": "https://example.com/local/moodec/index.php"
+        "shopurl": "https://example.com/local/educheckout/index.php"
     }
 }}
-<div class="local-moodec-receipt">
+<div class="local-educheckout-receipt">
     {{#delivered}}
-    <p>{{#str}}order_complete, local_moodec{{/str}}</p>
+    <p>{{#str}}order_complete, local_educheckout{{/str}}</p>
     {{/delivered}}
     {{^delivered}}
-    <p>{{#str}}order_pending, local_moodec{{/str}}</p>
+    <p>{{#str}}order_pending, local_educheckout{{/str}}</p>
     {{/delivered}}
-    <p>{{#str}}total, local_moodec{{/str}}: {{amount}} {{currency}}</p>
-    <p><a href="{{shopurl}}">{{#str}}continueshopping, local_moodec{{/str}}</a></p>
+    <p>{{#str}}total, local_educheckout{{/str}}: {{amount}} {{currency}}</p>
+    <p><a href="{{shopurl}}">{{#str}}continueshopping, local_educheckout{{/str}}</a></p>
 </div>

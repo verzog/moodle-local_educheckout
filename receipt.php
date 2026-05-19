@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Moodec order receipt page.
+ * EduCheckout order receipt page.
  *
- * @package    local_moodec
+ * @package    local_educheckout
  * @copyright  2026 LearningWorks Ltd
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -30,24 +30,24 @@ require_login();
 
 $context = context_system::instance();
 $PAGE->set_context($context);
-$PAGE->set_url(new moodle_url('/local/moodec/receipt.php', ['id' => $orderid]));
+$PAGE->set_url(new moodle_url('/local/educheckout/receipt.php', ['id' => $orderid]));
 $PAGE->set_pagelayout('standard');
-$PAGE->set_title(get_string('ordersummary', 'local_moodec'));
-$PAGE->set_heading(get_string('ordersummary', 'local_moodec'));
+$PAGE->set_title(get_string('ordersummary', 'local_educheckout'));
+$PAGE->set_heading(get_string('ordersummary', 'local_educheckout'));
 
-$order = \local_moodec\order::instance($orderid);
+$order = \local_educheckout\order::instance($orderid);
 
 if ($order->get_userid() !== (int) $USER->id) {
-    require_capability('local/moodec:viewallorders', $context);
+    require_capability('local/educheckout:viewallorders', $context);
 }
 
 $data = [
     'delivered' => $order->is_delivered(),
     'amount' => format_float($order->get_amount(), 2),
     'currency' => $order->get_currency(),
-    'shopurl' => (new moodle_url('/local/moodec/index.php'))->out(false),
+    'shopurl' => (new moodle_url('/local/educheckout/index.php'))->out(false),
 ];
 
 echo $OUTPUT->header();
-echo $OUTPUT->render_from_template('local_moodec/receipt', $data);
+echo $OUTPUT->render_from_template('local_educheckout/receipt', $data);
 echo $OUTPUT->footer();

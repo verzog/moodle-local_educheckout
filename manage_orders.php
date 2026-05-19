@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Moodec order management page for admins.
+ * EduCheckout order management page for admins.
  *
- * @package    local_moodec
+ * @package    local_educheckout
  * @copyright  2026 LearningWorks Ltd
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -27,16 +27,16 @@ require_once(__DIR__ . '/../../config.php');
 require_login();
 
 $context = context_system::instance();
-require_capability('local/moodec:viewallorders', $context);
+require_capability('local/educheckout:viewallorders', $context);
 
 $status = optional_param('status', '', PARAM_ALPHA);
 $page = optional_param('page', 0, PARAM_INT);
 
 $PAGE->set_context($context);
-$PAGE->set_url(new moodle_url('/local/moodec/manage_orders.php', ['status' => $status, 'page' => $page]));
+$PAGE->set_url(new moodle_url('/local/educheckout/manage_orders.php', ['status' => $status, 'page' => $page]));
 $PAGE->set_pagelayout('admin');
-$PAGE->set_title(get_string('orders_title', 'local_moodec'));
-$PAGE->set_heading(get_string('orders_title', 'local_moodec'));
+$PAGE->set_title(get_string('orders_title', 'local_educheckout'));
+$PAGE->set_heading(get_string('orders_title', 'local_educheckout'));
 
 $perpage = 25;
 
@@ -48,13 +48,13 @@ if (in_array($status, $validstatuses, true)) {
     $params['status'] = $status;
 }
 
-$countsql = "SELECT COUNT(o.id) FROM {local_moodec_order} o $where";
+$countsql = "SELECT COUNT(o.id) FROM {local_educheckout_order} o $where";
 $total = (int) $DB->count_records_sql($countsql, $params);
 
 $namefields = \core_user\fields::for_name()->get_sql('u', true)->selects;
 
 $sql = "SELECT o.id, o.userid, o.status, o.amount, o.currency, o.timecreated{$namefields}
-          FROM {local_moodec_order} o
+          FROM {local_educheckout_order} o
           JOIN {user} u ON u.id = o.userid
                $where
          ORDER BY o.timecreated DESC";
@@ -64,14 +64,14 @@ $records = $DB->get_records_sql($sql, $params, $page * $perpage, $perpage);
 $orders = [];
 foreach ($records as $rec) {
     // Collect course names for this order's items.
-    $items = $DB->get_records('local_moodec_order_item', ['orderid' => $rec->id]);
+    $items = $DB->get_records('local_educheckout_order_item', ['orderid' => $rec->id]);
     $coursenames = [];
     foreach ($items as $item) {
         try {
             $course = get_course($item->courseid);
             $coursenames[] = format_string($course->fullname);
         } catch (\dml_missing_record_exception $e) {
-            $coursenames[] = get_string('order_course_missing', 'local_moodec');
+            $coursenames[] = get_string('order_course_missing', 'local_educheckout');
         }
     }
 
@@ -83,19 +83,19 @@ foreach ($records as $rec) {
         'currency' => $rec->currency,
         'courses' => implode(', ', $coursenames),
         'date' => userdate($rec->timecreated, get_string('strftimedatetimeshort', 'langconfig')),
-        'receipturl' => (new moodle_url('/local/moodec/receipt.php', ['id' => $rec->id]))->out(false),
+        'receipturl' => (new moodle_url('/local/educheckout/receipt.php', ['id' => $rec->id]))->out(false),
     ];
 }
 
 // Build status filter links.
-$allordersurl = (new moodle_url('/local/moodec/manage_orders.php'))->out(false);
+$allordersurl = (new moodle_url('/local/educheckout/manage_orders.php'))->out(false);
 $statusfilters = [
-    ['label' => get_string('orders_all', 'local_moodec'), 'url' => $allordersurl, 'active' => $status === ''],
+    ['label' => get_string('orders_all', 'local_educheckout'), 'url' => $allordersurl, 'active' => $status === ''],
 ];
 foreach ($validstatuses as $s) {
     $statusfilters[] = [
-        'label' => get_string('order_status_' . $s, 'local_moodec'),
-        'url' => (new moodle_url('/local/moodec/manage_orders.php', ['status' => $s]))->out(false),
+        'label' => get_string('order_status_' . $s, 'local_educheckout'),
+        'url' => (new moodle_url('/local/educheckout/manage_orders.php', ['status' => $s]))->out(false),
         'active' => $status === $s,
     ];
 }
@@ -111,14 +111,14 @@ $data = [
     'totalpages' => $totalpages,
     'hasprev' => $page > 0,
     'prevurl' => (new moodle_url(
-        '/local/moodec/manage_orders.php',
+        '/local/educheckout/manage_orders.php',
         ['status' => $status, 'page' => max(0, $page - 1)]
     ))->out(false),
     'hasnext' => ($page + 1) < $totalpages,
-    'nexturl' => (new moodle_url('/local/moodec/manage_orders.php', ['status' => $status, 'page' => $page + 1]))->out(false),
-    'manageurl' => (new moodle_url('/local/moodec/manage.php'))->out(false),
+    'nexturl' => (new moodle_url('/local/educheckout/manage_orders.php', ['status' => $status, 'page' => $page + 1]))->out(false),
+    'manageurl' => (new moodle_url('/local/educheckout/manage.php'))->out(false),
 ];
 
 echo $OUTPUT->header();
-echo $OUTPUT->render_from_template('local_moodec/manage_orders', $data);
+echo $OUTPUT->render_from_template('local_educheckout/manage_orders', $data);
 echo $OUTPUT->footer();

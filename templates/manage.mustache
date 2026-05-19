@@ -15,7 +15,7 @@
     along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 }}
 {{!
-    @template local_moodec/manage
+    @template local_educheckout/manage
 
     Product management listing for admins.
 
@@ -23,24 +23,24 @@
     {
         "hasproducts": true,
         "products": [{"id":1,"fullname":"Course A","is_enabled":true,"enabled_class":"badge-success","tags":"php,web","editurl":"","toggleurl":"","togglelabel":"Disable","deleteurl":""}],
-        "addurl": "https://example.com/local/moodec/product_edit.php",
-        "categoryurl": "https://example.com/local/moodec/category_manage.php"
+        "addurl": "https://example.com/local/educheckout/product_edit.php",
+        "categoryurl": "https://example.com/local/educheckout/category_manage.php"
     }
 }}
-<div class="local-moodec-manage">
+<div class="local-educheckout-manage">
     <div class="mb-3 d-flex gap-2">
-        <a href="{{addurl}}" class="btn btn-primary">{{#str}}product_add, local_moodec{{/str}}</a>
-        <a href="{{categoryurl}}" class="btn btn-secondary">{{#str}}manage_categories, local_moodec{{/str}}</a>
+        <a href="{{addurl}}" class="btn btn-primary">{{#str}}product_add, local_educheckout{{/str}}</a>
+        <a href="{{categoryurl}}" class="btn btn-secondary">{{#str}}manage_categories, local_educheckout{{/str}}</a>
     </div>
 
     {{#hasproducts}}
     <table class="table table-bordered table-hover">
         <thead class="thead-light">
             <tr>
-                <th>{{#str}}product_course, local_moodec{{/str}}</th>
-                <th>{{#str}}product_tags, local_moodec{{/str}}</th>
-                <th>{{#str}}product_status, local_moodec{{/str}}</th>
-                <th>{{#str}}actions, local_moodec{{/str}}</th>
+                <th>{{#str}}product_course, local_educheckout{{/str}}</th>
+                <th>{{#str}}product_tags, local_educheckout{{/str}}</th>
+                <th>{{#str}}product_status, local_educheckout{{/str}}</th>
+                <th>{{#str}}actions, local_educheckout{{/str}}</th>
             </tr>
         </thead>
         <tbody>
@@ -50,15 +50,15 @@
                 <td><small class="text-muted">{{tags}}</small></td>
                 <td>
                     <span class="badge {{enabled_class}}">
-                        {{#is_enabled}}{{#str}}product_enabled_yes, local_moodec{{/str}}{{/is_enabled}}
-                        {{^is_enabled}}{{#str}}product_enabled_no, local_moodec{{/str}}{{/is_enabled}}
+                        {{#is_enabled}}{{#str}}product_enabled_yes, local_educheckout{{/str}}{{/is_enabled}}
+                        {{^is_enabled}}{{#str}}product_enabled_no, local_educheckout{{/str}}{{/is_enabled}}
                     </span>
                 </td>
                 <td class="d-flex gap-1">
                     <a href="{{editurl}}" class="btn btn-sm btn-outline-primary">{{#str}}edit{{/str}}</a>
                     <a href="{{toggleurl}}" class="btn btn-sm btn-outline-secondary">{{togglelabel}}</a>
                     <a href="{{deleteurl}}" class="btn btn-sm btn-outline-danger"
-                       onclick="return confirm('{{#str}}product_delete_confirm, local_moodec{{/str}}')">
+                       onclick="return confirm('{{#str}}product_delete_confirm, local_educheckout{{/str}}')">
                         {{#str}}delete{{/str}}
                     </a>
                 </td>
@@ -68,6 +68,6 @@
     </table>
     {{/hasproducts}}
     {{^hasproducts}}
-    <p class="text-muted">{{#str}}manage_noproducts, local_moodec{{/str}}</p>
+    <p class="text-muted">{{#str}}manage_noproducts, local_educheckout{{/str}}</p>
     {{/hasproducts}}
 </div>

@@ -15,15 +15,28 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Message provider definitions for the EduCheckout storefront plugin.
+ * Behat data generator for the EduCheckout storefront plugin.
  *
  * @package    local_educheckout
  * @copyright  2026 LearningWorks Ltd
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
-$messageproviders = [
-    'order_receipt' => [],
-];
+/**
+ * Generates EduCheckout Behat test data.
+ */
+class behat_local_educheckout_generator extends behat_generator_base {
+    /**
+     * Declare entities that can be created via "the following ... exist:" steps.
+     *
+     * @return array
+     */
+    protected function get_creatable_entities(): array {
+        return [
+            'product' => [
+                'datagenerator' => 'product',
+                'required' => ['course'],
+            ],
+        ];
+    }
+}

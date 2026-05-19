@@ -15,14 +15,14 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * DB-backed shopping cart for the Moodec storefront.
+ * DB-backed shopping cart for the EduCheckout storefront.
  *
- * @package    local_moodec
+ * @package    local_educheckout
  * @copyright  2026 LearningWorks Ltd
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace local_moodec;
+namespace local_educheckout;
 
 /**
  * Loads and mutates the current open cart for a user or guest session.
@@ -34,7 +34,7 @@ class cart {
     /**
      * Wrap a cart record.
      *
-     * @param \stdClass $record a row from {local_moodec_cart}
+     * @param \stdClass $record a row from {local_educheckout_cart}
      */
     protected function __construct(\stdClass $record) {
         $this->record = $record;
@@ -56,18 +56,18 @@ class cart {
             $conditions = ['userid' => 0, 'sessionkey' => (string) $sessionkey, 'status' => 'open'];
         }
 
-        $record = $DB->get_record('local_moodec_cart', $conditions);
+        $record = $DB->get_record('local_educheckout_cart', $conditions);
         if (!$record) {
             $now = time();
             $record = (object) [
                 'userid' => $userid,
                 'sessionkey' => $userid > 0 ? null : (string) $sessionkey,
-                'currency' => (string) (get_config('local_moodec', 'currency') ?: 'AUD'),
+                'currency' => (string) (get_config('local_educheckout', 'currency') ?: 'AUD'),
                 'status' => 'open',
                 'timecreated' => $now,
                 'timemodified' => $now,
             ];
-            $record->id = $DB->insert_record('local_moodec_cart', $record);
+            $record->id = $DB->insert_record('local_educheckout_cart', $record);
         }
 
         return new self($record);
@@ -85,7 +85,7 @@ class cart {
         if ($sessionkey === null || $sessionkey === '') {
             return null;
         }
-        $record = $DB->get_record('local_moodec_cart', [
+        $record = $DB->get_record('local_educheckout_cart', [
             'userid' => 0,
             'sessionkey' => $sessionkey,
             'status' => 'open',
@@ -114,11 +114,11 @@ class cart {
     /**
      * Return the items in this cart.
      *
-     * @return array records from {local_moodec_cart_item}
+     * @return array records from {local_educheckout_cart_item}
      */
     public function get_items(): array {
         global $DB;
-        return $DB->get_records('local_moodec_cart_item', ['cartid' => $this->get_id()]);
+        return $DB->get_records('local_educheckout_cart_item', ['cartid' => $this->get_id()]);
     }
 
     /**
@@ -128,7 +128,7 @@ class cart {
      */
     public function is_empty(): bool {
         global $DB;
-        return !$DB->record_exists('local_moodec_cart_item', ['cartid' => $this->get_id()]);
+        return !$DB->record_exists('local_educheckout_cart_item', ['cartid' => $this->get_id()]);
     }
 
     /**
@@ -139,7 +139,7 @@ class cart {
     public function get_total(): float {
         global $DB;
         $total = $DB->get_field_sql(
-            'SELECT SUM(unitprice) FROM {local_moodec_cart_item} WHERE cartid = :cartid',
+            'SELECT SUM(unitprice) FROM {local_educheckout_cart_item} WHERE cartid = :cartid',
             ['cartid' => $this->get_id()]
         );
         return (float) ($total ?: 0);
@@ -157,7 +157,7 @@ class cart {
     public function add_item(int $productid, int $variationid, int $courseid, float $unitprice): bool {
         global $DB;
 
-        $existing = $DB->record_exists('local_moodec_cart_item', [
+        $existing = $DB->record_exists('local_educheckout_cart_item', [
             'cartid' => $this->get_id(),
             'productid' => $productid,
             'variationid' => $variationid,
@@ -166,7 +166,7 @@ class cart {
             return false;
         }
 
-        $DB->insert_record('local_moodec_cart_item', (object) [
+        $DB->insert_record('local_educheckout_cart_item', (object) [
             'cartid' => $this->get_id(),
             'productid' => $productid,
             'variationid' => $variationid,
@@ -186,7 +186,7 @@ class cart {
      */
     public function remove_item(int $itemid): void {
         global $DB;
-        $DB->delete_records('local_moodec_cart_item', ['id' => $itemid, 'cartid' => $this->get_id()]);
+        $DB->delete_records('local_educheckout_cart_item', ['id' => $itemid, 'cartid' => $this->get_id()]);
         $this->touch();
     }
 
@@ -210,8 +210,8 @@ class cart {
                 (float) $item->unitprice
             );
         }
-        $DB->delete_records('local_moodec_cart_item', ['cartid' => $other->get_id()]);
-        $DB->set_field('local_moodec_cart', 'status', 'cancelled', ['id' => $other->get_id()]);
+        $DB->delete_records('local_educheckout_cart_item', ['cartid' => $other->get_id()]);
+        $DB->set_field('local_educheckout_cart', 'status', 'cancelled', ['id' => $other->get_id()]);
     }
 
     /**
@@ -221,7 +221,7 @@ class cart {
      */
     public function mark_ordered(): void {
         global $DB;
-        $DB->set_field('local_moodec_cart', 'status', 'ordered', ['id' => $this->get_id()]);
+        $DB->set_field('local_educheckout_cart', 'status', 'ordered', ['id' => $this->get_id()]);
     }
 
     /**
@@ -231,6 +231,6 @@ class cart {
      */
     protected function touch(): void {
         global $DB;
-        $DB->set_field('local_moodec_cart', 'timemodified', time(), ['id' => $this->get_id()]);
+        $DB->set_field('local_educheckout_cart', 'timemodified', time(), ['id' => $this->get_id()]);
     }
 }

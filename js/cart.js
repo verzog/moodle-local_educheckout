@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
-// Moodec cart progressive enhancement (static script, no build step).
+// EduCheckout cart progressive enhancement (static script, no build step).
 // Uses the global AMD loader to reach core modules; the add/remove forms
 // still POST normally when this script is absent or fails.
 
@@ -21,9 +21,9 @@
     "use strict";
 
     var SELECTORS = {
-        ADD_FORM: '[data-moodec="add-form"]',
-        REMOVE_FORM: '[data-moodec="remove-form"]',
-        TOTAL: '[data-moodec="total"]'
+        ADD_FORM: '[data-educheckout="add-form"]',
+        REMOVE_FORM: '[data-educheckout="remove-form"]',
+        TOTAL: '[data-educheckout="total"]'
     };
 
     if (typeof window.require !== "function") {
@@ -43,9 +43,9 @@
                 || form.querySelector('[name="variation"]');
             var variationid = variationField ? parseInt(variationField.value, 10) : 0;
 
-            call("local_moodec_cart_add", {productid: productid, variationid: variationid})
+            call("local_educheckout_cart_add", {productid: productid, variationid: variationid})
                 .then(function() {
-                    return Str.get_string("addedtocart", "local_moodec");
+                    return Str.get_string("addedtocart", "local_educheckout");
                 })
                 .then(function(message) {
                     Notification.addNotification({message: message, type: "success"});
@@ -59,7 +59,7 @@
             var form = e.target;
             var itemid = parseInt(form.querySelector('[name="item"]').value, 10);
 
-            call("local_moodec_cart_remove", {itemid: itemid})
+            call("local_educheckout_cart_remove", {itemid: itemid})
                 .then(function(result) {
                     var row = form.closest("li");
                     if (row) {

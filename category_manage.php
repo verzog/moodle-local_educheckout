@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Moodec category management page.
+ * EduCheckout category management page.
  *
- * @package    local_moodec
+ * @package    local_educheckout
  * @copyright  2026 LearningWorks Ltd
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -27,55 +27,69 @@ require_once(__DIR__ . '/../../config.php');
 require_login();
 
 $context = context_system::instance();
-require_capability('local/moodec:manageproducts', $context);
+require_capability('local/educheckout:manageproducts', $context);
 
 $id = optional_param('id', 0, PARAM_INT);
 $action = optional_param('action', '', PARAM_ALPHA);
 
 $PAGE->set_context($context);
-$PAGE->set_url(new moodle_url('/local/moodec/category_manage.php'));
+$PAGE->set_url(new moodle_url('/local/educheckout/category_manage.php'));
 $PAGE->set_pagelayout('admin');
-$PAGE->set_title(get_string('categories_title', 'local_moodec'));
-$PAGE->set_heading(get_string('categories_title', 'local_moodec'));
+$PAGE->set_title(get_string('categories_title', 'local_educheckout'));
+$PAGE->set_heading(get_string('categories_title', 'local_educheckout'));
 
-// Handle delete.
+// Handle delete: show confirmation page first, then perform on confirm.
 if ($action === 'delete' && $id > 0) {
-    require_sesskey();
-    $cat = \local_moodec\category::get($id);
-    $cat->delete();
-    redirect(new moodle_url('/local/moodec/category_manage.php'));
+    $confirmed = optional_param('confirmed', 0, PARAM_INT);
+    if ($confirmed) {
+        require_sesskey();
+        $cat = \local_educheckout\category::get($id);
+        $cat->delete();
+        redirect(new moodle_url('/local/educheckout/category_manage.php'));
+    }
+    $confirmurl = new moodle_url('/local/educheckout/category_manage.php', [
+        'action' => 'delete',
+        'id' => $id,
+        'confirmed' => 1,
+        'sesskey' => sesskey(),
+    ]);
+    $cancelurl = new moodle_url('/local/educheckout/category_manage.php');
+    echo $OUTPUT->header();
+    echo $OUTPUT->confirm(get_string('category_delete_confirm', 'local_educheckout'), $confirmurl, $cancelurl);
+    echo $OUTPUT->footer();
+    exit;
 }
 
 // Category form (handles both create and edit).
-$form = new \local_moodec\form\category_form(
-    new moodle_url('/local/moodec/category_manage.php', ['id' => $id])
+$form = new \local_educheckout\form\category_form(
+    new moodle_url('/local/educheckout/category_manage.php', ['id' => $id])
 );
 
 if ($form->is_cancelled()) {
-    redirect(new moodle_url('/local/moodec/category_manage.php'));
+    redirect(new moodle_url('/local/educheckout/category_manage.php'));
 }
 
 if ($formdata = $form->get_data()) {
     if ((int) $formdata->id > 0) {
-        $cat = \local_moodec\category::get((int) $formdata->id);
+        $cat = \local_educheckout\category::get((int) $formdata->id);
         $cat->update(
             clean_param($formdata->name, PARAM_TEXT),
             clean_param($formdata->description ?? '', PARAM_TEXT),
             (int) $formdata->sortorder
         );
     } else {
-        \local_moodec\category::create(
+        \local_educheckout\category::create(
             clean_param($formdata->name, PARAM_TEXT),
             clean_param($formdata->description ?? '', PARAM_TEXT),
             (int) $formdata->sortorder
         );
     }
-    redirect(new moodle_url('/local/moodec/category_manage.php'));
+    redirect(new moodle_url('/local/educheckout/category_manage.php'));
 }
 
 // Pre-fill form for editing an existing category.
 if ($id > 0 && !$form->is_submitted()) {
-    $cat = \local_moodec\category::get($id);
+    $cat = \local_educheckout\category::get($id);
     $form->set_data([
         'id' => $cat->get_id(),
         'name' => $cat->get_name(),
@@ -85,32 +99,31 @@ if ($id > 0 && !$form->is_submitted()) {
 }
 
 // Build category list.
-$categories = \local_moodec\category::get_all();
+$categories = \local_educheckout\category::get_all();
 $catlist = [];
 foreach ($categories as $cat) {
     $catlist[] = [
         'id' => $cat->get_id(),
         'name' => format_string($cat->get_name()),
         'sortorder' => $cat->get_sortorder(),
-        'editurl' => (new moodle_url('/local/moodec/category_manage.php', ['id' => $cat->get_id()]))->out(false),
-        'deleteurl' => (new moodle_url('/local/moodec/category_manage.php', [
+        'editurl' => (new moodle_url('/local/educheckout/category_manage.php', ['id' => $cat->get_id()]))->out(false),
+        'deleteurl' => (new moodle_url('/local/educheckout/category_manage.php', [
             'action' => 'delete',
             'id' => $cat->get_id(),
-            'sesskey' => sesskey(),
         ]))->out(false),
     ];
 }
 
 echo $OUTPUT->header();
 
-echo $OUTPUT->render_from_template('local_moodec/category_list', [
+echo $OUTPUT->render_from_template('local_educheckout/category_list', [
     'hascategories' => !empty($catlist),
     'categories' => $catlist,
-    'manageurl' => (new moodle_url('/local/moodec/manage.php'))->out(false),
+    'manageurl' => (new moodle_url('/local/educheckout/manage.php'))->out(false),
 ]);
 
 echo $OUTPUT->heading(
-    $id > 0 ? get_string('category_edit', 'local_moodec') : get_string('category_add', 'local_moodec'),
+    $id > 0 ? get_string('category_edit', 'local_educheckout') : get_string('category_add', 'local_educheckout'),
     3
 );
 $form->display();

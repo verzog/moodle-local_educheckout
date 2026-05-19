@@ -1,4 +1,4 @@
-# Moodec Cart Rebuild — Design (for review)
+# EduCheckout Cart Rebuild — Design (for review)
 
 Status: **DESIGN ONLY — no implementation in this PR.** All decisions locked
 (§11). Governed by the repo-root `CLAUDE.md` (AU Moodle plugin standard), with
@@ -6,8 +6,8 @@ one deliberate project narrowing: **Moodle 5.0+ only**.
 
 ## 1. Goal
 
-Replace the dead Moodec purchase flow with a new shopping cart and checkout built
-from scratch, reusing the existing product catalogue and the `enrol_moodec`
+Replace the dead EduCheckout purchase flow with a new shopping cart and checkout built
+from scratch, reusing the existing product catalogue and the `enrol_educheckout`
 enrolment leg. **Target: Moodle 5.0+ / PHP 8.2+.** (Moodle 5.0 drops PHP 8.1, so
 the PHP floor is 8.2; CI matrix PHP 8.2/8.3 × `mysqli`/`pgsql`.) The Moodle 5.1+
 `public/` directory layout must be accounted for. Implementation integrates on
@@ -15,7 +15,7 @@ the **`main`** branch (Decision 1).
 
 ## 2. Why the old flow is dead (recap)
 
-`pages/checkout.php` → `MoodecGatewayPaypal::render()` posts an HTML form to PayPal
+`pages/checkout.php` → `EduCheckoutGatewayPaypal::render()` posts an HTML form to PayPal
 classic `www.paypal.com/cgi-bin/webscr` (`cmd=_cart`); PayPal then server-to-server
 POSTs `payment/paypal/ipn.php`, which posts back `cmd=_notify-validate` and on
 `VERIFIED` enrols the user.
@@ -28,12 +28,12 @@ with a copy of the product page, so that branch cannot confirm payment at all.)
 ## 3. What is kept vs replaced
 
 **Kept / reused**
-- Product model: `local_moodec_product`, `local_moodec_variation` tables and the
+- Product model: `local_educheckout_product`, `local_educheckout_variation` tables and the
   product classes (simple + variable/variation pricing, durations, groups),
-  reimplemented as autoloaded `\local_moodec\` namespaced classes.
-- Enrolment leg: enrolment via the `enrol_moodec` plugin (fallback `manual`),
+  reimplemented as autoloaded `\local_educheckout\` namespaced classes.
+- Enrolment leg: enrolment via the `enrol_educheckout` plugin (fallback `manual`),
   group assignment, duration handling — logic lifted from the old
-  `MoodecGateway::complete_enrolment()`, modernised.
+  `EduCheckoutGateway::complete_enrolment()`, modernised.
 - Catalogue/product pages (rebuilt to standard; link changes).
 
 **Replaced / removed (all legacy PHP goes — see §10 CI note)**
@@ -42,10 +42,10 @@ with a copy of the product page, so that branch cannot confirm payment at all.)
 - `classes/gateway*.php` and the entire `payment/` directory → removed; payment
   delegated to Moodle core_payment.
 - `classes/transaction*.php` and the old report code → removed. The
-  `local_moodec_transaction*` **tables and their data are left untouched in the
+  `local_educheckout_transaction*` **tables and their data are left untouched in the
   database but are no longer surfaced** (Decision 3 — no migration).
 - All `sprintf()`-built SQL → parameterised Moodle DML (`CLAUDE.md` §4).
-- The legacy hardcoded 13-currency list (`local_moodec_get_currencies()`) →
+- The legacy hardcoded 13-currency list (`local_educheckout_get_currencies()`) →
   full supported currency set (Decision 5).
 - Non-standard file headers / `require_once config.php` in class files →
   standard Moodle header + autoloading + `MOODLE_INTERNAL` guard.
@@ -55,7 +55,7 @@ with a copy of the product page, so that branch cannot confirm payment at all.)
 The new cart does **not** hand-roll any gateway, IPN, or PCI-sensitive code.
 Checkout delegates to Moodle's built-in **Payments subsystem** (`core_payment`):
 
-- Moodec defines a *payable* = the cart total (incl. tax) in the order currency.
+- EduCheckout defines a *payable* = the cart total (incl. tax) in the order currency.
 - Both **core** gateway subplugins — `paygw_paypal` **and** `paygw_stripe`,
   which ship with Moodle core — are enabled on the payment account (Decision 2).
   The user picks PayPal or Stripe at the core-rendered pay step.
@@ -64,31 +64,31 @@ Checkout delegates to Moodle's built-in **Payments subsystem** (`core_payment`):
 
 No bundled SDK and no third-party libraries (so no `thirdpartylibs.xml`, smaller
 PCI/security surface — `CLAUDE.md` §5). `core_payment` models one payable per
-`(component, paymentarea, itemid)`; a Moodec cart holds multiple courses, so
-**the order is the payable**: `component = local_moodec`,
-`paymentarea = cart`, `itemid = local_moodec_order.id`.
+`(component, paymentarea, itemid)`; a EduCheckout cart holds multiple courses, so
+**the order is the payable**: `component = local_educheckout`,
+`paymentarea = cart`, `itemid = local_educheckout_order.id`.
 
 ## 5. Data model (new tables)
 
-`local_moodec_cart` — `id, userid (0 for guest), sessionkey (guest cart),
+`local_educheckout_cart` — `id, userid (0 for guest), sessionkey (guest cart),
 currency, status (open|ordered|cancelled), timecreated, timemodified`. One `open`
 cart per user; guest carts keyed by `sessionkey`.
 
-`local_moodec_cart_item` — `id, cartid, productid, variationid, courseid,
+`local_educheckout_cart_item` — `id, cartid, productid, variationid, courseid,
 unitprice (display only), timecreated`. Authoritative pricing recomputed at
 checkout.
 
-`local_moodec_order` — `id, userid, cartid, currency, netamount, taxamount,
+`local_educheckout_order` — `id, userid, cartid, currency, netamount, taxamount,
 taxrate, taxinclusive, amount (gross = net + tax), status
 (pending|paid|delivered|failed|cancelled), paymentid (FK core {payments}),
 timecreated, timemodified`.
 
-`local_moodec_order_item` — `id, orderid, productid, variationid, courseid,
+`local_educheckout_order_item` — `id, orderid, productid, variationid, courseid,
 unitprice, nettax (per-item tax for the invoice breakdown), enrolled (0/1,
 idempotent delivery)`.
 
 `db/install.xml` adds these; `db/upgrade.php` uses incrementing savepoints
-(`CLAUDE.md` §3.5). **No upgrade step migrates legacy `local_moodec_transaction*`
+(`CLAUDE.md` §3.5). **No upgrade step migrates legacy `local_educheckout_transaction*`
 data** (Decision 3). A Moodle **privacy provider**
 (`privacy/classes/provider.php`) covers the four new tables for APP compliance
 (`CLAUDE.md` §2); customer country used for tax is read from the existing Moodle
@@ -105,18 +105,18 @@ user profile (not separately collected).
    never `innerHTML` (`CLAUDE.md` §4).
 2. **Checkout** — `pages/checkout.php`: `require_login()`, load open cart, drop
    disabled products / already-enrolled courses, recompute prices, **compute tax
-   (§8.2)**, create `local_moodec_order` (pending) recording net/tax/gross +
+   (§8.2)**, create `local_educheckout_order` (pending) recording net/tax/gross +
    currency, render the core_payment pay region for the gross amount. Any
    `moodleform` action targets an explicit `index.php` (`CLAUDE.md` §3.7).
 3. **Payment** — entirely core_payment + the chosen gateway (PayPal or Stripe).
-   No moodec payment code.
+   No educheckout payment code.
 4. **Delivery** — `classes/payment/service_provider.php` implementing
    `\core_payment\local\callback\service_provider`: `get_payable` (returns gross
    + order currency), `get_success_url`, `deliver_order` (enrol via
-   `enrol_moodec`/`manual`, correct duration incl. 0 = unlimited, group add,
+   `enrol_educheckout`/`manual`, correct duration incl. 0 = unlimited, group add,
    **idempotent** via `order_item.enrolled`, fire events, send a tax-itemised
    receipt). Dates via `userdate()`; product summaries rendered through
-   `file_rewrite_pluginfile_urls()` + a `local_moodec_pluginfile()` whitelist
+   `file_rewrite_pluginfile_urls()` + a `local_educheckout_pluginfile()` whitelist
    (`CLAUDE.md` §3.3).
 
 ## 7. Observability & security
@@ -130,7 +130,7 @@ failure recorded (not swallowed) on delivery error; `fullname()` fed via
 
 ### 8.1 Locale & currency
 
-- All user-facing text in `lang/en/local_moodec.php`, **ascending byte order,
+- All user-facing text in `lang/en/local_educheckout.php`, **ascending byte order,
   no interspersed comments** (§3.1). Legacy lang files use US spellings
   (e.g. "Enrollment") and section-comment dividers — both eliminated. Audit for
   `-ize/-or` → `-ise/-our`.
@@ -155,8 +155,8 @@ New tax capability (addresses the consumer/tax-law gap previously flagged):
   (`country → rate`) for VAT/GST destinations, defaulting to the base rate.
 - **Computation** at checkout: resolve the applicable rate (per-country override
   → base rate; customer country from the Moodle user profile), compute per-item
-  and order-level net/tax/gross, persist on `local_moodec_order` /
-  `local_moodec_order_item`. Rate 0 / `tax_enable=off` ⇒ pure net (covers
+  and order-level net/tax/gross, persist on `local_educheckout_order` /
+  `local_educheckout_order_item`. Rate 0 / `tax_enable=off` ⇒ pure net (covers
   tax-exempt education jurisdictions).
 - **Display**: cart, checkout and the emailed/HTML receipt show a net + tax
   (label + rate) + gross breakdown; invoice-style receipt suitable as a tax
@@ -173,14 +173,14 @@ New tax capability (addresses the consumer/tax-law gap previously flagged):
   (replaced by core Payments admin + new currency/tax settings).
   `version.php`: standard header, bump `version`,
   **`requires` = the Moodle 5.0 baseline version**, set `maturity`, bump the
-  `enrol_moodec` dependency to the rebuilt enrol plugin's new version.
+  `enrol_educheckout` dependency to the rebuilt enrol plugin's new version.
 - **README** rebuilt to the `tool_pluginskel` template, and **must explicitly
-  state**: (a) existing `local_moodec_transaction*` data is **not migrated** and
+  state**: (a) existing `local_educheckout_transaction*` data is **not migrated** and
   no longer displayed, remaining untouched in the DB (Decision 3); (b) the
   operator is responsible for configuring correct tax rates and for tax/GST/VAT
   registration and compliance in their jurisdiction.
-- **`enrol_moodec`** rebuild is **authorised and designed** — see
-  `verzog/moodle-enrol_moodec` PR #1 (`docs/enrol-rebuild-design.md`): a
+- **`enrol_educheckout`** rebuild is **authorised and designed** — see
+  `verzog/moodle-enrol_educheckout` PR #1 (`docs/enrol-rebuild-design.md`): a
   minimal, conformant Moodle 5.0+ enrolment plugin (admin-only unenrol, no bulk
   ops in v1). The two rebuilds and their version dependency are coordinated
   across the two PRs, both integrating on `main`.
@@ -198,15 +198,15 @@ New tax capability (addresses the consumer/tax-law gap previously flagged):
 - **Currency**: AUD remains the `CLAUDE.md` §2 default, but all
   gateway-supported currencies are selectable (Decision 5).
 - **Tax**: new configurable tax subsystem; receipt doubles as a tax receipt.
-- **Two-plugin scope**: `CLAUDE.md` applies independently to `local_moodec` and
-  `enrol_moodec`, both targeting Moodle 5.0+ and integrating on `main`.
+- **Two-plugin scope**: `CLAUDE.md` applies independently to `local_educheckout` and
+  `enrol_educheckout`, both targeting Moodle 5.0+ and integrating on `main`.
 
 ## 11. Decisions (locked)
 
 1. **Integration branch** — both repos standardise on **`main`** as the
    Moodle 5.0+ integration line and CI trigger; making `main` the repo default
    is a one-off GitHub admin step at implementation start. (Supersedes the
-   earlier `Moodle-Local_moodle5.0` / `moodle_enrol_moodec50` target names.)
+   earlier `Moodle-Local_moodle5.0` / `moodle_enrol_educheckout50` target names.)
 2. **Gateways** — **both** PayPal and Stripe, via the **core** `paygw_paypal`
    and `paygw_stripe` subplugins. No custom gateway code.
 3. **Legacy data** — **no migration.** Old tables/data left untouched and
@@ -220,15 +220,15 @@ New tax capability (addresses the consumer/tax-law gap previously flagged):
 6. **Tax** — **configurable tax capability added**: enable flag, label, base
    rate, inclusive/exclusive mode, optional per-country override; net/tax/gross
    recorded per order and shown on an invoice-style receipt.
-7. **`enrol_moodec` rebuild** — **authorised.** Minimal conformant Moodle 5.0+
+7. **`enrol_educheckout` rebuild** — **authorised.** Minimal conformant Moodle 5.0+
    rebuild (admin-only unenrol, no v1 bulk ops) designed in
-   `verzog/moodle-enrol_moodec` PR #1.
+   `verzog/moodle-enrol_educheckout` PR #1.
 
 ### Remaining items
 
-- **A. `enrol_moodec`** — ✅ authorised, designed, and its open questions
+- **A. `enrol_educheckout`** — ✅ authorised, designed, and its open questions
   resolved (admin-only unenrol; `main` branch; no v1 bulk ops) in PR #1 of
-  `moodle-enrol_moodec`.
+  `moodle-enrol_educheckout`.
 - **B. Branch naming** — ✅ resolved: standardise on **`main`** (Decision 1).
 - **C. Future phases (confirmed later, not v1)** — per-shopper multi-currency
   (per-currency price lists + payment accounts) and per-product/category tax

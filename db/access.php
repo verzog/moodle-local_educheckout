@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Capability definitions for the Moodec storefront plugin.
+ * Capability definitions for the EduCheckout storefront plugin.
  *
- * @package    local_moodec
+ * @package    local_educheckout
  * @copyright  2026 LearningWorks Ltd
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -25,14 +25,14 @@
 defined('MOODLE_INTERNAL') || die();
 
 $capabilities = [
-    'local/moodec:manageproducts' => [
+    'local/educheckout:manageproducts' => [
         'captype' => 'write',
         'contextlevel' => CONTEXT_SYSTEM,
         'archetypes' => [
             'manager' => CAP_ALLOW,
         ],
     ],
-    'local/moodec:viewallorders' => [
+    'local/educheckout:viewallorders' => [
         'captype' => 'read',
         'contextlevel' => CONTEXT_SYSTEM,
         'archetypes' => [

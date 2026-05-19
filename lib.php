@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Library callbacks for the Moodec storefront plugin.
+ * Library callbacks for the EduCheckout storefront plugin.
  *
- * @package    local_moodec
+ * @package    local_educheckout
  * @copyright  2015 LearningWorks Ltd
  * @copyright  2026 LearningWorks Ltd
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -29,16 +29,16 @@
  * @param global_navigation $navigation
  * @return void
  */
-function local_moodec_extend_navigation(global_navigation $navigation) {
+function local_educheckout_extend_navigation(global_navigation $navigation) {
     if (!isloggedin() || isguestuser()) {
         return;
     }
     $node = $navigation->add(
-        get_string('catalogue', 'local_moodec'),
-        new moodle_url('/local/moodec/index.php'),
+        get_string('catalogue', 'local_educheckout'),
+        new moodle_url('/local/educheckout/index.php'),
         navigation_node::TYPE_CUSTOM,
         null,
-        'local_moodec'
+        'local_educheckout'
     );
     $node->showinflatnavigation = true;
 }
@@ -55,7 +55,7 @@ function local_moodec_extend_navigation(global_navigation $navigation) {
  * @param array $options
  * @return bool false if not found
  */
-function local_moodec_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options = []) {
+function local_educheckout_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options = []) {
     if ($context->contextlevel !== CONTEXT_SYSTEM) {
         return false;
     }
@@ -71,7 +71,7 @@ function local_moodec_pluginfile($course, $cm, $context, $filearea, $args, $forc
     $filepath = $args ? ('/' . implode('/', $args) . '/') : '/';
 
     $fs = get_file_storage();
-    $file = $fs->get_file($context->id, 'local_moodec', 'product_image', $itemid, $filepath, $filename);
+    $file = $fs->get_file($context->id, 'local_educheckout', 'product_image', $itemid, $filepath, $filename);
 
     if (!$file || $file->is_directory()) {
         return false;

@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Moodec single product page.
+ * EduCheckout single product page.
  *
- * @package    local_moodec
+ * @package    local_educheckout
  * @copyright  2026 LearningWorks Ltd
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -32,10 +32,10 @@ require_login(null, true);
 
 $context = context_system::instance();
 $PAGE->set_context($context);
-$PAGE->set_url(new moodle_url('/local/moodec/product.php', ['id' => $productid]));
+$PAGE->set_url(new moodle_url('/local/educheckout/product.php', ['id' => $productid]));
 $PAGE->set_pagelayout('standard');
 
-$product = new \local_moodec\product($productid);
+$product = new \local_educheckout\product($productid);
 $PAGE->set_title($product->get_fullname());
 $PAGE->set_heading($product->get_fullname());
 
@@ -48,8 +48,8 @@ if ($issessionproduct) {
     if (!empty($enabledids)) {
         [$insql, $inparams] = $DB->get_in_or_equal($enabledids, SQL_PARAMS_NAMED);
         $sql = "SELECT oi.variationid, COUNT(oi.id) AS cnt
-                  FROM {local_moodec_order_item} oi
-                  JOIN {local_moodec_order} o ON o.id = oi.orderid
+                  FROM {local_educheckout_order_item} oi
+                  JOIN {local_educheckout_order} o ON o.id = oi.orderid
                  WHERE oi.variationid $insql
                    AND o.status IN ('paid', 'delivered')
               GROUP BY oi.variationid";
@@ -69,11 +69,11 @@ foreach ($product->get_enabled_variations() as $variation) {
     $seatstext = '';
     if ($hassessiondata) {
         if ($capacity === 0) {
-            $seatstext = get_string('session_seats_unlimited', 'local_moodec');
+            $seatstext = get_string('session_seats_unlimited', 'local_educheckout');
         } else if ($seatsremaining === 0) {
-            $seatstext = get_string('session_full', 'local_moodec');
+            $seatstext = get_string('session_full', 'local_educheckout');
         } else {
-            $seatstext = get_string('session_seats_remaining', 'local_moodec', $seatsremaining);
+            $seatstext = get_string('session_seats_remaining', 'local_educheckout', $seatsremaining);
         }
     }
 
@@ -103,7 +103,7 @@ $categoryname = '';
 $catid = $product->get_category_id();
 if ($catid) {
     try {
-        $cat = \local_moodec\category::get($catid);
+        $cat = \local_educheckout\category::get($catid);
         $categoryname = format_string($cat->get_name());
     } catch (\dml_missing_record_exception $e) {
         $categoryname = '';
@@ -143,11 +143,11 @@ $data = [
     'variations' => $variations,
     'alreadyenrolled' => $alreadyenrolled,
     'courseurl' => (new moodle_url('/course/view.php', ['id' => $product->get_course_id()]))->out(false),
-    'addurl' => (new moodle_url('/local/moodec/cart.php'))->out(false),
-    'catalogueurl' => (new moodle_url('/local/moodec/index.php'))->out(false),
+    'addurl' => (new moodle_url('/local/educheckout/cart.php'))->out(false),
+    'catalogueurl' => (new moodle_url('/local/educheckout/index.php'))->out(false),
     'sesskey' => sesskey(),
 ];
 
 echo $OUTPUT->header();
-echo $OUTPUT->render_from_template('local_moodec/product', $data);
+echo $OUTPUT->render_from_template('local_educheckout/product', $data);
 echo $OUTPUT->footer();

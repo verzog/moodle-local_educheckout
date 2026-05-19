@@ -15,14 +15,14 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Category model for the Moodec storefront.
+ * Category model for the EduCheckout storefront.
  *
- * @package    local_moodec
+ * @package    local_educheckout
  * @copyright  2026 LearningWorks Ltd
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace local_moodec;
+namespace local_educheckout;
 
 /**
  * Represents a storefront category.
@@ -48,7 +48,7 @@ class category {
      */
     public static function get(int $id): category {
         global $DB;
-        $record = $DB->get_record('local_moodec_category', ['id' => $id], '*', MUST_EXIST);
+        $record = $DB->get_record('local_educheckout_category', ['id' => $id], '*', MUST_EXIST);
         return new self($record);
     }
 
@@ -59,7 +59,7 @@ class category {
      */
     public static function get_all(): array {
         global $DB;
-        $records = $DB->get_records('local_moodec_category', null, 'sortorder ASC, name ASC');
+        $records = $DB->get_records('local_educheckout_category', null, 'sortorder ASC, name ASC');
         $categories = [];
         foreach ($records as $record) {
             $categories[(int) $record->id] = new self($record);
@@ -85,7 +85,7 @@ class category {
             'timecreated' => $now,
             'timemodified' => $now,
         ];
-        $record->id = $DB->insert_record('local_moodec_category', $record);
+        $record->id = $DB->insert_record('local_educheckout_category', $record);
         return new self($record);
     }
 
@@ -103,7 +103,7 @@ class category {
         $this->record->description = $description;
         $this->record->sortorder = $sortorder;
         $this->record->timemodified = time();
-        $DB->update_record('local_moodec_category', $this->record);
+        $DB->update_record('local_educheckout_category', $this->record);
     }
 
     /**
@@ -113,8 +113,8 @@ class category {
      */
     public function delete(): void {
         global $DB;
-        $DB->set_field('local_moodec_product', 'category_id', null, ['category_id' => $this->get_id()]);
-        $DB->delete_records('local_moodec_category', ['id' => $this->get_id()]);
+        $DB->set_field('local_educheckout_product', 'category_id', null, ['category_id' => $this->get_id()]);
+        $DB->delete_records('local_educheckout_category', ['id' => $this->get_id()]);
     }
 
     /**

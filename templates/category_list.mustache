@@ -15,7 +15,7 @@
     along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 }}
 {{!
-    @template local_moodec/category_list
+    @template local_educheckout/category_list
 
     Category listing on the category management page.
 
@@ -23,19 +23,19 @@
     {
         "hascategories": true,
         "categories": [{"id":1,"name":"Compliance","sortorder":0,"editurl":"","deleteurl":""}],
-        "manageurl": "https://example.com/local/moodec/manage.php"
+        "manageurl": "https://example.com/local/educheckout/manage.php"
     }
 }}
-<div class="local-moodec-categories mb-3">
-    <a href="{{manageurl}}" class="btn btn-secondary mb-3">&larr; {{#str}}manage_title, local_moodec{{/str}}</a>
+<div class="local-educheckout-categories mb-3">
+    <a href="{{manageurl}}" class="btn btn-secondary mb-3">&larr; {{#str}}manage_title, local_educheckout{{/str}}</a>
 
     {{#hascategories}}
     <table class="table table-bordered table-hover">
         <thead class="thead-light">
             <tr>
-                <th>{{#str}}category_name, local_moodec{{/str}}</th>
-                <th>{{#str}}category_sortorder, local_moodec{{/str}}</th>
-                <th>{{#str}}actions, local_moodec{{/str}}</th>
+                <th>{{#str}}category_name, local_educheckout{{/str}}</th>
+                <th>{{#str}}category_sortorder, local_educheckout{{/str}}</th>
+                <th>{{#str}}actions, local_educheckout{{/str}}</th>
             </tr>
         </thead>
         <tbody>
@@ -45,10 +45,7 @@
                 <td>{{sortorder}}</td>
                 <td class="d-flex gap-1">
                     <a href="{{editurl}}" class="btn btn-sm btn-outline-primary">{{#str}}edit{{/str}}</a>
-                    <a href="{{deleteurl}}" class="btn btn-sm btn-outline-danger"
-                       onclick="return confirm('{{#str}}category_delete_confirm, local_moodec{{/str}}')">
-                        {{#str}}delete{{/str}}
-                    </a>
+                    <a href="{{deleteurl}}" class="btn btn-sm btn-outline-danger">{{#str}}delete{{/str}}</a>
                 </td>
             </tr>
             {{/categories}}
@@ -56,6 +53,6 @@
     </table>
     {{/hascategories}}
     {{^hascategories}}
-    <p class="text-muted">{{#str}}categories_none, local_moodec{{/str}}</p>
+    <p class="text-muted">{{#str}}categories_none, local_educheckout{{/str}}</p>
     {{/hascategories}}
 </div>
