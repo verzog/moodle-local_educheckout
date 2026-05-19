@@ -20,7 +20,7 @@ Feature: Moodec product management
     Given I visit "/local/moodec/manage.php"
     When I click on "Add product" "link"
     Then I should see "Add product"
-    And I should see "Save changes"
+    And "Save changes" "button" should exist
 
   Scenario: Admin can disable and re-enable a product
     Given the following "local_moodec > product" exist:
