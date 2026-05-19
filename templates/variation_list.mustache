@@ -22,7 +22,10 @@
     Example context (json):
     {
         "hasvariations": true,
-        "variations": [{"id":1,"name":"Standard","price":"99.00","duration":365,"is_enabled":true,"editurl":"","deleteurl":""}]
+        "is_session_product": false,
+        "variations": [{"id":1,"name":"Standard","price":"99.00","duration":365,"is_enabled":true,
+            "session_starttime_formatted":"","session_endtime_formatted":"",
+            "session_location":"","session_capacity":0,"editurl":"","deleteurl":""}]
     }
 }}
 {{#hasvariations}}
@@ -32,6 +35,12 @@
             <th>{{#str}}variation_name, local_moodec{{/str}}</th>
             <th>{{#str}}variation_price, local_moodec{{/str}}</th>
             <th>{{#str}}variation_duration, local_moodec{{/str}}</th>
+            {{#is_session_product}}
+            <th>{{#str}}variation_session_starttime, local_moodec{{/str}}</th>
+            <th>{{#str}}variation_session_endtime, local_moodec{{/str}}</th>
+            <th>{{#str}}session_location, local_moodec{{/str}}</th>
+            <th>{{#str}}session_capacity, local_moodec{{/str}}</th>
+            {{/is_session_product}}
             <th>{{#str}}product_status, local_moodec{{/str}}</th>
             <th>{{#str}}actions, local_moodec{{/str}}</th>
         </tr>
@@ -42,6 +51,12 @@
             <td>{{name}}</td>
             <td>{{price}}</td>
             <td>{{duration}}</td>
+            {{#is_session_product}}
+            <td>{{session_starttime_formatted}}</td>
+            <td>{{session_endtime_formatted}}</td>
+            <td>{{session_location}}</td>
+            <td>{{session_capacity}}</td>
+            {{/is_session_product}}
             <td>
                 {{#is_enabled}}<span class="badge badge-success">{{#str}}product_enabled_yes, local_moodec{{/str}}</span>{{/is_enabled}}
                 {{^is_enabled}}<span class="badge badge-secondary">{{#str}}product_enabled_no, local_moodec{{/str}}</span>{{/is_enabled}}
