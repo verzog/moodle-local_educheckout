@@ -15,17 +15,17 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Data generator for the Moodec storefront plugin.
+ * Data generator for the EduCheckout storefront plugin.
  *
- * @package    local_moodec
+ * @package    local_educheckout
  * @copyright  2026 LearningWorks Ltd
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 /**
- * Generates Moodec test data.
+ * Generates EduCheckout test data.
  */
-class local_moodec_generator extends component_generator_base {
+class local_educheckout_generator extends component_generator_base {
     /**
      * Create a product record.
      *
@@ -55,7 +55,7 @@ class local_moodec_generator extends component_generator_base {
             'description'        => $record['description'] ?? '',
             'description_format' => FORMAT_HTML,
         ];
-        $row->id = $DB->insert_record('local_moodec_product', $row);
+        $row->id = $DB->insert_record('local_educheckout_product', $row);
         return $row;
     }
 }

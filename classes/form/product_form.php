@@ -15,14 +15,14 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Product editing form for the Moodec storefront.
+ * Product editing form for the EduCheckout storefront.
  *
- * @package    local_moodec
+ * @package    local_educheckout
  * @copyright  2026 LearningWorks Ltd
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace local_moodec\form;
+namespace local_educheckout\form;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -50,7 +50,7 @@ class product_form extends \moodleform {
             $mform->addElement(
                 'course',
                 'course_id',
-                get_string('product_course', 'local_moodec')
+                get_string('product_course', 'local_educheckout')
             );
             $mform->addRule('course_id', null, 'required', null, 'client');
         } else {
@@ -61,29 +61,29 @@ class product_form extends \moodleform {
         $mform->addElement(
             'advcheckbox',
             'is_enabled',
-            get_string('product_enabled', 'local_moodec')
+            get_string('product_enabled', 'local_educheckout')
         );
 
         $mform->addElement(
             'select',
             'category_id',
-            get_string('product_category', 'local_moodec'),
-            [0 => get_string('uncategorised', 'local_moodec')] + $categoryoptions
+            get_string('product_category', 'local_educheckout'),
+            [0 => get_string('uncategorised', 'local_educheckout')] + $categoryoptions
         );
 
         $mform->addElement(
             'text',
             'tags',
-            get_string('product_tags', 'local_moodec'),
+            get_string('product_tags', 'local_educheckout'),
             ['size' => 60]
         );
         $mform->setType('tags', PARAM_TEXT);
-        $mform->addHelpButton('tags', 'product_tags', 'local_moodec');
+        $mform->addHelpButton('tags', 'product_tags', 'local_educheckout');
 
         $mform->addElement(
             'editor',
             'description_editor',
-            get_string('product_description', 'local_moodec'),
+            get_string('product_description', 'local_educheckout'),
             null,
             ['maxfiles' => 0, 'noclean' => false]
         );
@@ -92,7 +92,7 @@ class product_form extends \moodleform {
         $mform->addElement(
             'filemanager',
             'image',
-            get_string('product_image', 'local_moodec'),
+            get_string('product_image', 'local_educheckout'),
             null,
             [
                 'subdirs' => 0,
@@ -104,7 +104,7 @@ class product_form extends \moodleform {
         $mform->addElement(
             'text',
             'sort_order',
-            get_string('product_sortorder', 'local_moodec'),
+            get_string('product_sortorder', 'local_educheckout'),
             ['size' => 5]
         );
         $mform->setType('sort_order', PARAM_INT);

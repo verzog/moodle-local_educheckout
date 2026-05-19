@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Scheduled task definitions for the Moodec storefront plugin.
+ * Scheduled task definitions for the EduCheckout storefront plugin.
  *
- * @package    local_moodec
+ * @package    local_educheckout
  * @copyright  2026 LearningWorks Ltd
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -26,7 +26,7 @@ defined('MOODLE_INTERNAL') || die();
 
 $tasks = [
     [
-        'classname' => \local_moodec\task\cleanup_carts::class,
+        'classname' => \local_educheckout\task\cleanup_carts::class,
         'blocking' => 0,
         'minute' => '0',
         'hour' => '3',

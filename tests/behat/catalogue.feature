@@ -1,5 +1,5 @@
-@local @local_moodec
-Feature: Moodec storefront catalogue is reachable
+@local @local_educheckout
+Feature: EduCheckout storefront catalogue is reachable
   In order to buy courses
   As a user
   I need to be able to open the course store
@@ -9,5 +9,5 @@ Feature: Moodec storefront catalogue is reachable
       | username | firstname | lastname | email            |
       | buyer    | Bea       | Buyer    | buyer@example.com |
     And I log in as "buyer"
-    When I visit "/local/moodec/index.php"
+    When I visit "/local/educheckout/index.php"
     Then I should see "Course store"

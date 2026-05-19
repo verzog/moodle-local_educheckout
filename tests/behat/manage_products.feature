@@ -1,5 +1,5 @@
-@local @local_moodec
-Feature: Moodec product management
+@local @local_educheckout
+Feature: EduCheckout product management
   In order to sell courses
   As an admin
   I need to be able to manage products
@@ -11,22 +11,22 @@ Feature: Moodec product management
     And I log in as "admin"
 
   Scenario: Admin can view the product management page
-    When I visit "/local/moodec/manage.php"
+    When I visit "/local/educheckout/manage.php"
     Then I should see "Manage products"
     And I should see "Add product"
 
   @javascript
   Scenario: Admin can navigate to the add product form
-    Given I visit "/local/moodec/manage.php"
+    Given I visit "/local/educheckout/manage.php"
     When I click on "Add product" "link"
     Then I should see "Add product"
     And "Save changes" "button" should exist
 
   Scenario: Admin can disable and re-enable a product
-    Given the following "local_moodec > product" exist:
+    Given the following "local_educheckout > product" exist:
       | course | is_enabled |
       | TC101  | 1          |
-    And I visit "/local/moodec/manage.php"
+    And I visit "/local/educheckout/manage.php"
     Then I should see "Test Course"
     When I click on "Disable" "link"
     Then I should see "Disabled"

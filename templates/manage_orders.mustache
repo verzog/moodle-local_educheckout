@@ -15,7 +15,7 @@
     along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 }}
 {{!
-    @template local_moodec/manage_orders
+    @template local_educheckout/manage_orders
 
     Order management listing for admins.
 
@@ -34,10 +34,10 @@
         "manageurl": ""
     }
 }}
-<div class="local-moodec-orders">
+<div class="local-educheckout-orders">
 
     <div class="mb-3">
-        <a href="{{manageurl}}" class="btn btn-secondary btn-sm">&larr; {{#str}}manage_title, local_moodec{{/str}}</a>
+        <a href="{{manageurl}}" class="btn btn-secondary btn-sm">&larr; {{#str}}manage_title, local_educheckout{{/str}}</a>
     </div>
 
     <nav class="mb-3">
@@ -55,11 +55,11 @@
         <thead class="thead-light">
             <tr>
                 <th>#</th>
-                <th>{{#str}}orders_student, local_moodec{{/str}}</th>
-                <th>{{#str}}orders_courses, local_moodec{{/str}}</th>
-                <th>{{#str}}orders_amount, local_moodec{{/str}}</th>
-                <th>{{#str}}orders_status, local_moodec{{/str}}</th>
-                <th>{{#str}}orders_date, local_moodec{{/str}}</th>
+                <th>{{#str}}orders_student, local_educheckout{{/str}}</th>
+                <th>{{#str}}orders_courses, local_educheckout{{/str}}</th>
+                <th>{{#str}}orders_amount, local_educheckout{{/str}}</th>
+                <th>{{#str}}orders_status, local_educheckout{{/str}}</th>
+                <th>{{#str}}orders_date, local_educheckout{{/str}}</th>
                 <th></th>
             </tr>
         </thead>
@@ -72,27 +72,27 @@
                 <td>{{currency}} {{amount}}</td>
                 <td><span class="badge badge-secondary">{{status}}</span></td>
                 <td><small>{{date}}</small></td>
-                <td><a href="{{receipturl}}" class="btn btn-sm btn-outline-primary">{{#str}}orders_receipt, local_moodec{{/str}}</a></td>
+                <td><a href="{{receipturl}}" class="btn btn-sm btn-outline-primary">{{#str}}orders_receipt, local_educheckout{{/str}}</a></td>
             </tr>
             {{/orders}}
         </tbody>
     </table>
     {{/hasorders}}
     {{^hasorders}}
-    <p class="text-muted">{{#str}}orders_none, local_moodec{{/str}}</p>
+    <p class="text-muted">{{#str}}orders_none, local_educheckout{{/str}}</p>
     {{/hasorders}}
 
     {{#haspagination}}
-    <nav aria-label="{{#str}}pagination_label, local_moodec{{/str}}">
+    <nav aria-label="{{#str}}pagination_label, local_educheckout{{/str}}">
         <ul class="pagination">
             <li class="page-item{{^hasprev}} disabled{{/hasprev}}">
-                <a class="page-link" href="{{prevurl}}">&laquo; {{#str}}previous, local_moodec{{/str}}</a>
+                <a class="page-link" href="{{prevurl}}">&laquo; {{#str}}previous, local_educheckout{{/str}}</a>
             </li>
             <li class="page-item disabled">
                 <span class="page-link">{{page}} / {{totalpages}}</span>
             </li>
             <li class="page-item{{^hasnext}} disabled{{/hasnext}}">
-                <a class="page-link" href="{{nexturl}}">{{#str}}next, local_moodec{{/str}} &raquo;</a>
+                <a class="page-link" href="{{nexturl}}">{{#str}}next, local_educheckout{{/str}} &raquo;</a>
             </li>
         </ul>
     </nav>

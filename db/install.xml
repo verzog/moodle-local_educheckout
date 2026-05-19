@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="local/moodec/db" VERSION="20260518" COMMENT="XMLDB file for the Moodec storefront plugin"
+<XMLDB PATH="local/educheckout/db" VERSION="20260518" COMMENT="XMLDB file for the EduCheckout storefront plugin"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd">
   <TABLES>
-    <TABLE NAME="local_moodec_category" COMMENT="Moodec product categories">
+    <TABLE NAME="local_educheckout_category" COMMENT="EduCheckout product categories">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
@@ -16,7 +16,7 @@
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="local_moodec_product" COMMENT="Moodec product settings">
+    <TABLE NAME="local_educheckout_product" COMMENT="EduCheckout product settings">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="course_id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
@@ -37,7 +37,7 @@
         <INDEX NAME="category_id" UNIQUE="false" FIELDS="category_id"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="local_moodec_variation" COMMENT="Moodec product variation settings">
+    <TABLE NAME="local_educheckout_variation" COMMENT="EduCheckout product variation settings">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="product_id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
@@ -54,7 +54,7 @@
         <INDEX NAME="product_id" UNIQUE="false" FIELDS="product_id"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="local_moodec_transaction" COMMENT="Legacy Moodec transactions (retained read-only; not migrated)">
+    <TABLE NAME="local_educheckout_transaction" COMMENT="Legacy EduCheckout transactions (retained read-only; not migrated)">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="txn_id" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
@@ -68,7 +68,7 @@
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="local_moodec_trans_item" COMMENT="Legacy Moodec transaction items (retained read-only; not migrated)">
+    <TABLE NAME="local_educheckout_trans_item" COMMENT="Legacy EduCheckout transaction items (retained read-only; not migrated)">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="transaction_id" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
@@ -80,7 +80,7 @@
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="local_moodec_cart" COMMENT="Shopping carts; one open cart per user, guests keyed by sessionkey">
+    <TABLE NAME="local_educheckout_cart" COMMENT="Shopping carts; one open cart per user, guests keyed by sessionkey">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="0 for a guest cart"/>
@@ -98,7 +98,7 @@
         <INDEX NAME="sessionkey" UNIQUE="false" FIELDS="sessionkey"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="local_moodec_cart_item" COMMENT="Items in a Moodec cart">
+    <TABLE NAME="local_educheckout_cart_item" COMMENT="Items in a EduCheckout cart">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="cartid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
@@ -110,10 +110,10 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="cartid" TYPE="foreign" FIELDS="cartid" REFTABLE="local_moodec_cart" REFFIELDS="id"/>
+        <KEY NAME="cartid" TYPE="foreign" FIELDS="cartid" REFTABLE="local_educheckout_cart" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="local_moodec_order" COMMENT="Moodec orders backed by a core payment">
+    <TABLE NAME="local_educheckout_order" COMMENT="EduCheckout orders backed by a core payment">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
@@ -131,14 +131,14 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="cartid" TYPE="foreign" FIELDS="cartid" REFTABLE="local_moodec_cart" REFFIELDS="id"/>
+        <KEY NAME="cartid" TYPE="foreign" FIELDS="cartid" REFTABLE="local_educheckout_cart" REFFIELDS="id"/>
       </KEYS>
       <INDEXES>
         <INDEX NAME="userid_status" UNIQUE="false" FIELDS="userid, status"/>
         <INDEX NAME="paymentid" UNIQUE="false" FIELDS="paymentid"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="local_moodec_order_item" COMMENT="Line items for a Moodec order">
+    <TABLE NAME="local_educheckout_order_item" COMMENT="Line items for a EduCheckout order">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="orderid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
@@ -151,7 +151,7 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="orderid" TYPE="foreign" FIELDS="orderid" REFTABLE="local_moodec_order" REFFIELDS="id"/>
+        <KEY NAME="orderid" TYPE="foreign" FIELDS="orderid" REFTABLE="local_educheckout_order" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
   </TABLES>

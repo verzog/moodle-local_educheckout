@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Moodec shopping cart page.
+ * EduCheckout shopping cart page.
  *
- * @package    local_moodec
+ * @package    local_educheckout
  * @copyright  2026 LearningWorks Ltd
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -30,18 +30,18 @@ require_login(null, true);
 
 $context = context_system::instance();
 $PAGE->set_context($context);
-$PAGE->set_url(new moodle_url('/local/moodec/cart.php'));
+$PAGE->set_url(new moodle_url('/local/educheckout/cart.php'));
 $PAGE->set_pagelayout('standard');
-$PAGE->set_title(get_string('cart_title', 'local_moodec'));
-$PAGE->set_heading(get_string('cart_title', 'local_moodec'));
-$cartjsurl = new moodle_url('/local/moodec/js/cart.js', ['v' => get_config('local_moodec', 'version')]);
+$PAGE->set_title(get_string('cart_title', 'local_educheckout'));
+$PAGE->set_heading(get_string('cart_title', 'local_educheckout'));
+$cartjsurl = new moodle_url('/local/educheckout/js/cart.js', ['v' => get_config('local_educheckout', 'version')]);
 $PAGE->requires->js($cartjsurl);
 
 $isguest = !isloggedin() || isguestuser();
-$cart = \local_moodec\cart::get_open($isguest ? 0 : (int) $USER->id, $isguest ? sesskey() : null);
+$cart = \local_educheckout\cart::get_open($isguest ? 0 : (int) $USER->id, $isguest ? sesskey() : null);
 
 if (!$isguest) {
-    $guestcart = \local_moodec\cart::find_guest(sesskey());
+    $guestcart = \local_educheckout\cart::find_guest(sesskey());
     if ($guestcart) {
         $cart->merge_from($guestcart);
     }
@@ -50,16 +50,16 @@ if (!$isguest) {
 if ($action === 'add' && confirm_sesskey()) {
     $productid = required_param('product', PARAM_INT);
     $variationid = optional_param('variation', 0, PARAM_INT);
-    $product = new \local_moodec\product($productid);
+    $product = new \local_educheckout\product($productid);
 
     if (!$product->is_enabled()) {
-        redirect(new moodle_url('/local/moodec/index.php'));
+        redirect(new moodle_url('/local/educheckout/index.php'));
     }
 
     if ($variationid > 0) {
         $variation = $product->get_variation($variationid);
         if (!$variation || empty($variation->is_enabled)) {
-            redirect(new moodle_url('/local/moodec/product.php', ['id' => $product->get_id()]));
+            redirect(new moodle_url('/local/educheckout/product.php', ['id' => $product->get_id()]));
         }
     }
 
@@ -69,13 +69,13 @@ if ($action === 'add' && confirm_sesskey()) {
         $product->get_course_id(),
         $product->get_price($variationid)
     );
-    redirect(new moodle_url('/local/moodec/cart.php'));
+    redirect(new moodle_url('/local/educheckout/cart.php'));
 }
 
 if ($action === 'remove' && confirm_sesskey()) {
     $itemid = required_param('item', PARAM_INT);
     $cart->remove_item($itemid);
-    redirect(new moodle_url('/local/moodec/cart.php'));
+    redirect(new moodle_url('/local/educheckout/cart.php'));
 }
 
 $items = [];
@@ -92,7 +92,7 @@ foreach ($cart->get_items() as $item) {
         'name' => $coursename,
         'unitprice' => format_float((float) $item->unitprice, 2),
         'sesskey' => sesskey(),
-        'removeurl' => (new moodle_url('/local/moodec/cart.php'))->out(false),
+        'removeurl' => (new moodle_url('/local/educheckout/cart.php'))->out(false),
     ];
 }
 
@@ -100,10 +100,10 @@ $data = [
     'isempty' => $cart->is_empty(),
     'items' => $items,
     'total' => format_float($cart->get_total(), 2),
-    'checkouturl' => (new moodle_url('/local/moodec/checkout.php'))->out(false),
-    'shopurl' => (new moodle_url('/local/moodec/index.php'))->out(false),
+    'checkouturl' => (new moodle_url('/local/educheckout/checkout.php'))->out(false),
+    'shopurl' => (new moodle_url('/local/educheckout/index.php'))->out(false),
 ];
 
 echo $OUTPUT->header();
-echo $OUTPUT->render_from_template('local_moodec/cart', $data);
+echo $OUTPUT->render_from_template('local_educheckout/cart', $data);
 echo $OUTPUT->footer();

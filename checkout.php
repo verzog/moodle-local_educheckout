@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Moodec checkout page.
+ * EduCheckout checkout page.
  *
- * @package    local_moodec
+ * @package    local_educheckout
  * @copyright  2026 LearningWorks Ltd
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -28,40 +28,40 @@ require_login();
 
 $context = context_system::instance();
 $PAGE->set_context($context);
-$PAGE->set_url(new moodle_url('/local/moodec/checkout.php'));
+$PAGE->set_url(new moodle_url('/local/educheckout/checkout.php'));
 $PAGE->set_pagelayout('standard');
-$PAGE->set_title(get_string('checkout_title', 'local_moodec'));
-$PAGE->set_heading(get_string('checkout_title', 'local_moodec'));
+$PAGE->set_title(get_string('checkout_title', 'local_educheckout'));
+$PAGE->set_heading(get_string('checkout_title', 'local_educheckout'));
 
-$cart = \local_moodec\cart::get_open((int) $USER->id);
-$guestcart = \local_moodec\cart::find_guest(sesskey());
+$cart = \local_educheckout\cart::get_open((int) $USER->id);
+$guestcart = \local_educheckout\cart::find_guest(sesskey());
 if ($guestcart) {
     $cart->merge_from($guestcart);
 }
 
 if ($cart->is_empty()) {
-    redirect(new moodle_url('/local/moodec/cart.php'));
+    redirect(new moodle_url('/local/educheckout/cart.php'));
 }
 
 $country = !empty($USER->country) ? $USER->country : null;
-$order = \local_moodec\order::create_from_cart($cart, (int) $USER->id, $country);
+$order = \local_educheckout\order::create_from_cart($cart, (int) $USER->id, $country);
 $cart->mark_ordered();
 
-$successurl = new moodle_url('/local/moodec/receipt.php', ['id' => $order->get_id()]);
+$successurl = new moodle_url('/local/educheckout/receipt.php', ['id' => $order->get_id()]);
 
 $data = [
     'amount' => format_float($order->get_amount(), 2),
     'currency' => $order->get_currency(),
     'cost' => \core_payment\helper::get_cost_as_string($order->get_amount(), $order->get_currency()),
-    'component' => 'local_moodec',
+    'component' => 'local_educheckout',
     'paymentarea' => 'cart',
     'itemid' => $order->get_id(),
-    'description' => get_string('checkout_title', 'local_moodec'),
+    'description' => get_string('checkout_title', 'local_educheckout'),
     'successurl' => $successurl->out(false),
 ];
 
 $PAGE->requires->js_call_amd('core_payment/gateways_modal', 'init');
 
 echo $OUTPUT->header();
-echo $OUTPUT->render_from_template('local_moodec/checkout', $data);
+echo $OUTPUT->render_from_template('local_educheckout/checkout', $data);
 echo $OUTPUT->footer();

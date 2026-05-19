@@ -1,21 +1,21 @@
-.local-moodec-catalogue .local-moodec-products {
+.local-educheckout-catalogue .local-educheckout-products {
     list-style: none;
     padding: 0;
 }
 
-.local-moodec-catalogue .local-moodec-product {
+.local-educheckout-catalogue .local-educheckout-product {
     display: flex;
     justify-content: space-between;
     padding: 0.5rem 0;
     border-bottom: 1px solid #ddd;
 }
 
-.local-moodec-cart .local-moodec-cart-items {
+.local-educheckout-cart .local-educheckout-cart-items {
     list-style: none;
     padding: 0;
 }
 
-.local-moodec-cart .local-moodec-cart-items li {
+.local-educheckout-cart .local-educheckout-cart-items li {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -23,6 +23,6 @@
     border-bottom: 1px solid #ddd;
 }
 
-.local-moodec-total {
+.local-educheckout-total {
     font-weight: bold;
 }

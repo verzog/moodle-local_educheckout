@@ -15,19 +15,19 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Tests for Moodec order creation and delivery.
+ * Tests for EduCheckout order creation and delivery.
  *
- * @package    local_moodec
+ * @package    local_educheckout
  * @copyright  2026 LearningWorks Ltd
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace local_moodec;
+namespace local_educheckout;
 
 /**
- * Unit tests for \local_moodec\order.
+ * Unit tests for \local_educheckout\order.
  *
- * @covers \local_moodec\order
+ * @covers \local_educheckout\order
  */
 final class order_test extends \advanced_testcase {
     /**
@@ -38,9 +38,9 @@ final class order_test extends \advanced_testcase {
     public function test_create_and_deliver(): void {
         $this->resetAfterTest();
 
-        set_config('tax_enable', 1, 'local_moodec');
-        set_config('tax_rate', '10.0', 'local_moodec');
-        set_config('tax_mode', 'exclusive', 'local_moodec');
+        set_config('tax_enable', 1, 'local_educheckout');
+        set_config('tax_rate', '10.0', 'local_educheckout');
+        set_config('tax_mode', 'exclusive', 'local_educheckout');
 
         $user = $this->getDataGenerator()->create_user();
         $course = $this->getDataGenerator()->create_course();

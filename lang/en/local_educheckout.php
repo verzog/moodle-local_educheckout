@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Strings for the Moodec storefront plugin.
+ * Strings for the EduCheckout storefront plugin.
  *
- * @package    local_moodec
+ * @package    local_educheckout
  * @copyright  2015 LearningWorks Ltd
  * @copyright  2026 LearningWorks Ltd
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -46,6 +46,8 @@ $string['checkout_title'] = 'Checkout';
 $string['continueshopping'] = 'Continue shopping';
 $string['currency'] = 'Currency';
 $string['currency_desc'] = 'The currency in which courses are sold. Must match the currency of the configured Moodle payment account.';
+$string['educheckout:manageproducts'] = 'Manage EduCheckout products and categories';
+$string['educheckout:viewallorders'] = 'View all EduCheckout orders';
 $string['error_categorynamerequired'] = 'A category name is required.';
 $string['error_negativeduration'] = 'Duration cannot be negative.';
 $string['error_negativeprice'] = 'Price cannot be negative.';
@@ -56,9 +58,7 @@ $string['itemremoved'] = 'Item removed from your cart.';
 $string['manage_categories'] = 'Manage categories';
 $string['manage_noproducts'] = 'No products have been created yet. Click ‘Add product’ to list a course for sale.';
 $string['manage_title'] = 'Manage products';
-$string['messageprovider:order_receipt'] = 'Moodec order receipts';
-$string['moodec:manageproducts'] = 'Manage Moodec products and categories';
-$string['moodec:viewallorders'] = 'View all Moodec orders';
+$string['messageprovider:order_receipt'] = 'EduCheckout order receipts';
 $string['next'] = 'Next';
 $string['nogateways'] = 'No payment gateway is configured. Please contact the site administrator.';
 $string['order_complete'] = 'Thank you. Your enrolment is complete.';
@@ -85,22 +85,22 @@ $string['pagination_label'] = 'Catalogue pages';
 $string['pay'] = 'Pay now';
 $string['paymentaccount'] = 'Payment account';
 $string['paymentaccount_desc'] = 'The Moodle payment account (Site administration > Payments) used to take storefront payments.';
-$string['pluginname'] = 'Moodec storefront';
+$string['pluginname'] = 'EduCheckout storefront';
 $string['previous'] = 'Previous';
 $string['price'] = 'Price';
 $string['price_from'] = 'From ${a}';
-$string['privacy:metadata'] = 'The Moodec storefront stores shopping cart and order records associated with a user.';
+$string['privacy:metadata'] = 'The EduCheckout storefront stores shopping cart and order records associated with a user.';
 $string['privacy:metadata:core_payment'] = 'Payments are processed and stored by the Moodle core payment subsystem.';
-$string['privacy:metadata:local_moodec_cart'] = 'Shopping carts created by the user.';
-$string['privacy:metadata:local_moodec_cart:status'] = 'The status of the cart (open, ordered or cancelled).';
-$string['privacy:metadata:local_moodec_cart:timecreated'] = 'The time the cart was created.';
-$string['privacy:metadata:local_moodec_cart:userid'] = 'The user who owns the cart.';
-$string['privacy:metadata:local_moodec_order'] = 'Orders placed by the user.';
-$string['privacy:metadata:local_moodec_order:amount'] = 'The gross amount of the order.';
-$string['privacy:metadata:local_moodec_order:currency'] = 'The currency of the order.';
-$string['privacy:metadata:local_moodec_order:status'] = 'The status of the order.';
-$string['privacy:metadata:local_moodec_order:timecreated'] = 'The time the order was created.';
-$string['privacy:metadata:local_moodec_order:userid'] = 'The user who placed the order.';
+$string['privacy:metadata:local_educheckout_cart'] = 'Shopping carts created by the user.';
+$string['privacy:metadata:local_educheckout_cart:status'] = 'The status of the cart (open, ordered or cancelled).';
+$string['privacy:metadata:local_educheckout_cart:timecreated'] = 'The time the cart was created.';
+$string['privacy:metadata:local_educheckout_cart:userid'] = 'The user who owns the cart.';
+$string['privacy:metadata:local_educheckout_order'] = 'Orders placed by the user.';
+$string['privacy:metadata:local_educheckout_order:amount'] = 'The gross amount of the order.';
+$string['privacy:metadata:local_educheckout_order:currency'] = 'The currency of the order.';
+$string['privacy:metadata:local_educheckout_order:status'] = 'The status of the order.';
+$string['privacy:metadata:local_educheckout_order:timecreated'] = 'The time the order was created.';
+$string['privacy:metadata:local_educheckout_order:userid'] = 'The user who placed the order.';
 $string['product_add'] = 'Add product';
 $string['product_add_title'] = 'Add product';
 $string['product_category'] = 'Category';
@@ -122,7 +122,7 @@ $string['product_tags_help'] = 'Enter comma-separated tags to help students find
 $string['remove'] = 'Remove';
 $string['selectvariation'] = 'Choose an option';
 $string['subtotal'] = 'Subtotal';
-$string['task_cleanup_carts'] = 'Moodec: clean up stale shopping carts';
+$string['task_cleanup_carts'] = 'EduCheckout: clean up stale shopping carts';
 $string['tax'] = 'Tax';
 $string['tax_enable'] = 'Enable tax';
 $string['tax_enable_desc'] = 'Apply tax to orders. When disabled, orders are recorded with no tax.';

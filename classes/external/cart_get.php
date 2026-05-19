@@ -17,12 +17,12 @@
 /**
  * External web service: get the current cart contents.
  *
- * @package    local_moodec
+ * @package    local_educheckout
  * @copyright  2026 LearningWorks Ltd
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace local_moodec\external;
+namespace local_educheckout\external;
 
 use core_external\external_api;
 use core_external\external_function_parameters;
@@ -54,7 +54,7 @@ class cart_get extends external_api {
         $context = \context_system::instance();
         self::validate_context($context);
 
-        $cart = \local_moodec\cart::get_open((int) $USER->id);
+        $cart = \local_educheckout\cart::get_open((int) $USER->id);
         $items = [];
         foreach ($cart->get_items() as $item) {
             $items[] = [

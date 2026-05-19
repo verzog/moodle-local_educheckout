@@ -15,7 +15,7 @@
     along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 }}
 {{!
-    @template local_moodec/catalogue
+    @template local_educheckout/catalogue
 
     Catalogue card grid with category filter and pagination.
 
@@ -37,22 +37,22 @@
         "hasnext": true
     }
 }}
-<div class="local-moodec-catalogue">
+<div class="local-educheckout-catalogue">
 
-    <div class="local-moodec-catalogue__toolbar d-flex justify-content-between align-items-center mb-3">
+    <div class="local-educheckout-catalogue__toolbar d-flex justify-content-between align-items-center mb-3">
         <div>
             <a href="{{carturl}}" class="btn btn-outline-secondary">
-                &#128722; {{#str}}cart_title, local_moodec{{/str}}
+                &#128722; {{#str}}cart_title, local_educheckout{{/str}}
             </a>
         </div>
     </div>
 
     {{#hascategories}}
-    <nav class="local-moodec-catalogue__categories mb-4" aria-label="{{#str}}catalogue_categories, local_moodec{{/str}}">
+    <nav class="local-educheckout-catalogue__categories mb-4" aria-label="{{#str}}catalogue_categories, local_educheckout{{/str}}">
         <ul class="nav nav-pills flex-wrap">
             <li class="nav-item">
                 <a class="nav-link{{#allcatactive}} active{{/allcatactive}}" href="{{allcaturl}}">
-                    {{#str}}catalogue_all, local_moodec{{/str}}
+                    {{#str}}catalogue_all, local_educheckout{{/str}}
                 </a>
             </li>
             {{#categories}}
@@ -65,15 +65,15 @@
     {{/hascategories}}
 
     {{#hasproducts}}
-    <div class="local-moodec-catalogue__grid row">
+    <div class="local-educheckout-catalogue__grid row">
         {{#products}}
         <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-4">
-            <div class="card h-100 local-moodec-product-card">
+            <div class="card h-100 local-educheckout-product-card">
                 {{#imageurl}}
-                <img src="{{imageurl}}" class="card-img-top local-moodec-product-card__img" alt="{{fullname}}">
+                <img src="{{imageurl}}" class="card-img-top local-educheckout-product-card__img" alt="{{fullname}}">
                 {{/imageurl}}
                 {{^imageurl}}
-                <div class="local-moodec-product-card__img-placeholder d-flex align-items-center justify-content-center bg-light" style="height:160px">
+                <div class="local-educheckout-product-card__img-placeholder d-flex align-items-center justify-content-center bg-light" style="height:160px">
                     <span class="text-muted">&#127979;</span>
                 </div>
                 {{/imageurl}}
@@ -85,14 +85,14 @@
                         <a href="{{producturl}}" class="stretched-link text-dark text-decoration-none">{{fullname}}</a>
                     </h5>
                     {{#hastags}}
-                    <div class="local-moodec-product-card__tags mb-2">
+                    <div class="local-educheckout-product-card__tags mb-2">
                         {{#tags}}
                         <span class="badge badge-light border">{{label}}</span>
                         {{/tags}}
                     </div>
                     {{/hastags}}
                     <div class="mt-auto">
-                        <span class="local-moodec-product-card__price h5 text-primary">{{price}}</span>
+                        <span class="local-educheckout-product-card__price h5 text-primary">{{price}}</span>
                     </div>
                 </div>
             </div>
@@ -101,20 +101,20 @@
     </div>
     {{/hasproducts}}
     {{^hasproducts}}
-    <p class="text-muted">{{#str}}catalogue_empty, local_moodec{{/str}}</p>
+    <p class="text-muted">{{#str}}catalogue_empty, local_educheckout{{/str}}</p>
     {{/hasproducts}}
 
     {{#haspagination}}
-    <nav class="local-moodec-catalogue__pagination mt-4" aria-label="{{#str}}pagination_label, local_moodec{{/str}}">
+    <nav class="local-educheckout-catalogue__pagination mt-4" aria-label="{{#str}}pagination_label, local_educheckout{{/str}}">
         <ul class="pagination justify-content-center">
             <li class="page-item{{^hasprev}} disabled{{/hasprev}}">
-                <a class="page-link" href="{{prevurl}}">&laquo; {{#str}}previous, local_moodec{{/str}}</a>
+                <a class="page-link" href="{{prevurl}}">&laquo; {{#str}}previous, local_educheckout{{/str}}</a>
             </li>
             <li class="page-item disabled">
                 <span class="page-link">{{page}} / {{totalpages}}</span>
             </li>
             <li class="page-item{{^hasnext}} disabled{{/hasnext}}">
-                <a class="page-link" href="{{nexturl}}">{{#str}}next, local_moodec{{/str}} &raquo;</a>
+                <a class="page-link" href="{{nexturl}}">{{#str}}next, local_educheckout{{/str}} &raquo;</a>
             </li>
         </ul>
     </nav>

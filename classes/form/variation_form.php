@@ -15,14 +15,14 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Variation editing form for the Moodec storefront.
+ * Variation editing form for the EduCheckout storefront.
  *
- * @package    local_moodec
+ * @package    local_educheckout
  * @copyright  2026 LearningWorks Ltd
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace local_moodec\form;
+namespace local_educheckout\form;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -47,7 +47,7 @@ class variation_form extends \moodleform {
         $mform->addElement(
             'text',
             'name',
-            get_string('variation_name', 'local_moodec'),
+            get_string('variation_name', 'local_educheckout'),
             ['size' => 50]
         );
         $mform->setType('name', PARAM_TEXT);
@@ -56,7 +56,7 @@ class variation_form extends \moodleform {
         $mform->addElement(
             'text',
             'price',
-            get_string('variation_price', 'local_moodec'),
+            get_string('variation_price', 'local_educheckout'),
             ['size' => 10]
         );
         $mform->setType('price', PARAM_FLOAT);
@@ -66,17 +66,17 @@ class variation_form extends \moodleform {
         $mform->addElement(
             'text',
             'duration',
-            get_string('variation_duration', 'local_moodec'),
+            get_string('variation_duration', 'local_educheckout'),
             ['size' => 8]
         );
         $mform->setType('duration', PARAM_INT);
         $mform->setDefault('duration', 0);
-        $mform->addHelpButton('duration', 'variation_duration', 'local_moodec');
+        $mform->addHelpButton('duration', 'variation_duration', 'local_educheckout');
 
         $mform->addElement(
             'advcheckbox',
             'is_enabled',
-            get_string('variation_enabled', 'local_moodec')
+            get_string('variation_enabled', 'local_educheckout')
         );
         $mform->setDefault('is_enabled', 1);
 
@@ -93,10 +93,10 @@ class variation_form extends \moodleform {
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
         if (isset($data['price']) && $data['price'] < 0) {
-            $errors['price'] = get_string('error_negativeprice', 'local_moodec');
+            $errors['price'] = get_string('error_negativeprice', 'local_educheckout');
         }
         if (isset($data['duration']) && $data['duration'] < 0) {
-            $errors['duration'] = get_string('error_negativeduration', 'local_moodec');
+            $errors['duration'] = get_string('error_negativeduration', 'local_educheckout');
         }
         return $errors;
     }

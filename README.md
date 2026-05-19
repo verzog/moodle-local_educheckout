@@ -1,16 +1,16 @@
-# Moodec storefront (local_moodec)
+# EduCheckout storefront (local_educheckout)
 
-Moodec is an eCommerce storefront for Moodle. Learners browse a catalogue of
+EduCheckout is an eCommerce storefront for Moodle. Learners browse a catalogue of
 courses, add them to a cart and pay through Moodle's core Payments subsystem
 (`core_payment`); on successful payment they are enrolled via the companion
-`enrol_moodec` plugin.
+`enrol_educheckout` plugin.
 
 Targets **Moodle 5.0+ / PHP 8.2+**.
 
 ## Requirements
 
 - Moodle 5.0 or later.
-- The `enrol_moodec` enrolment plugin (declared as a dependency).
+- The `enrol_educheckout` enrolment plugin (declared as a dependency).
 - A configured Moodle payment account with a gateway enabled
   (`paygw_paypal` and/or `paygw_stripe`, both shipped with Moodle core).
 
@@ -25,18 +25,30 @@ Targets **Moodle 5.0+ / PHP 8.2+**.
 
 Copy the plugin into
 
-    {your/moodle/dirroot}/local/moodec
+    {your/moodle/dirroot}/local/educheckout
 
 then log in as an admin and go to _Site administration > Notifications_.
 
 ## Note on legacy data
 
 The pre-2026 PayPal/IPN storefront stored purchases in
-`local_moodec_transaction` / `local_moodec_trans_item`. Those tables are left
+`local_educheckout_transaction` / `local_educheckout_trans_item`. Those tables are left
 in place untouched for historical reference; they are **not** migrated into the
 new order tables and are no longer displayed. Operators are responsible for
 configuring correct tax rates and for tax/GST/VAT registration in their
 jurisdiction.
+
+## Credits and acknowledgements
+
+EduCheckout storefront is a rename and continuation of the **Moodec
+storefront** plugin (`local_moodec`) originally written in 2015 by
+**Thomas Threadgold** at **LearningWorks Ltd**
+([github.com/LearningWorks](https://github.com/LearningWorks)). The
+catalogue, cart, ordering and checkout architecture in this codebase
+descend directly from that work.
+
+Sincere thanks to Thomas and LearningWorks for the prior art this plugin
+is built on.
 
 ## License
 
@@ -52,5 +64,6 @@ PARTICULAR PURPOSE. See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 this program. If not, see <https://www.gnu.org/licenses/>.
 
-Copyright (C) 2015 LearningWorks Ltd; modernisation Copyright (C) 2026
-LearningWorks Ltd.
+Original Moodec storefront, Copyright (C) 2015 Thomas Threadgold /
+LearningWorks Ltd; renaming and ongoing maintenance Copyright (C) 2026
+the EduCheckout contributors.

@@ -15,17 +15,17 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Behat data generator for the Moodec storefront plugin.
+ * Behat data generator for the EduCheckout storefront plugin.
  *
- * @package    local_moodec
+ * @package    local_educheckout
  * @copyright  2026 LearningWorks Ltd
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 /**
- * Generates Moodec Behat test data.
+ * Generates EduCheckout Behat test data.
  */
-class behat_local_moodec_generator extends behat_generator_base {
+class behat_local_educheckout_generator extends behat_generator_base {
     /**
      * Declare entities that can be created via "the following ... exist:" steps.
      *

@@ -15,7 +15,7 @@
     along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 }}
 {{!
-    @template local_moodec/product
+    @template local_educheckout/product
 
     Single product page with image, description, tags, variation chooser and add-to-cart form.
 
@@ -33,25 +33,25 @@
         "hascategoryname": true,
         "hasvariations": true,
         "variations": [{"id": 5, "name": "Standard", "price": "10.00"}],
-        "addurl": "https://example.com/local/moodec/cart.php",
-        "catalogueurl": "https://example.com/local/moodec/index.php",
+        "addurl": "https://example.com/local/educheckout/cart.php",
+        "catalogueurl": "https://example.com/local/educheckout/index.php",
         "sesskey": "abc123"
     }
 }}
-<div class="local-moodec-product-detail row">
+<div class="local-educheckout-product-detail row">
     <div class="col-12 col-md-5 mb-4">
         {{#imageurl}}
         <img src="{{imageurl}}" class="img-fluid rounded" alt="{{fullname}}">
         {{/imageurl}}
         {{^imageurl}}
-        <div class="local-moodec-product-detail__img-placeholder d-flex align-items-center justify-content-center bg-light rounded" style="height:280px">
+        <div class="local-educheckout-product-detail__img-placeholder d-flex align-items-center justify-content-center bg-light rounded" style="height:280px">
             <span class="display-4 text-muted">&#127979;</span>
         </div>
         {{/imageurl}}
     </div>
 
     <div class="col-12 col-md-7">
-        <a href="{{catalogueurl}}" class="text-muted small">&larr; {{#str}}catalogue, local_moodec{{/str}}</a>
+        <a href="{{catalogueurl}}" class="text-muted small">&larr; {{#str}}catalogue, local_educheckout{{/str}}</a>
 
         {{#hascategoryname}}
         <p class="text-muted mt-2 mb-1">{{categoryname}}</p>
@@ -60,7 +60,7 @@
         <h2 class="mt-1">{{fullname}}</h2>
 
         {{#hastags}}
-        <div class="local-moodec-product-detail__tags mb-3">
+        <div class="local-educheckout-product-detail__tags mb-3">
             {{#tags}}
             <span class="badge badge-light border">{{label}}</span>
             {{/tags}}
@@ -68,27 +68,27 @@
         {{/hastags}}
 
         {{#hasdescription}}
-        <div class="local-moodec-product-detail__description mb-4">
+        <div class="local-educheckout-product-detail__description mb-4">
             {{{description}}}
         </div>
         {{/hasdescription}}
 
         {{#alreadyenrolled}}
         <div class="alert alert-success">
-            {{#str}}alreadyenrolled, local_moodec{{/str}}
-            <a href="{{courseurl}}" class="alert-link">{{#str}}gotocourse, local_moodec{{/str}}</a>
+            {{#str}}alreadyenrolled, local_educheckout{{/str}}
+            <a href="{{courseurl}}" class="alert-link">{{#str}}gotocourse, local_educheckout{{/str}}</a>
         </div>
         {{/alreadyenrolled}}
 
         {{^alreadyenrolled}}
-        <form method="post" action="{{addurl}}" data-moodec="add-form">
+        <form method="post" action="{{addurl}}" data-educheckout="add-form">
             <input type="hidden" name="action" value="add">
             <input type="hidden" name="product" value="{{id}}">
             <input type="hidden" name="sesskey" value="{{sesskey}}">
 
             {{#hasvariations}}
-            <fieldset class="local-moodec-variations mb-3">
-                <legend class="h6">{{#str}}selectvariation, local_moodec{{/str}}</legend>
+            <fieldset class="local-educheckout-variations mb-3">
+                <legend class="h6">{{#str}}selectvariation, local_educheckout{{/str}}</legend>
                 {{#variations}}
                 <div class="form-check">
                     <input class="form-check-input" type="radio" name="variation" value="{{id}}" id="var-{{id}}">
@@ -100,11 +100,11 @@
             </fieldset>
             {{/hasvariations}}
             {{^hasvariations}}
-            <p class="local-moodec-price h4 text-primary mb-3">{{price}}</p>
+            <p class="local-educheckout-price h4 text-primary mb-3">{{price}}</p>
             <input type="hidden" name="variation" value="0">
             {{/hasvariations}}
 
-            <button type="submit" class="btn btn-primary btn-lg">{{#str}}addtocart, local_moodec{{/str}}</button>
+            <button type="submit" class="btn btn-primary btn-lg">{{#str}}addtocart, local_educheckout{{/str}}</button>
         </form>
         {{/alreadyenrolled}}
     </div>
