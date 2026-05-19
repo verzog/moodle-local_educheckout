@@ -60,7 +60,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: verzog/moodle-enrol_moodec
-          ref: claude/rename-to-educheckout
+          ref: master
           path: extra/enrol_educheckout
 
       - name: Setup PHP ${{ matrix.php }}
