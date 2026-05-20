@@ -44,22 +44,26 @@ if ($order->get_userid() !== (int) $USER->id) {
 $items = [];
 foreach ($order->get_items() as $item) {
     $course = $DB->get_record('course', ['id' => (int) $item->courseid], 'id, fullname', IGNORE_MISSING);
-    $gross = format_float((float) $item->unitprice + (float) $item->nettax, 2);
-    $enrolled = (int) $item->enrolled === 1;
+    $hascourseurl = $course && $item->enrolled;
+    $coursename = $course ? format_string($course->fullname) : get_string('order_course_missing', 'local_educheckout');
+    $courseurl = $hascourseurl ? (new moodle_url('/course/view.php', ['id' => (int) $item->courseid]))->out(false) : '';
     $items[] = [
-        'coursename' => $course
-            ? format_string($course->fullname)
-            : get_string('order_course_missing', 'local_educheckout'),
-        'courseurl' => ($course && $enrolled)
-            ? (new moodle_url('/course/view.php', ['id' => (int) $item->courseid]))->out(false)
-            : '',
-        'hascourseurl' => (bool) ($course && $enrolled),
-        'unitprice' => $gross,
+        'coursename' => $coursename,
+        'courseurl' => $courseurl,
+        'hascourseurl' => (bool) $hascourseurl,
+        'unitprice' => format_float((float) $item->unitprice + (float) $item->nettax, 2),
     ];
 }
 
 $taxamount = $order->get_tax_amount();
 $hastax = $taxamount > 0.0;
+$taxlabel = '';
+if ($hastax) {
+    $taxlabel = (string) get_config('local_educheckout', 'tax_label');
+    if ($taxlabel === '') {
+        $taxlabel = get_string('tax', 'local_educheckout');
+    }
+}
 
 $data = [
     'delivered' => $order->is_delivered(),
@@ -69,9 +73,7 @@ $data = [
     'hasitems' => !empty($items),
     'items' => $items,
     'hastax' => $hastax,
-    'taxlabel' => $hastax
-        ? (string) (get_config('local_educheckout', 'tax_label') ?: get_string('tax', 'local_educheckout'))
-        : '',
+    'taxlabel' => $taxlabel,
     'netamount' => $hastax ? format_float($order->get_net_amount(), 2) : '',
     'taxamount' => $hastax ? format_float($taxamount, 2) : '',
 ];

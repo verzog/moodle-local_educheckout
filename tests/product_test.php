@@ -30,7 +30,6 @@ namespace local_educheckout;
  * @covers \local_educheckout\product
  */
 final class product_test extends \advanced_testcase {
-
     /**
      * Create, persist and reload a product record.
      *
@@ -185,8 +184,7 @@ final class product_test extends \advanced_testcase {
         $p2 = product::create((int) $course2->id);
         $p2->set_enabled(true);
 
-        $p3 = product::create((int) $course3->id);
-        // p3 stays disabled.
+        product::create((int) $course3->id); // disabled, excluded from get_enabled().
 
         $this->assertCount(2, product::get_enabled());
         $this->assertSame(2, product::count_enabled());
