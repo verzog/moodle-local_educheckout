@@ -41,11 +41,39 @@ if ($order->get_userid() !== (int) $USER->id) {
     require_capability('local/educheckout:viewallorders', $context);
 }
 
+$items = [];
+foreach ($order->get_items() as $item) {
+    $course = $DB->get_record('course', ['id' => (int) $item->courseid], 'id, fullname', IGNORE_MISSING);
+    $gross = format_float((float) $item->unitprice + (float) $item->nettax, 2);
+    $enrolled = (int) $item->enrolled === 1;
+    $items[] = [
+        'coursename' => $course
+            ? format_string($course->fullname)
+            : get_string('order_course_missing', 'local_educheckout'),
+        'courseurl' => ($course && $enrolled)
+            ? (new moodle_url('/course/view.php', ['id' => (int) $item->courseid]))->out(false)
+            : '',
+        'hascourseurl' => (bool) ($course && $enrolled),
+        'unitprice' => $gross,
+    ];
+}
+
+$taxamount = $order->get_tax_amount();
+$hastax = $taxamount > 0.0;
+
 $data = [
     'delivered' => $order->is_delivered(),
     'amount' => format_float($order->get_amount(), 2),
     'currency' => $order->get_currency(),
     'shopurl' => (new moodle_url('/local/educheckout/index.php'))->out(false),
+    'hasitems' => !empty($items),
+    'items' => $items,
+    'hastax' => $hastax,
+    'taxlabel' => $hastax
+        ? (string) (get_config('local_educheckout', 'tax_label') ?: get_string('tax', 'local_educheckout'))
+        : '',
+    'netamount' => $hastax ? format_float($order->get_net_amount(), 2) : '',
+    'taxamount' => $hastax ? format_float($taxamount, 2) : '',
 ];
 
 echo $OUTPUT->header();
