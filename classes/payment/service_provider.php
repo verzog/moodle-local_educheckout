@@ -89,6 +89,39 @@ class service_provider implements \core_payment\local\callback\service_provider 
             throw $e;
         }
 
+        try {
+            $user = \core_user::get_user($userid, '*', MUST_EXIST);
+            $receipturl = (new \moodle_url(
+                '/local/educheckout/receipt.php',
+                ['id' => $order->get_id()]
+            ))->out(false);
+            $cost = \core_payment\helper::get_cost_as_string(
+                $order->get_amount(),
+                $order->get_currency()
+            );
+            $a = (object) [
+                'orderid' => $order->get_id(),
+                'cost'    => $cost,
+                'receipturl' => $receipturl,
+            ];
+            $msg = new \core\message\message();
+            $msg->component         = 'local_educheckout';
+            $msg->name              = 'order_receipt';
+            $msg->userfrom          = \core_user::get_noreply_user();
+            $msg->userto            = $user;
+            $msg->subject           = get_string('email_order_receipt_subject', 'local_educheckout', $order->get_id());
+            $msg->fullmessage       = get_string('email_order_receipt_body', 'local_educheckout', $a);
+            $msg->fullmessageformat = FORMAT_PLAIN;
+            $msg->fullmessagehtml   = '';
+            $msg->smallmessage      = $msg->subject;
+            $msg->notification      = 1;
+            $msg->contexturl        = $receipturl;
+            $msg->contexturlname    = get_string('ordersummary', 'local_educheckout');
+            message_send($msg);
+        } catch (\Throwable $e) {
+            debugging('EduCheckout: failed to send order receipt: ' . $e->getMessage(), DEBUG_DEVELOPER);
+        }
+
         return true;
     }
 }
