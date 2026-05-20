@@ -24,6 +24,8 @@
 
 require_once(__DIR__ . '/../../config.php');
 
+global $DB, $OUTPUT, $PAGE, $USER;
+
 $productid = required_param('id', PARAM_INT);
 
 require_login(null, true);
@@ -37,12 +39,58 @@ $product = new \local_educheckout\product($productid);
 $PAGE->set_title($product->get_fullname());
 $PAGE->set_heading($product->get_fullname());
 
+$issessionproduct = $product->is_session_type();
+
+// For session products, count seats sold per variation from paid/delivered orders.
+$seatssold = [];
+if ($issessionproduct) {
+    $enabledids = array_keys($product->get_enabled_variations());
+    if (!empty($enabledids)) {
+        [$insql, $inparams] = $DB->get_in_or_equal($enabledids, SQL_PARAMS_NAMED);
+        $sql = "SELECT oi.variationid, COUNT(oi.id) AS cnt
+                  FROM {local_educheckout_order_item} oi
+                  JOIN {local_educheckout_order} o ON o.id = oi.orderid
+                 WHERE oi.variationid $insql
+                   AND o.status IN ('paid', 'delivered')
+              GROUP BY oi.variationid";
+        foreach ($DB->get_records_sql($sql, $inparams) as $row) {
+            $seatssold[(int) $row->variationid] = (int) $row->cnt;
+        }
+    }
+}
+
 $variations = [];
 foreach ($product->get_enabled_variations() as $variation) {
+    $hassessiondata = $issessionproduct && !empty($variation->session_starttime);
+    $capacity = (int) ($variation->session_capacity ?? 0);
+    $sold = $seatssold[(int) $variation->id] ?? 0;
+    $seatsremaining = ($capacity > 0) ? max(0, $capacity - $sold) : null;
+
+    $seatstext = '';
+    if ($hassessiondata) {
+        if ($capacity === 0) {
+            $seatstext = get_string('session_seats_unlimited', 'local_educheckout');
+        } else if ($seatsremaining === 0) {
+            $seatstext = get_string('session_full', 'local_educheckout');
+        } else {
+            $seatstext = get_string('session_seats_remaining', 'local_educheckout', $seatsremaining);
+        }
+    }
+
     $variations[] = [
         'id' => (int) $variation->id,
         'name' => format_string($variation->name),
         'price' => format_float((float) $variation->price, 2),
+        'hassessiondata' => $hassessiondata,
+        'session_starttime_formatted' => $hassessiondata
+            ? userdate((int) $variation->session_starttime)
+            : '',
+        'session_endtime_formatted' => ($hassessiondata && !empty($variation->session_endtime))
+            ? userdate((int) $variation->session_endtime)
+            : '',
+        'session_location' => $hassessiondata ? format_string($variation->session_location ?? '') : '',
+        'seats_text' => $seatstext,
+        'is_full' => $hassessiondata && $seatsremaining === 0,
     ];
 }
 

@@ -66,6 +66,16 @@ class product_form extends \moodleform {
 
         $mform->addElement(
             'select',
+            'type',
+            get_string('product_type', 'local_educheckout'),
+            [
+                '' => get_string('product_type_simple', 'local_educheckout'),
+                'session' => get_string('product_type_session', 'local_educheckout'),
+            ]
+        );
+
+        $mform->addElement(
+            'select',
             'category_id',
             get_string('product_category', 'local_educheckout'),
             [0 => get_string('uncategorised', 'local_educheckout')] + $categoryoptions

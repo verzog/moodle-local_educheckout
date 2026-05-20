@@ -37,6 +37,7 @@ class variation_form extends \moodleform {
      */
     public function definition() {
         $mform = $this->_form;
+        $issession = !empty($this->_customdata['is_session_product']);
 
         $mform->addElement('hidden', 'id');
         $mform->setType('id', PARAM_INT);
@@ -73,6 +74,38 @@ class variation_form extends \moodleform {
         $mform->setDefault('duration', 0);
         $mform->addHelpButton('duration', 'variation_duration', 'local_educheckout');
 
+        if ($issession) {
+            $mform->addElement(
+                'date_time_selector',
+                'session_starttime',
+                get_string('variation_session_starttime', 'local_educheckout')
+            );
+
+            $mform->addElement(
+                'date_time_selector',
+                'session_endtime',
+                get_string('variation_session_endtime', 'local_educheckout')
+            );
+
+            $mform->addElement(
+                'text',
+                'session_location',
+                get_string('variation_session_location', 'local_educheckout'),
+                ['size' => 60]
+            );
+            $mform->setType('session_location', PARAM_TEXT);
+
+            $mform->addElement(
+                'text',
+                'session_capacity',
+                get_string('variation_session_capacity', 'local_educheckout'),
+                ['size' => 8]
+            );
+            $mform->setType('session_capacity', PARAM_INT);
+            $mform->setDefault('session_capacity', 0);
+            $mform->addHelpButton('session_capacity', 'session_capacity', 'local_educheckout');
+        }
+
         $mform->addElement(
             'advcheckbox',
             'is_enabled',
@@ -97,6 +130,18 @@ class variation_form extends \moodleform {
         }
         if (isset($data['duration']) && $data['duration'] < 0) {
             $errors['duration'] = get_string('error_negativeduration', 'local_educheckout');
+        }
+        $issession = !empty($this->_customdata['is_session_product']);
+        if ($issession) {
+            if (empty($data['session_starttime'])) {
+                $errors['session_starttime'] = get_string('error_invalidsessionstarttime', 'local_educheckout');
+            }
+            if (
+                !empty($data['session_starttime']) && !empty($data['session_endtime'])
+                && $data['session_endtime'] <= $data['session_starttime']
+            ) {
+                $errors['session_endtime'] = get_string('error_invalidsessionendtime', 'local_educheckout');
+            }
         }
         return $errors;
     }

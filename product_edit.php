@@ -99,6 +99,7 @@ if ($formdata = $productform->get_data()) {
         (int) ($formdata->sort_order ?? 0)
     );
     $product->set_enabled(!empty($formdata->is_enabled));
+    $product->set_type(clean_param($formdata->type ?? '', PARAM_ALPHA));
 
     redirect(
         new moodle_url('/local/educheckout/product_edit.php', ['id' => $product->get_id()]),
@@ -122,6 +123,7 @@ if (!$isnew && $product !== null && !$productform->is_submitted()) {
         'id' => $product->get_id(),
         'course_id' => $product->get_course_id(),
         'is_enabled' => (int) $product->is_enabled(),
+        'type' => $product->get_type(),
         'category_id' => $product->get_category_id() ?? 0,
         'tags' => $product->get_tags(),
         'description_editor' => [
@@ -137,7 +139,8 @@ $varform = null;
 if (!$isnew && $product !== null) {
     $editvarid = optional_param('editvarid', 0, PARAM_INT);
     $varform = new \local_educheckout\form\variation_form(
-        new moodle_url('/local/educheckout/product_edit.php', ['id' => $id, 'editvarid' => $editvarid])
+        new moodle_url('/local/educheckout/product_edit.php', ['id' => $id, 'editvarid' => $editvarid]),
+        ['is_session_product' => $product->is_session_type()]
     );
 
     if ($varform->is_cancelled()) {
@@ -145,6 +148,11 @@ if (!$isnew && $product !== null) {
     }
 
     if ($vardata = $varform->get_data()) {
+        $issession = $product->is_session_type();
+        $sessionstarttime = $issession ? (int) ($vardata->session_starttime ?? 0) : 0;
+        $sessionendtime = $issession ? (int) ($vardata->session_endtime ?? 0) : 0;
+        $sessionlocation = $issession ? clean_param($vardata->session_location ?? '', PARAM_TEXT) : '';
+        $sessioncapacity = $issession ? (int) ($vardata->session_capacity ?? 0) : 0;
         if ((int) $vardata->id > 0) {
             $product->update_variation(
                 (int) $vardata->id,
@@ -152,7 +160,11 @@ if (!$isnew && $product !== null) {
                 (float) $vardata->price,
                 (int) $vardata->duration,
                 0,
-                !empty($vardata->is_enabled)
+                !empty($vardata->is_enabled),
+                $sessionstarttime,
+                $sessionendtime,
+                $sessionlocation,
+                $sessioncapacity
             );
         } else {
             $product->add_variation(
@@ -160,7 +172,11 @@ if (!$isnew && $product !== null) {
                 (float) $vardata->price,
                 (int) $vardata->duration,
                 0,
-                !empty($vardata->is_enabled)
+                !empty($vardata->is_enabled),
+                $sessionstarttime,
+                $sessionendtime,
+                $sessionlocation,
+                $sessioncapacity
             );
         }
         redirect(new moodle_url('/local/educheckout/product_edit.php', ['id' => $id]));
@@ -169,14 +185,21 @@ if (!$isnew && $product !== null) {
     if ($editvarid > 0 && !$varform->is_submitted()) {
         $varrecord = $product->get_variation($editvarid);
         if ($varrecord) {
-            $varform->set_data([
+            $vardata = [
                 'id' => $varrecord->id,
                 'product_id' => $id,
                 'name' => $varrecord->name,
                 'price' => format_float($varrecord->price, 2, true),
                 'duration' => $varrecord->duration,
                 'is_enabled' => (int) $varrecord->is_enabled,
-            ]);
+            ];
+            if ($product->is_session_type()) {
+                $vardata['session_starttime'] = (int) ($varrecord->session_starttime ?? 0);
+                $vardata['session_endtime'] = (int) ($varrecord->session_endtime ?? 0);
+                $vardata['session_location'] = $varrecord->session_location ?? '';
+                $vardata['session_capacity'] = (int) ($varrecord->session_capacity ?? 0);
+            }
+            $varform->set_data($vardata);
         }
     } else if (!$varform->is_submitted()) {
         $varform->set_data(['id' => 0, 'product_id' => $id]);
@@ -192,8 +215,12 @@ echo $OUTPUT->heading($headingtitle);
 $productform->display();
 
 if (!$isnew && $product !== null) {
-    echo $OUTPUT->heading(get_string('variations_heading', 'local_educheckout'), 3);
+    $varheading = $product->is_session_type()
+        ? get_string('sessions_heading', 'local_educheckout')
+        : get_string('variations_heading', 'local_educheckout');
+    echo $OUTPUT->heading($varheading, 3);
 
+    $issessionproduct = $product->is_session_type();
     $variations = [];
     foreach ($product->get_variations() as $var) {
         $variations[] = [
@@ -202,6 +229,14 @@ if (!$isnew && $product !== null) {
             'price' => format_float($var->price, 2),
             'duration' => (int) $var->duration,
             'is_enabled' => (bool) $var->is_enabled,
+            'session_starttime_formatted' => ($issessionproduct && !empty($var->session_starttime))
+                ? userdate((int) $var->session_starttime)
+                : '',
+            'session_endtime_formatted' => ($issessionproduct && !empty($var->session_endtime))
+                ? userdate((int) $var->session_endtime)
+                : '',
+            'session_location' => format_string($var->session_location ?? ''),
+            'session_capacity' => (int) ($var->session_capacity ?? 0),
             'editurl' => (new moodle_url('/local/educheckout/product_edit.php', [
                 'id' => $id,
                 'editvarid' => $var->id,
@@ -217,6 +252,7 @@ if (!$isnew && $product !== null) {
 
     echo $OUTPUT->render_from_template('local_educheckout/variation_list', [
         'hasvariations' => !empty($variations),
+        'is_session_product' => $issessionproduct,
         'variations' => $variations,
     ]);
 

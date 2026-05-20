@@ -32,7 +32,9 @@
         "categoryname": "Compliance",
         "hascategoryname": true,
         "hasvariations": true,
-        "variations": [{"id": 5, "name": "Standard", "price": "10.00"}],
+        "variations": [{"id": 5, "name": "Standard", "price": "10.00", "hassessiondata": false,
+            "session_starttime_formatted": "", "session_endtime_formatted": "",
+            "session_location": "", "seats_text": "", "is_full": false}],
         "addurl": "https://example.com/local/educheckout/cart.php",
         "catalogueurl": "https://example.com/local/educheckout/index.php",
         "sesskey": "abc123"
@@ -90,10 +92,17 @@
             <fieldset class="local-educheckout-variations mb-3">
                 <legend class="h6">{{#str}}selectvariation, local_educheckout{{/str}}</legend>
                 {{#variations}}
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="variation" value="{{id}}" id="var-{{id}}">
-                    <label class="form-check-label" for="var-{{id}}">
+                <div class="form-check{{#is_full}} local-moodec-session--full{{/is_full}}">
+                    <input class="form-check-input" type="radio" name="variation" value="{{id}}" id="var-{{id}}"{{#is_full}} disabled{{/is_full}}>
+                    <label class="form-check-label{{#is_full}} text-muted{{/is_full}}" for="var-{{id}}">
                         {{name}} &mdash; <strong>{{price}}</strong>
+                        {{#hassessiondata}}
+                        <span class="d-block text-muted small">
+                            {{session_starttime_formatted}}{{#session_endtime_formatted}} &ndash; {{session_endtime_formatted}}{{/session_endtime_formatted}}
+                            {{#session_location}}&bull; {{session_location}}{{/session_location}}
+                        </span>
+                        <span class="d-block small">{{seats_text}}</span>
+                        {{/hassessiondata}}
                     </label>
                 </div>
                 {{/variations}}

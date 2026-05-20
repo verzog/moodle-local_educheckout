@@ -46,6 +46,9 @@ class product {
     /** @var string the course full name */
     protected $fullname;
 
+    /** @var string product type: '' = simple, 'session' = scheduled delivery */
+    protected $type;
+
     /** @var string comma-separated tags */
     protected $tags;
 
@@ -67,7 +70,7 @@ class product {
         global $DB;
 
         $sql = 'SELECT p.id, p.course_id, p.category_id, p.is_enabled, p.sort_order,
-                       p.tags, p.description, p.description_format,
+                       p.type, p.tags, p.description, p.description_format,
                        c.fullname
                   FROM {local_educheckout_product} p
                   JOIN {course} c ON c.id = p.course_id
@@ -79,6 +82,7 @@ class product {
         $this->categoryid = $record->category_id !== null ? (int) $record->category_id : null;
         $this->enabled = (bool) $record->is_enabled;
         $this->sortorder = (int) ($record->sort_order ?? 0);
+        $this->type = (string) ($record->type ?? '');
         $this->fullname = (string) $record->fullname;
         $this->tags = (string) ($record->tags ?? '');
         $this->description = (string) ($record->description ?? '');
@@ -120,6 +124,37 @@ class product {
      */
     public function is_enabled(): bool {
         return $this->enabled;
+    }
+
+    /**
+     * Return the product type string ('' for simple, 'session' for scheduled delivery).
+     *
+     * @return string
+     */
+    public function get_type(): string {
+        return $this->type;
+    }
+
+    /**
+     * Whether this is a session-type product (scheduled delivery with date/time/location/capacity).
+     *
+     * @return bool
+     */
+    public function is_session_type(): bool {
+        return $this->type === 'session';
+    }
+
+    /**
+     * Set the product type.
+     *
+     * @param string $type '' for simple or 'session' for scheduled delivery
+     * @return void
+     */
+    public function set_type(string $type): void {
+        global $DB;
+        $type = ($type === 'session') ? 'session' : '';
+        $DB->set_field('local_educheckout_product', 'type', $type, ['id' => $this->id]);
+        $this->type = $type;
     }
 
     /**
@@ -345,6 +380,10 @@ class product {
      * @param int $duration days until enrolment expires (0 = no limit)
      * @param int $groupid Moodle group to enrol into (0 = none)
      * @param bool $enabled
+     * @param int $sessionstarttime unix timestamp for session start (0 = not a session)
+     * @param int $sessionendtime unix timestamp for session end
+     * @param string $sessionlocation venue or location string
+     * @param int $sessioncapacity max seats (0 = unlimited)
      * @return \stdClass the new variation record
      */
     public function add_variation(
@@ -352,7 +391,11 @@ class product {
         float $price,
         int $duration = 0,
         int $groupid = 0,
-        bool $enabled = true
+        bool $enabled = true,
+        int $sessionstarttime = 0,
+        int $sessionendtime = 0,
+        string $sessionlocation = '',
+        int $sessioncapacity = 0
     ): \stdClass {
         global $DB;
         $record = (object) [
@@ -362,6 +405,10 @@ class product {
             'price' => $price,
             'duration' => $duration,
             'group_id' => $groupid,
+            'session_starttime' => $sessionstarttime,
+            'session_endtime' => $sessionendtime,
+            'session_location' => $sessionlocation,
+            'session_capacity' => $sessioncapacity,
         ];
         $record->id = $DB->insert_record('local_educheckout_variation', $record);
         $this->variations[(int) $record->id] = $record;
@@ -378,6 +425,10 @@ class product {
      * @param int $duration
      * @param int $groupid
      * @param bool $enabled
+     * @param int $sessionstarttime unix timestamp for session start (0 = not a session)
+     * @param int $sessionendtime unix timestamp for session end
+     * @param string $sessionlocation venue or location string
+     * @param int $sessioncapacity max seats (0 = unlimited)
      * @return void
      */
     public function update_variation(
@@ -386,7 +437,11 @@ class product {
         float $price,
         int $duration = 0,
         int $groupid = 0,
-        bool $enabled = true
+        bool $enabled = true,
+        int $sessionstarttime = 0,
+        int $sessionendtime = 0,
+        string $sessionlocation = '',
+        int $sessioncapacity = 0
     ): void {
         global $DB;
         if (!isset($this->variations[$variationid])) {
@@ -398,6 +453,10 @@ class product {
         $record->duration = $duration;
         $record->group_id = $groupid;
         $record->is_enabled = (int) $enabled;
+        $record->session_starttime = $sessionstarttime;
+        $record->session_endtime = $sessionendtime;
+        $record->session_location = $sessionlocation;
+        $record->session_capacity = $sessioncapacity;
         $DB->update_record('local_educheckout_variation', $record);
         $this->variations[$variationid] = $record;
     }
