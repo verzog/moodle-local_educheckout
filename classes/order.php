@@ -212,9 +212,13 @@ class order {
     public function deliver(int $userid): void {
         global $DB;
 
-        $plugin = enrol_get_plugin('educheckout');
+        if ($this->is_delivered()) {
+            return;
+        }
+
+        $plugin = enrol_get_plugin('educheckout') ?? enrol_get_plugin('manual');
         if (!$plugin) {
-            $plugin = enrol_get_plugin('manual');
+            throw new \coding_exception('Neither educheckout nor manual enrolment plugin is available.');
         }
         $enrolname = $plugin->get_name();
 
