@@ -184,7 +184,7 @@ final class product_test extends \advanced_testcase {
         $p2 = product::create((int) $course2->id);
         $p2->set_enabled(true);
 
-        product::create((int) $course3->id); // disabled, excluded from get_enabled().
+        product::create((int) $course3->id); // Disabled, excluded from get_enabled().
 
         $this->assertCount(2, product::get_enabled());
         $this->assertSame(2, product::count_enabled());
