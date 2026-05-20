@@ -43,6 +43,13 @@ if ($cart->is_empty()) {
     redirect(new moodle_url('/local/educheckout/cart.php'));
 }
 
+if (!(int) get_config('local_educheckout', 'paymentaccount')) {
+    echo $OUTPUT->header();
+    echo $OUTPUT->notification(get_string('nogateways', 'local_educheckout'), \core\output\notification::NOTIFY_ERROR);
+    echo $OUTPUT->footer();
+    exit;
+}
+
 $country = !empty($USER->country) ? $USER->country : null;
 $order = \local_educheckout\order::create_from_cart($cart, (int) $USER->id, $country);
 $cart->mark_ordered();

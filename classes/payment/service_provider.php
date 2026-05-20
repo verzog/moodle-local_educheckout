@@ -43,6 +43,10 @@ class service_provider implements \core_payment\local\callback\service_provider 
         $record = $DB->get_record('local_educheckout_order', ['id' => $itemid], '*', MUST_EXIST);
         $accountid = (int) get_config('local_educheckout', 'paymentaccount');
 
+        if (!$accountid) {
+            throw new \moodle_exception('nogateways', 'local_educheckout');
+        }
+
         return new \core_payment\local\entities\payable(
             (float) $record->amount,
             $record->currency,
@@ -72,8 +76,19 @@ class service_provider implements \core_payment\local\callback\service_provider 
      */
     public static function deliver_order(string $paymentarea, int $itemid, int $paymentid, int $userid): bool {
         $order = order::instance($itemid);
-        $order->set_status('paid', $paymentid);
-        $order->deliver($userid);
+
+        if ($order->is_delivered()) {
+            return true;
+        }
+
+        try {
+            $order->set_status('paid', $paymentid);
+            $order->deliver($userid);
+        } catch (\Throwable $e) {
+            $order->set_status('failed');
+            throw $e;
+        }
+
         return true;
     }
 }
