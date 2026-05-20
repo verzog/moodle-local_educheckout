@@ -286,7 +286,7 @@ class product {
             );
         }
 
-        $coursecontext = \context_course::instance($this->course_id, IGNORE_MISSING);
+        $coursecontext = \context_course::instance($this->courseid, IGNORE_MISSING);
         if ($coursecontext) {
             $files = $fs->get_area_files($coursecontext->id, 'course', 'overviewfiles', 0, '', false);
             if (!empty($files)) {

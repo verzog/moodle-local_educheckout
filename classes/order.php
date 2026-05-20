@@ -128,6 +128,24 @@ class order {
     }
 
     /**
+     * Return the net amount (pre-tax).
+     *
+     * @return float
+     */
+    public function get_net_amount(): float {
+        return (float) $this->record->netamount;
+    }
+
+    /**
+     * Return the tax component of the order total.
+     *
+     * @return float
+     */
+    public function get_tax_amount(): float {
+        return (float) $this->record->taxamount;
+    }
+
+    /**
      * Return the user id who placed the order.
      *
      * @return int

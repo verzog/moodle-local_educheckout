@@ -22,9 +22,22 @@
     Example context (json):
     {
         "delivered": true,
-        "amount": "10.00",
+        "amount": "110.00",
         "currency": "AUD",
-        "shopurl": "https://example.com/local/educheckout/index.php"
+        "shopurl": "https://example.com/local/educheckout/index.php",
+        "hasitems": true,
+        "items": [
+            {
+                "coursename": "Introduction to Work Safety",
+                "courseurl": "https://example.com/course/view.php?id=3",
+                "hascourseurl": true,
+                "unitprice": "110.00"
+            }
+        ],
+        "hastax": true,
+        "taxlabel": "GST",
+        "netamount": "100.00",
+        "taxamount": "10.00"
     }
 }}
 <div class="local-educheckout-receipt">
@@ -34,6 +47,32 @@
     {{^delivered}}
     <p>{{#str}}order_pending, local_educheckout{{/str}}</p>
     {{/delivered}}
-    <p>{{#str}}total, local_educheckout{{/str}}: {{amount}} {{currency}}</p>
+    {{#hasitems}}
+    <ul class="list-unstyled mb-3">
+        {{#items}}
+        <li class="d-flex justify-content-between">
+            <span>
+                {{#hascourseurl}}<a href="{{courseurl}}">{{coursename}}</a>{{/hascourseurl}}
+                {{^hascourseurl}}{{coursename}}{{/hascourseurl}}
+            </span>
+            <span>{{currency}}&nbsp;{{unitprice}}</span>
+        </li>
+        {{/items}}
+    </ul>
+    {{/hasitems}}
+    {{#hastax}}
+    <p class="d-flex justify-content-between">
+        <span>{{#str}}subtotal, local_educheckout{{/str}}</span>
+        <span>{{currency}}&nbsp;{{netamount}}</span>
+    </p>
+    <p class="d-flex justify-content-between">
+        <span>{{taxlabel}}</span>
+        <span>{{currency}}&nbsp;{{taxamount}}</span>
+    </p>
+    {{/hastax}}
+    <p class="d-flex justify-content-between fw-bold">
+        <span>{{#str}}total, local_educheckout{{/str}}</span>
+        <span>{{currency}}&nbsp;{{amount}}</span>
+    </p>
     <p><a href="{{shopurl}}">{{#str}}continueshopping, local_educheckout{{/str}}</a></p>
 </div>
