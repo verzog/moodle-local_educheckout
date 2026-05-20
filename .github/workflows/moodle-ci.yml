@@ -59,7 +59,7 @@ jobs:
       - name: Check out enrol_educheckout dependency
         uses: actions/checkout@v4
         with:
-          repository: verzog/moodle-enrol_moodec
+          repository: verzog/moodle-enrol_educheckout
           ref: master
           path: extra/enrol_educheckout
 
