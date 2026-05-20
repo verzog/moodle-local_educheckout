@@ -18,7 +18,7 @@
  * Library callbacks for the EduCheckout storefront plugin.
  *
  * @package    local_educheckout
- * @copyright  2015 LearningWorks Ltd
+ * @copyright  2015 Thomas Threadgold, LearningWorks Ltd
  * @copyright  2026 LearningWorks Ltd
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
