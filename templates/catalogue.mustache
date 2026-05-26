@@ -26,7 +26,7 @@
         "allcaturl": "",
         "allcatactive": true,
         "hasproducts": true,
-        "products": [{"id":1,"fullname":"Course A","price":"From $10.00","imageurl":"","hastags":true,"tags":[{"label":"php"}],"producturl":"","categoryname":"Compliance","hascategoryname":true,"candirectadd":true,"directvariationid":0}],
+        "products": [{"id":1,"fullname":"Course A","price":"From $10.00","imageurl":"","hastags":true,"tags":[{"label":"php"}],"producturl":"https://example.com/local/educheckout/product.php?id=1","categoryname":"Compliance","hascategoryname":true,"candirectadd":true,"directvariationid":0,"purchased":false,"courseurl":"https://example.com/course/view.php?id=2"}],
         "carturl": "",
         "addurl": "https://example.com/local/educheckout/cart.php",
         "sesskey": "sesskey",
@@ -73,14 +73,19 @@
         {{#products}}
         <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-4">
             <div class="card h-100 local-educheckout-product-card">
-                {{#imageurl}}
-                <img src="{{imageurl}}" class="card-img-top local-educheckout-product-card__img" alt="{{fullname}}">
-                {{/imageurl}}
-                {{^imageurl}}
-                <div class="local-educheckout-product-card__img-placeholder d-flex align-items-center justify-content-center bg-light" style="height:160px">
-                    <span class="text-muted">&#127979;</span>
+                <div class="position-relative">
+                    {{#purchased}}
+                    <span class="badge badge-success local-educheckout-product-card__purchased" style="position:absolute;top:.5rem;left:.5rem;z-index:1;">{{#str}}purchased, local_educheckout{{/str}}</span>
+                    {{/purchased}}
+                    {{#imageurl}}
+                    <img src="{{imageurl}}" class="card-img-top local-educheckout-product-card__img" alt="{{fullname}}">
+                    {{/imageurl}}
+                    {{^imageurl}}
+                    <div class="local-educheckout-product-card__img-placeholder d-flex align-items-center justify-content-center bg-light" style="height:160px">
+                        <span class="text-muted">&#127979;</span>
+                    </div>
+                    {{/imageurl}}
                 </div>
-                {{/imageurl}}
                 <div class="card-body d-flex flex-column">
                     {{#hascategoryname}}
                     <p class="card-subtitle mb-1 text-muted small">{{categoryname}}</p>
@@ -97,6 +102,10 @@
                     {{/hastags}}
                     <div class="mt-auto">
                         <span class="local-educheckout-product-card__price h5 text-primary d-block mb-2">{{price}}</span>
+                        {{#purchased}}
+                        <a href="{{courseurl}}" class="btn btn-success btn-sm w-100">{{#str}}gotocourse, local_educheckout{{/str}}</a>
+                        {{/purchased}}
+                        {{^purchased}}
                         {{#candirectadd}}
                         <form method="post" action="{{addurl}}" data-educheckout="add-form">
                             <input type="hidden" name="action" value="add">
@@ -109,6 +118,7 @@
                         {{^candirectadd}}
                         <a href="{{producturl}}" class="btn btn-outline-primary btn-sm w-100">{{#str}}viewoptions, local_educheckout{{/str}}</a>
                         {{/candirectadd}}
+                        {{/purchased}}
                     </div>
                 </div>
             </div>

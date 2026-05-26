@@ -53,6 +53,39 @@ class order {
     }
 
     /**
+     * Return the set of course ids a user has already purchased.
+     *
+     * A course counts as purchased once it appears on a paid or delivered order
+     * for the user. The result is keyed by course id for cheap lookups.
+     *
+     * @param int $userid the user id
+     * @return array course id => true
+     */
+    public static function get_purchased_courseids(int $userid): array {
+        global $DB;
+
+        if ($userid <= 0) {
+            return [];
+        }
+        $sql = 'SELECT DISTINCT oi.courseid
+                  FROM {local_educheckout_order_item} oi
+                  JOIN {local_educheckout_order} o ON o.id = oi.orderid
+                 WHERE o.userid = :userid
+                   AND o.status IN (:paid, :delivered)';
+        $courseids = $DB->get_fieldset_sql($sql, [
+            'userid' => $userid,
+            'paid' => 'paid',
+            'delivered' => 'delivered',
+        ]);
+
+        $result = [];
+        foreach ($courseids as $courseid) {
+            $result[(int) $courseid] = true;
+        }
+        return $result;
+    }
+
+    /**
      * Create a pending order from a cart, computing net/tax/gross.
      *
      * @param cart $cart the source cart
