@@ -75,6 +75,14 @@ class product_form extends \moodleform {
         );
 
         $mform->addElement(
+            'advcheckbox',
+            'use_variation_pricing',
+            get_string('product_usevariationpricing', 'local_educheckout')
+        );
+        $mform->setDefault('use_variation_pricing', 0);
+        $mform->addHelpButton('use_variation_pricing', 'product_usevariationpricing', 'local_educheckout');
+
+        $mform->addElement(
             'select',
             'category_id',
             get_string('product_category', 'local_educheckout'),

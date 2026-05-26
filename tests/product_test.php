@@ -116,6 +116,8 @@ final class product_test extends \advanced_testcase {
 
         $course = $this->getDataGenerator()->create_course();
         $product = product::create((int) $course->id);
+        // Price from the product's own variations rather than the course fee.
+        $product->save(null, '', '', FORMAT_HTML, 0, true);
 
         $this->assertEmpty($product->get_variations());
         $this->assertSame(0.0, $product->get_price());
@@ -149,11 +151,46 @@ final class product_test extends \advanced_testcase {
 
         $course = $this->getDataGenerator()->create_course();
         $product = product::create((int) $course->id);
+        // Price from the product's own variations rather than the course fee.
+        $product->save(null, '', '', FORMAT_HTML, 0, true);
 
         $product->add_variation('Early bird', 79.0, 0, 0, true);
         $product->add_variation('Standard', 129.0, 0, 0, true);
 
         $this->assertSame(79.0, $product->get_price());
+    }
+
+    /**
+     * Products inherit the linked course's enrol_fee cost unless variation pricing is on.
+     *
+     * @return void
+     */
+    public function test_price_inherits_course_fee(): void {
+        global $DB;
+        $this->resetAfterTest();
+
+        $course = $this->getDataGenerator()->create_course();
+        $DB->insert_record('enrol', (object) [
+            'enrol' => 'fee',
+            'courseid' => (int) $course->id,
+            'status' => ENROL_INSTANCE_ENABLED,
+            'cost' => 50.0,
+            'currency' => 'AUD',
+            'sortorder' => 0,
+            'timecreated' => time(),
+            'timemodified' => time(),
+        ]);
+
+        $product = product::create((int) $course->id);
+        $product->add_variation('Standard', 99.0, 0, 0, true);
+
+        // By default the product is priced from the course fee, not the variation.
+        $this->assertSame(50.0, $product->get_course_fee());
+        $this->assertSame(50.0, $product->get_price());
+
+        // Enabling variation pricing makes the variation price win.
+        $product->save(null, '', '', FORMAT_HTML, 0, true);
+        $this->assertSame(99.0, $product->get_price());
     }
 
     /**

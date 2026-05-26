@@ -96,7 +96,8 @@ if ($formdata = $productform->get_data()) {
         clean_param($formdata->tags ?? '', PARAM_TEXT),
         $descdata['text'],
         (int) $descdata['format'],
-        (int) ($formdata->sort_order ?? 0)
+        (int) ($formdata->sort_order ?? 0),
+        !empty($formdata->use_variation_pricing)
     );
     $product->set_enabled(!empty($formdata->is_enabled));
     $product->set_type(clean_param($formdata->type ?? '', PARAM_ALPHA));
@@ -132,6 +133,7 @@ if (!$isnew && $product !== null && !$productform->is_submitted()) {
         ],
         'image' => $draftitemid,
         'sort_order' => $product->get_sort_order(),
+        'use_variation_pricing' => (int) $product->uses_variation_pricing(),
     ]);
 }
 

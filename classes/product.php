@@ -58,6 +58,9 @@ class product {
     /** @var int description text format */
     protected $descriptionformat;
 
+    /** @var bool when true the variation prices override the inherited course fee */
+    protected $usevariationpricing;
+
     /** @var array variation records keyed by variation id */
     protected $variations;
 
@@ -71,6 +74,7 @@ class product {
 
         $sql = 'SELECT p.id, p.course_id, p.category_id, p.is_enabled, p.sort_order,
                        p.type, p.tags, p.description, p.description_format,
+                       p.use_variation_pricing,
                        c.fullname
                   FROM {local_educheckout_product} p
                   JOIN {course} c ON c.id = p.course_id
@@ -87,6 +91,7 @@ class product {
         $this->tags = (string) ($record->tags ?? '');
         $this->description = (string) ($record->description ?? '');
         $this->descriptionformat = (int) ($record->description_format ?? FORMAT_HTML);
+        $this->usevariationpricing = (bool) ($record->use_variation_pricing ?? 0);
         $this->variations = $DB->get_records('local_educheckout_variation', ['product_id' => $this->id]);
     }
 
@@ -249,12 +254,27 @@ class product {
     }
 
     /**
+     * Whether this product prices itself from its own variations rather than the course fee.
+     *
+     * @return bool
+     */
+    public function uses_variation_pricing(): bool {
+        return $this->usevariationpricing;
+    }
+
+    /**
      * Return the price for a specific variation, or the lowest enabled price if none given.
+     *
+     * Unless the product is set to price from its own variations, the price is
+     * inherited from the linked course's enrol_fee enrolment method.
      *
      * @param int $variationid the variation id, or 0 for the lowest price
      * @return float
      */
     public function get_price(int $variationid = 0): float {
+        if (!$this->usevariationpricing) {
+            return $this->get_course_fee();
+        }
         if ($variationid > 0 && isset($this->variations[$variationid])) {
             return (float) $this->variations[$variationid]->price;
         }
@@ -263,6 +283,30 @@ class product {
             $prices[] = (float) $variation->price;
         }
         return $prices ? min($prices) : 0.0;
+    }
+
+    /**
+     * Return the fee configured on the linked course's enrol_fee enrolment method.
+     *
+     * Where the course has more than one enabled fee method the lowest cost is
+     * used. Returns 0.0 when the course has no enabled fee method.
+     *
+     * @return float
+     */
+    public function get_course_fee(): float {
+        global $DB;
+        $instances = $DB->get_records('enrol', [
+            'courseid' => $this->courseid,
+            'enrol' => 'fee',
+            'status' => ENROL_INSTANCE_ENABLED,
+        ]);
+        $costs = [];
+        foreach ($instances as $instance) {
+            if ($instance->cost !== null && $instance->cost !== '') {
+                $costs[] = (float) $instance->cost;
+            }
+        }
+        return $costs ? min($costs) : 0.0;
     }
 
     /**
@@ -306,6 +350,42 @@ class product {
     }
 
     /**
+     * Return the overview HTML, falling back to the linked course summary.
+     *
+     * Uses the product's own description when set; otherwise renders the linked
+     * course's summary (with its embedded files rewritten). Returns an empty
+     * string when neither is available.
+     *
+     * @param \context $context the system context the product description belongs to
+     * @return string formatted HTML (may be empty)
+     */
+    public function get_overview_html(\context $context): string {
+        if (trim($this->description) !== '') {
+            return format_text($this->description, $this->descriptionformat, ['context' => $context]);
+        }
+
+        $course = get_course($this->courseid);
+        if (empty($course->summary)) {
+            return '';
+        }
+
+        $coursecontext = \context_course::instance($this->courseid);
+        $summary = file_rewrite_pluginfile_urls(
+            $course->summary,
+            'pluginfile.php',
+            $coursecontext->id,
+            'course',
+            'summary',
+            null
+        );
+        return format_text(
+            $summary,
+            $course->summaryformat ?? FORMAT_HTML,
+            ['context' => $coursecontext]
+        );
+    }
+
+    /**
      * Create a new product record for a course.
      *
      * @param int $courseid
@@ -323,6 +403,7 @@ class product {
             'tags' => '',
             'description' => '',
             'description_format' => FORMAT_HTML,
+            'use_variation_pricing' => 0,
         ]);
         return new self((int) $id);
     }
@@ -335,6 +416,7 @@ class product {
      * @param string $description
      * @param int $descriptionformat
      * @param int $sortorder
+     * @param bool $usevariationpricing when true the variation prices override the course fee
      * @return void
      */
     public function save(
@@ -342,7 +424,8 @@ class product {
         string $tags,
         string $description,
         int $descriptionformat,
-        int $sortorder = 0
+        int $sortorder = 0,
+        bool $usevariationpricing = false
     ): void {
         global $DB;
         $DB->update_record('local_educheckout_product', (object) [
@@ -352,12 +435,14 @@ class product {
             'description' => $description,
             'description_format' => $descriptionformat,
             'sort_order' => $sortorder,
+            'use_variation_pricing' => (int) $usevariationpricing,
         ]);
         $this->categoryid = $categoryid;
         $this->tags = $tags;
         $this->description = $description;
         $this->descriptionformat = $descriptionformat;
         $this->sortorder = $sortorder;
+        $this->usevariationpricing = $usevariationpricing;
     }
 
     /**
