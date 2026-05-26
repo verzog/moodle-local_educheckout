@@ -36,77 +36,7 @@ $PAGE->set_pagelayout('standard');
 $PAGE->set_title(get_string('catalogue', 'local_educheckout'));
 $PAGE->set_heading(get_string('catalogue', 'local_educheckout'));
 
-$perpage = (int) (get_config('local_educheckout', 'pagination') ?: 12);
-$filtercat = ($categoryid > 0) ? $categoryid : null;
-
-$total = \local_educheckout\product::count_enabled($filtercat);
-$products = \local_educheckout\product::get_enabled($filtercat, $page, $perpage);
-
-// Build category nav.
-$allcategories = \local_educheckout\category::get_all();
-$catitems = [];
-foreach ($allcategories as $cat) {
-    $catitems[] = [
-        'id' => $cat->get_id(),
-        'name' => format_string($cat->get_name()),
-        'active' => ($categoryid === $cat->get_id()),
-        'url' => (new moodle_url('/local/educheckout/index.php', ['category' => $cat->get_id()]))->out(false),
-    ];
-}
-
-// Load category names for display (one lookup per unique category in the current page).
-$catnames = [];
-foreach ($allcategories as $cat) {
-    $catnames[$cat->get_id()] = $cat->get_name();
-}
-
-$currency = get_config('local_educheckout', 'currency') ?: 'AUD';
-
-$items = [];
-foreach ($products as $product) {
-    $imageurl = $product->get_image_url($context);
-    $tagsarray = $product->get_tags_array();
-    $tagdata = array_map(fn($t) => ['label' => $t], $tagsarray);
-
-    $catid = $product->get_category_id();
-    $items[] = [
-        'id' => $product->get_id(),
-        'fullname' => format_string($product->get_fullname()),
-        'price' => get_string('price_from', 'local_educheckout', format_float($product->get_price(), 2)),
-        'imageurl' => $imageurl ? $imageurl->out(false) : '',
-        'hastags' => !empty($tagdata),
-        'tags' => $tagdata,
-        'categoryname' => ($catid && isset($catnames[$catid])) ? format_string($catnames[$catid]) : '',
-        'hascategoryname' => ($catid && isset($catnames[$catid])),
-        'producturl' => (new moodle_url('/local/educheckout/product.php', ['id' => $product->get_id()]))->out(false),
-    ];
-}
-
-$totalpages = ($perpage > 0 && $total > 0) ? (int) ceil($total / $perpage) : 1;
-$haspagination = $totalpages > 1;
-
-$data = [
-    'hascategories' => !empty($catitems),
-    'categories' => $catitems,
-    'allcaturl' => (new moodle_url('/local/educheckout/index.php'))->out(false),
-    'allcatactive' => ($categoryid === 0),
-    'hasproducts' => !empty($items),
-    'products' => $items,
-    'carturl' => (new moodle_url('/local/educheckout/cart.php'))->out(false),
-    'haspagination' => $haspagination,
-    'page' => $page + 1,
-    'totalpages' => $totalpages,
-    'hasprev' => $page > 0,
-    'prevurl' => (new moodle_url('/local/educheckout/index.php', [
-        'category' => $categoryid,
-        'page' => max(0, $page - 1),
-    ]))->out(false),
-    'hasnext' => ($page + 1) < $totalpages,
-    'nexturl' => (new moodle_url('/local/educheckout/index.php', [
-        'category' => $categoryid,
-        'page' => $page + 1,
-    ]))->out(false),
-];
+$data = \local_educheckout\catalogue::export_for_template($categoryid, $page);
 
 echo $OUTPUT->header();
 echo $OUTPUT->render_from_template('local_educheckout/catalogue', $data);
