@@ -80,7 +80,7 @@ foreach ($product->get_enabled_variations() as $variation) {
     $variations[] = [
         'id' => (int) $variation->id,
         'name' => format_string($variation->name),
-        'price' => format_float((float) $variation->price, 2),
+        'price' => format_float($product->get_price((int) $variation->id), 2),
         'hassessiondata' => $hassessiondata,
         'session_starttime_formatted' => $hassessiondata
             ? userdate((int) $variation->session_starttime)
@@ -110,14 +110,7 @@ if ($catid) {
     }
 }
 
-$description = '';
-if ($product->get_description() !== '') {
-    $description = format_text(
-        $product->get_description(),
-        $product->get_description_format(),
-        ['context' => $context]
-    );
-}
+$description = $product->get_overview_html($context);
 
 // Check if the student is already enrolled in this course.
 $alreadyenrolled = false;
