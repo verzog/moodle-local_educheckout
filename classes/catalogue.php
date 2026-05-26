@@ -31,7 +31,6 @@ namespace local_educheckout;
  * so the product grid is built in exactly one place.
  */
 class catalogue {
-
     /**
      * Build the data array consumed by the local_educheckout/catalogue template.
      *
@@ -43,8 +42,12 @@ class catalogue {
      *        visitors to the full store.
      * @return array Template context for local_educheckout/catalogue.
      */
-    public static function export_for_template(int $categoryid = 0, int $page = 0,
-            int $perpage = 0, ?\moodle_url $linkbase = null): array {
+    public static function export_for_template(
+        int $categoryid = 0,
+        int $page = 0,
+        int $perpage = 0,
+        ?\moodle_url $linkbase = null
+    ): array {
         $context = \context_system::instance();
 
         if ($linkbase === null) {
