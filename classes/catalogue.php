@@ -48,6 +48,8 @@ class catalogue {
         int $perpage = 0,
         ?\moodle_url $linkbase = null
     ): array {
+        global $USER;
+
         $context = \context_system::instance();
 
         if ($linkbase === null) {
@@ -79,6 +81,12 @@ class catalogue {
             $imageurl = $product->get_image_url($context);
             $tagdata = array_map(fn($t) => ['label' => $t], $product->get_tags_array());
             $catid = $product->get_category_id();
+            // A product can be added straight from the card when there is no
+            // choice to make (zero or one enabled variation). With several
+            // variations the buyer must pick one on the product page.
+            $enabledvariations = $product->get_enabled_variations();
+            $candirectadd = (count($enabledvariations) <= 1);
+            $directvariationid = (count($enabledvariations) === 1) ? (int) array_key_first($enabledvariations) : 0;
             $items[] = [
                 'id' => $product->get_id(),
                 'fullname' => format_string($product->get_fullname()),
@@ -89,8 +97,13 @@ class catalogue {
                 'categoryname' => ($catid && isset($catnames[$catid])) ? format_string($catnames[$catid]) : '',
                 'hascategoryname' => ($catid && isset($catnames[$catid])),
                 'producturl' => (new \moodle_url('/local/educheckout/product.php', ['id' => $product->get_id()]))->out(false),
+                'candirectadd' => $candirectadd,
+                'directvariationid' => $directvariationid,
             ];
         }
+
+        $isguest = !isloggedin() || isguestuser();
+        $cartcount = cart::count_open_items($isguest ? 0 : (int) $USER->id, $isguest ? sesskey() : null);
 
         $totalpages = ($perpage > 0 && $total > 0) ? (int) ceil($total / $perpage) : 1;
 
@@ -102,6 +115,10 @@ class catalogue {
             'hasproducts' => !empty($items),
             'products' => $items,
             'carturl' => (new \moodle_url('/local/educheckout/cart.php'))->out(false),
+            'addurl' => (new \moodle_url('/local/educheckout/cart.php'))->out(false),
+            'sesskey' => sesskey(),
+            'cartcount' => $cartcount,
+            'hascartitems' => ($cartcount > 0),
             'haspagination' => $totalpages > 1,
             'page' => $page + 1,
             'totalpages' => $totalpages,

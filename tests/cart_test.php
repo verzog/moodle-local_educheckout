@@ -63,4 +63,29 @@ final class cart_test extends \advanced_testcase {
         $this->assertEquals(25.0, $usercart->get_total());
         $this->assertNull(cart::find_guest('sesskey123'));
     }
+
+    /**
+     * count_open_items() reports the open cart size without creating a cart.
+     *
+     * @return void
+     */
+    public function test_count_open_items(): void {
+        global $DB;
+        $this->resetAfterTest();
+
+        $user = $this->getDataGenerator()->create_user();
+        $course = $this->getDataGenerator()->create_course();
+
+        // No cart yet: count is zero and nothing is created.
+        $this->assertSame(0, cart::count_open_items((int) $user->id));
+        $this->assertFalse($DB->record_exists('local_educheckout_cart', ['userid' => (int) $user->id]));
+
+        $cart = cart::get_open((int) $user->id);
+        $cart->add_item(1, 0, (int) $course->id, 10.0);
+        $cart->add_item(2, 0, (int) $course->id, 20.0);
+
+        $this->assertSame(2, cart::count_open_items((int) $user->id));
+        // A missing guest session key yields zero rather than an error.
+        $this->assertSame(0, cart::count_open_items(0, null));
+    }
 }
