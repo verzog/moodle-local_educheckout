@@ -94,6 +94,32 @@ class cart {
     }
 
     /**
+     * Count the items in a user's (or guest's) open cart without creating one.
+     *
+     * @param int $userid the user id, or 0 for a guest cart
+     * @param string|null $sessionkey guest session key (required when userid is 0)
+     * @return int number of items in the open cart, or 0 when there is none
+     */
+    public static function count_open_items(int $userid, ?string $sessionkey = null): int {
+        global $DB;
+
+        if ($userid > 0) {
+            $conditions = ['userid' => $userid, 'status' => 'open'];
+        } else {
+            if ($sessionkey === null || $sessionkey === '') {
+                return 0;
+            }
+            $conditions = ['userid' => 0, 'sessionkey' => (string) $sessionkey, 'status' => 'open'];
+        }
+
+        $cartid = $DB->get_field('local_educheckout_cart', 'id', $conditions);
+        if (!$cartid) {
+            return 0;
+        }
+        return $DB->count_records('local_educheckout_cart_item', ['cartid' => $cartid]);
+    }
+
+    /**
      * Return the cart id.
      *
      * @return int

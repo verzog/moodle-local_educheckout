@@ -49,6 +49,9 @@
         {{/items}}
     </ul>
     <p class="local-educheckout-total">{{#str}}total, local_educheckout{{/str}}: <span data-educheckout="total">{{total}}</span></p>
-    <p><a class="btn btn-primary" href="{{checkouturl}}">{{#str}}checkout, local_educheckout{{/str}}</a></p>
+    <p>
+        <a class="btn btn-primary" href="{{checkouturl}}">{{#str}}checkout, local_educheckout{{/str}}</a>
+        <a class="btn btn-link" href="{{shopurl}}">{{#str}}continueshopping, local_educheckout{{/str}}</a>
+    </p>
     {{/isempty}}
 </div>

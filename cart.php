@@ -63,19 +63,29 @@ if ($action === 'add' && confirm_sesskey()) {
         }
     }
 
-    $cart->add_item(
+    $added = $cart->add_item(
         $product->get_id(),
         $variationid,
         $product->get_course_id(),
         $product->get_price($variationid)
     );
-    redirect(new moodle_url('/local/educheckout/cart.php'));
+    redirect(
+        new moodle_url('/local/educheckout/cart.php'),
+        get_string($added ? 'addedtocart' : 'alreadyincart', 'local_educheckout'),
+        null,
+        $added ? \core\output\notification::NOTIFY_SUCCESS : \core\output\notification::NOTIFY_INFO
+    );
 }
 
 if ($action === 'remove' && confirm_sesskey()) {
     $itemid = required_param('item', PARAM_INT);
     $cart->remove_item($itemid);
-    redirect(new moodle_url('/local/educheckout/cart.php'));
+    redirect(
+        new moodle_url('/local/educheckout/cart.php'),
+        get_string('itemremoved', 'local_educheckout'),
+        null,
+        \core\output\notification::NOTIFY_SUCCESS
+    );
 }
 
 $items = [];

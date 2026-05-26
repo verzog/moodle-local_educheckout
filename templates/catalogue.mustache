@@ -26,8 +26,12 @@
         "allcaturl": "",
         "allcatactive": true,
         "hasproducts": true,
-        "products": [{"id":1,"fullname":"Course A","price":"10.00","imageurl":"","hastags":true,"tags":[{"label":"php"}],"producturl":"","categoryname":"Compliance","hascategoryname":true}],
+        "products": [{"id":1,"fullname":"Course A","price":"From $10.00","imageurl":"","hastags":true,"tags":[{"label":"php"}],"producturl":"","categoryname":"Compliance","hascategoryname":true,"candirectadd":true,"directvariationid":0}],
         "carturl": "",
+        "addurl": "",
+        "sesskey": "sesskey",
+        "cartcount": 2,
+        "hascartitems": true,
         "haspagination": true,
         "prevurl": "",
         "nexturl": "",
@@ -42,7 +46,7 @@
     <div class="local-educheckout-catalogue__toolbar d-flex justify-content-between align-items-center mb-3">
         <div>
             <a href="{{carturl}}" class="btn btn-outline-secondary">
-                &#128722; {{#str}}cart_title, local_educheckout{{/str}}
+                &#128722; {{#str}}cart_title, local_educheckout{{/str}}{{#hascartitems}} <span class="badge badge-primary local-educheckout-cart-count">{{cartcount}}</span>{{/hascartitems}}
             </a>
         </div>
     </div>
@@ -82,7 +86,7 @@
                     <p class="card-subtitle mb-1 text-muted small">{{categoryname}}</p>
                     {{/hascategoryname}}
                     <h5 class="card-title">
-                        <a href="{{producturl}}" class="stretched-link text-dark text-decoration-none">{{fullname}}</a>
+                        <a href="{{producturl}}" class="text-dark text-decoration-none">{{fullname}}</a>
                     </h5>
                     {{#hastags}}
                     <div class="local-educheckout-product-card__tags mb-2">
@@ -92,7 +96,19 @@
                     </div>
                     {{/hastags}}
                     <div class="mt-auto">
-                        <span class="local-educheckout-product-card__price h5 text-primary">{{price}}</span>
+                        <span class="local-educheckout-product-card__price h5 text-primary d-block mb-2">{{price}}</span>
+                        {{#candirectadd}}
+                        <form method="post" action="{{addurl}}" data-educheckout="add-form">
+                            <input type="hidden" name="action" value="add">
+                            <input type="hidden" name="product" value="{{id}}">
+                            <input type="hidden" name="variation" value="{{directvariationid}}">
+                            <input type="hidden" name="sesskey" value="{{sesskey}}">
+                            <button type="submit" class="btn btn-primary btn-sm w-100">{{#str}}addtocart, local_educheckout{{/str}}</button>
+                        </form>
+                        {{/candirectadd}}
+                        {{^candirectadd}}
+                        <a href="{{producturl}}" class="btn btn-outline-primary btn-sm w-100">{{#str}}viewoptions, local_educheckout{{/str}}</a>
+                        {{/candirectadd}}
                     </div>
                 </div>
             </div>
