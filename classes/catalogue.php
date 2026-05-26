@@ -63,6 +63,9 @@ class catalogue {
         $total = product::count_enabled($filtercat);
         $products = product::get_enabled($filtercat, $page, $perpage);
 
+        $isguest = !isloggedin() || isguestuser();
+        $purchased = $isguest ? [] : order::get_purchased_courseids((int) $USER->id);
+
         $allcategories = category::get_all();
         $catitems = [];
         $catnames = [];
@@ -87,6 +90,7 @@ class catalogue {
             $enabledvariations = $product->get_enabled_variations();
             $candirectadd = (count($enabledvariations) <= 1);
             $directvariationid = (count($enabledvariations) === 1) ? (int) array_key_first($enabledvariations) : 0;
+            $courseid = $product->get_course_id();
             $items[] = [
                 'id' => $product->get_id(),
                 'fullname' => format_string($product->get_fullname()),
@@ -99,10 +103,11 @@ class catalogue {
                 'producturl' => (new \moodle_url('/local/educheckout/product.php', ['id' => $product->get_id()]))->out(false),
                 'candirectadd' => $candirectadd,
                 'directvariationid' => $directvariationid,
+                'purchased' => isset($purchased[$courseid]),
+                'courseurl' => (new \moodle_url('/course/view.php', ['id' => $courseid]))->out(false),
             ];
         }
 
-        $isguest = !isloggedin() || isguestuser();
         $cartcount = cart::count_open_items($isguest ? 0 : (int) $USER->id, $isguest ? sesskey() : null);
 
         $totalpages = ($perpage > 0 && $total > 0) ? (int) ceil($total / $perpage) : 1;
