@@ -64,7 +64,8 @@ function local_educheckout_pluginfile($course, $cm, $context, $filearea, $args, 
         return false;
     }
 
-    require_login(null, true);
+    // Product images appear on the public catalogue (including the front page
+    // for logged-out visitors), so they must be served without requiring login.
 
     $itemid = (int) array_shift($args);
     $filename = array_pop($args);
