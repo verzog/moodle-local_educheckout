@@ -24,8 +24,6 @@
 
 namespace local_educheckout;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Aggregates order data into the figures used by the admin reports page and CSV exports.
  *
@@ -33,7 +31,6 @@ defined('MOODLE_INTERNAL') || die();
  * orders are ignored so a partially completed checkout does not skew the totals.
  */
 class report {
-
     /** @var array Order statuses that represent a completed sale. */
     private const COUNTED_STATUSES = ['paid', 'delivered'];
 

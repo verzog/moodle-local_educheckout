@@ -92,7 +92,7 @@ if (!empty($trend['series'])) {
 }
 
 // Format KPI tiles and table rows for the template.
-$toprows = array_map(static function(array $row) use ($currency) {
+$toprows = array_map(static function (array $row) use ($currency) {
     return [
         'fullname' => format_string($row['fullname']),
         'units' => $row['units'],
@@ -101,7 +101,7 @@ $toprows = array_map(static function(array $row) use ($currency) {
     ];
 }, $top);
 
-$pricerows = array_map(static function(array $row) use ($currency) {
+$pricerows = array_map(static function (array $row) use ($currency) {
     return [
         'fullname' => format_string($row['fullname']),
         'categoryname' => format_string($row['categoryname']),
