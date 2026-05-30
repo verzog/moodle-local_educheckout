@@ -24,8 +24,6 @@
 
 namespace local_educheckout;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Handles login events to absorb any guest cart into the user's cart.
  */

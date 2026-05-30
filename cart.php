@@ -24,9 +24,13 @@
 
 require_once(__DIR__ . '/../../config.php');
 
+// The cart page is intentionally available to anonymous visitors so they can
+// build a cart before signing up; the checkout page enforces authentication
+// before payment. No login check is appropriate here.
+// phpcs:disable moodle.Files.RequireLogin.Missing
+
 $action = optional_param('action', '', PARAM_ALPHA);
 
-// Guests can browse and build a cart; checkout will prompt them to sign in.
 $context = context_system::instance();
 $PAGE->set_context($context);
 $PAGE->set_url(new moodle_url('/local/educheckout/cart.php'));

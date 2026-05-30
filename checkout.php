@@ -24,6 +24,11 @@
 
 require_once(__DIR__ . '/../../config.php');
 
+// Anonymous visitors hitting checkout are redirected to signup/login below
+// (their guest cart is preserved and merged after authentication), so the
+// usual top-of-file login check would short-circuit that flow.
+// phpcs:disable moodle.Files.RequireLogin.Missing
+
 $context = context_system::instance();
 $PAGE->set_context($context);
 $PAGE->set_url(new moodle_url('/local/educheckout/checkout.php'));
