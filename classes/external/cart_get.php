@@ -54,7 +54,11 @@ class cart_get extends external_api {
         $context = \context_system::instance();
         self::validate_context($context);
 
-        $cart = \local_educheckout\cart::get_open((int) $USER->id);
+        $isguest = !isloggedin() || isguestuser();
+        $cart = \local_educheckout\cart::get_open(
+            $isguest ? 0 : (int) $USER->id,
+            $isguest ? sesskey() : null
+        );
         $items = [];
         foreach ($cart->get_items() as $item) {
             $items[] = [

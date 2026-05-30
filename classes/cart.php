@@ -74,6 +74,26 @@ class cart {
     }
 
     /**
+     * Load an open guest cart by its id (used after login to merge a stashed cart).
+     *
+     * @param int $cartid the cart id
+     * @return cart|null
+     */
+    public static function find_guest_by_id(int $cartid): ?cart {
+        global $DB;
+
+        if ($cartid <= 0) {
+            return null;
+        }
+        $record = $DB->get_record('local_educheckout_cart', [
+            'id' => $cartid,
+            'userid' => 0,
+            'status' => 'open',
+        ]);
+        return $record ? new self($record) : null;
+    }
+
+    /**
      * Find an open guest cart for a session key without creating one.
      *
      * @param string|null $sessionkey the guest session key

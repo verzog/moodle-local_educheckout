@@ -15,19 +15,22 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Version details for the EduCheckout storefront plugin.
+ * Event observer registrations for the EduCheckout storefront plugin.
  *
  * @package    local_educheckout
- * @copyright  2015 Thomas Threadgold, LearningWorks Ltd
  * @copyright  2026 LearningWorks Ltd
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2026053001;
-$plugin->requires = 2025041400; // Moodle 5.0.
-$plugin->component = 'local_educheckout';
-$plugin->dependencies = ['enrol_educheckout' => ANY_VERSION];
-$plugin->maturity = MATURITY_BETA;
-$plugin->release = '1.0.0';
+$observers = [
+    [
+        'eventname' => '\core\event\user_loggedin',
+        'callback' => '\local_educheckout\observer::user_loggedin',
+    ],
+    [
+        'eventname' => '\core\event\user_loggedinas',
+        'callback' => '\local_educheckout\observer::user_loggedin',
+    ],
+];

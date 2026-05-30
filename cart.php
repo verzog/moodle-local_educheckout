@@ -26,8 +26,7 @@ require_once(__DIR__ . '/../../config.php');
 
 $action = optional_param('action', '', PARAM_ALPHA);
 
-require_login(null, true);
-
+// Guests can browse and build a cart; checkout will prompt them to sign in.
 $context = context_system::instance();
 $PAGE->set_context($context);
 $PAGE->set_url(new moodle_url('/local/educheckout/cart.php'));

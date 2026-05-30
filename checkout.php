@@ -24,14 +24,32 @@
 
 require_once(__DIR__ . '/../../config.php');
 
-require_login();
-
 $context = context_system::instance();
 $PAGE->set_context($context);
 $PAGE->set_url(new moodle_url('/local/educheckout/checkout.php'));
 $PAGE->set_pagelayout('standard');
 $PAGE->set_title(get_string('checkout_title', 'local_educheckout'));
 $PAGE->set_heading(get_string('checkout_title', 'local_educheckout'));
+
+$isguest = !isloggedin() || isguestuser();
+
+if ($isguest) {
+    // A guest cannot pay; an account is required to be enrolled after payment.
+    // Stash the guest cart so the post-login observer can merge it, then send
+    // them to signup (or login if signup is disabled). Both flows return here.
+    $guestcart = \local_educheckout\cart::find_guest(sesskey());
+    if (!$guestcart || $guestcart->is_empty()) {
+        redirect(new moodle_url('/local/educheckout/cart.php'));
+    }
+    $SESSION->local_educheckout_guestcartid = $guestcart->get_id();
+
+    $returnurl = new moodle_url('/local/educheckout/checkout.php');
+    $authurl = (!empty($CFG->registerauth) && get_config('core', 'registerauth') !== '')
+        ? new moodle_url('/login/signup.php')
+        : new moodle_url('/login/index.php');
+    $authurl->param('wantsurl', $returnurl->out_as_local_url(false));
+    redirect($authurl);
+}
 
 $cart = \local_educheckout\cart::get_open((int) $USER->id);
 $guestcart = \local_educheckout\cart::find_guest(sesskey());
