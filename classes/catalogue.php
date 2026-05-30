@@ -66,6 +66,8 @@ class catalogue {
         $isguest = !isloggedin() || isguestuser();
         $purchased = $isguest ? [] : order::get_purchased_courseids((int) $USER->id);
 
+        $seatssold = self::get_seats_sold_by_variation($products);
+
         $allcategories = category::get_all();
         $catitems = [];
         $catnames = [];
@@ -91,6 +93,7 @@ class catalogue {
             $candirectadd = (count($enabledvariations) <= 1);
             $directvariationid = (count($enabledvariations) === 1) ? (int) array_key_first($enabledvariations) : 0;
             $courseid = $product->get_course_id();
+            $seats = self::summarise_seats($product, $enabledvariations, $seatssold);
             $items[] = [
                 'id' => $product->get_id(),
                 'fullname' => format_string($product->get_fullname()),
@@ -101,10 +104,13 @@ class catalogue {
                 'categoryname' => ($catid && isset($catnames[$catid])) ? format_string($catnames[$catid]) : '',
                 'hascategoryname' => ($catid && isset($catnames[$catid])),
                 'producturl' => (new \moodle_url('/local/educheckout/product.php', ['id' => $product->get_id()]))->out(false),
-                'candirectadd' => $candirectadd,
+                'candirectadd' => $candirectadd && !$seats['is_full'],
                 'directvariationid' => $directvariationid,
                 'purchased' => isset($purchased[$courseid]),
                 'courseurl' => (new \moodle_url('/course/view.php', ['id' => $courseid]))->out(false),
+                'hasseats' => $seats['has_seats'],
+                'seatstext' => $seats['text'],
+                'isfull' => $seats['is_full'],
             ];
         }
 
@@ -131,6 +137,87 @@ class catalogue {
             'prevurl' => (new \moodle_url($linkbase, ['category' => $categoryid, 'page' => max(0, $page - 1)]))->out(false),
             'hasnext' => ($page + 1) < $totalpages,
             'nexturl' => (new \moodle_url($linkbase, ['category' => $categoryid, 'page' => $page + 1]))->out(false),
+        ];
+    }
+
+    /**
+     * Fetch seats sold per variation across all enabled session variations of the given products.
+     *
+     * @param product[] $products
+     * @return array<int,int> Map of variationid => seats sold.
+     */
+    private static function get_seats_sold_by_variation(array $products): array {
+        global $DB;
+
+        $variationids = [];
+        foreach ($products as $product) {
+            if (!$product->is_session_type()) {
+                continue;
+            }
+            foreach ($product->get_enabled_variations() as $variation) {
+                if ((int) ($variation->session_capacity ?? 0) > 0) {
+                    $variationids[] = (int) $variation->id;
+                }
+            }
+        }
+        if (empty($variationids)) {
+            return [];
+        }
+        [$insql, $inparams] = $DB->get_in_or_equal($variationids, SQL_PARAMS_NAMED);
+        $sql = "SELECT oi.variationid, COUNT(oi.id) AS cnt
+                  FROM {local_educheckout_order_item} oi
+                  JOIN {local_educheckout_order} o ON o.id = oi.orderid
+                 WHERE oi.variationid $insql
+                   AND o.status IN ('paid', 'delivered')
+              GROUP BY oi.variationid";
+        $sold = [];
+        foreach ($DB->get_records_sql($sql, $inparams) as $row) {
+            $sold[(int) $row->variationid] = (int) $row->cnt;
+        }
+        return $sold;
+    }
+
+    /**
+     * Summarise seat availability for a product card.
+     *
+     * Aggregates the enabled session variations that have a defined capacity.
+     * A card with no capped variations returns has_seats=false so the card
+     * omits the counter (e.g. simple products, or sessions marked unlimited).
+     *
+     * @param product $product
+     * @param array $enabledvariations Enabled variation records (keyed by id).
+     * @param array<int,int> $seatssold Map of variationid => seats sold.
+     * @return array{has_seats:bool,text:string,is_full:bool}
+     */
+    private static function summarise_seats(product $product, array $enabledvariations, array $seatssold): array {
+        if (!$product->is_session_type()) {
+            return ['has_seats' => false, 'text' => '', 'is_full' => false];
+        }
+        $capped = 0;
+        $remaining = 0;
+        foreach ($enabledvariations as $variation) {
+            $capacity = (int) ($variation->session_capacity ?? 0);
+            if ($capacity <= 0) {
+                continue;
+            }
+            $capped++;
+            $sold = $seatssold[(int) $variation->id] ?? 0;
+            $remaining += max(0, $capacity - $sold);
+        }
+        if ($capped === 0) {
+            return ['has_seats' => false, 'text' => '', 'is_full' => false];
+        }
+        if ($remaining === 0) {
+            return [
+                'has_seats' => true,
+                'text' => get_string('session_full', 'local_educheckout'),
+                'is_full' => true,
+            ];
+        }
+        return [
+            'has_seats' => true,
+            'text' => get_string('session_seats_remaining', 'local_educheckout', $remaining),
+            'is_full' => false,
         ];
     }
 }
