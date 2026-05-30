@@ -143,8 +143,8 @@ class catalogue {
     /**
      * Fetch seats sold per variation across all enabled session variations of the given products.
      *
-     * @param product[] $products
-     * @return array<int,int> Map of variationid => seats sold.
+     * @param array $products Array of product objects.
+     * @return array Map of variationid => seats sold.
      */
     private static function get_seats_sold_by_variation(array $products): array {
         global $DB;
@@ -186,8 +186,8 @@ class catalogue {
      *
      * @param product $product
      * @param array $enabledvariations Enabled variation records (keyed by id).
-     * @param array<int,int> $seatssold Map of variationid => seats sold.
-     * @return array{has_seats:bool,text:string,is_full:bool}
+     * @param array $seatssold Map of variationid => seats sold.
+     * @return array With keys 'has_seats' (bool), 'text' (string), 'is_full' (bool).
      */
     private static function summarise_seats(product $product, array $enabledvariations, array $seatssold): array {
         if (!$product->is_session_type()) {
