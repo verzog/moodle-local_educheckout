@@ -1,0 +1,146 @@
+{{!
+    This file is part of Moodle - https://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_educheckout/reports
+
+    Admin sales report: KPI tiles, best-performing products, sales trend, and price list.
+
+    Example context (json):
+    {
+        "fromhuman": "1 March 2026",
+        "tohuman": "30 May 2026",
+        "fromiso": "2026-03-01",
+        "toiso": "2026-05-30",
+        "formaction": "https://example.com/local/educheckout/reports.php",
+        "kpi_orders": 42,
+        "kpi_units": 57,
+        "kpi_revenue": "9876.50",
+        "kpi_aov": "235.15",
+        "currency": "AUD",
+        "hastop": true,
+        "toprows": [{"fullname":"Workplace safety","units":18,"revenue":"3600.00","currency":"AUD"}],
+        "topchart": "",
+        "hastrend": true,
+        "trendchart": "",
+        "haspricelist": true,
+        "pricerows": [{"fullname":"Workplace safety","categoryname":"Compliance","variationname":"July intake","hasvariation":true,"price":"200.00","currency":"AUD"}],
+        "exportpriceurl": "https://example.com/local/educheckout/report_export.php?type=pricelist",
+        "exportsalesurl": "https://example.com/local/educheckout/report_export.php?type=sales"
+    }
+}}
+<div class="local-educheckout-reports">
+
+    <form method="get" action="{{formaction}}" class="form-inline mb-4 local-educheckout-reports__filter">
+        <label for="local-educheckout-reports-from" class="mr-2">{{#str}}reports_from, local_educheckout{{/str}}</label>
+        <input type="date" id="local-educheckout-reports-from" name="fromdate" value="{{fromiso}}" class="form-control mr-3">
+        <label for="local-educheckout-reports-to" class="mr-2">{{#str}}reports_to, local_educheckout{{/str}}</label>
+        <input type="date" id="local-educheckout-reports-to" name="todate" value="{{toiso}}" class="form-control mr-3">
+        <button type="submit" class="btn btn-primary">{{#str}}reports_apply, local_educheckout{{/str}}</button>
+    </form>
+
+    <p class="text-muted small">{{#str}}reports_range_label, local_educheckout{{/str}} {{fromhuman}} &ndash; {{tohuman}}</p>
+
+    <div class="row mb-4 local-educheckout-reports__kpis">
+        <div class="col-6 col-md-3 mb-2">
+            <div class="card h-100"><div class="card-body">
+                <p class="text-muted small mb-1">{{#str}}reports_kpi_orders, local_educheckout{{/str}}</p>
+                <p class="h3 mb-0">{{kpi_orders}}</p>
+            </div></div>
+        </div>
+        <div class="col-6 col-md-3 mb-2">
+            <div class="card h-100"><div class="card-body">
+                <p class="text-muted small mb-1">{{#str}}reports_kpi_units, local_educheckout{{/str}}</p>
+                <p class="h3 mb-0">{{kpi_units}}</p>
+            </div></div>
+        </div>
+        <div class="col-6 col-md-3 mb-2">
+            <div class="card h-100"><div class="card-body">
+                <p class="text-muted small mb-1">{{#str}}reports_kpi_revenue, local_educheckout{{/str}}</p>
+                <p class="h3 mb-0">{{kpi_revenue}} <span class="small text-muted">{{currency}}</span></p>
+            </div></div>
+        </div>
+        <div class="col-6 col-md-3 mb-2">
+            <div class="card h-100"><div class="card-body">
+                <p class="text-muted small mb-1">{{#str}}reports_kpi_aov, local_educheckout{{/str}}</p>
+                <p class="h3 mb-0">{{kpi_aov}} <span class="small text-muted">{{currency}}</span></p>
+            </div></div>
+        </div>
+    </div>
+
+    {{#hastop}}
+    <h3>{{#str}}reports_top_products, local_educheckout{{/str}}</h3>
+    <div class="mb-3 local-educheckout-reports__chart">{{{topchart}}}</div>
+    <div class="table-responsive mb-4">
+        <table class="table table-sm">
+            <thead><tr>
+                <th>{{#str}}reports_col_product, local_educheckout{{/str}}</th>
+                <th class="text-right">{{#str}}reports_units_sold, local_educheckout{{/str}}</th>
+                <th class="text-right">{{#str}}reports_revenue, local_educheckout{{/str}}</th>
+            </tr></thead>
+            <tbody>
+                {{#toprows}}
+                <tr>
+                    <td>{{fullname}}</td>
+                    <td class="text-right">{{units}}</td>
+                    <td class="text-right">{{revenue}} <span class="text-muted">{{currency}}</span></td>
+                </tr>
+                {{/toprows}}
+            </tbody>
+        </table>
+    </div>
+    {{/hastop}}
+    {{^hastop}}
+    <p class="text-muted">{{#str}}reports_no_sales, local_educheckout{{/str}}</p>
+    {{/hastop}}
+
+    {{#hastrend}}
+    <h3>{{#str}}reports_trend, local_educheckout{{/str}}</h3>
+    <div class="mb-4 local-educheckout-reports__chart">{{{trendchart}}}</div>
+    {{/hastrend}}
+
+    <h3>
+        {{#str}}reports_price_list, local_educheckout{{/str}}
+        <a href="{{exportpriceurl}}" class="btn btn-outline-secondary btn-sm ml-2">{{#str}}reports_download_pricelist, local_educheckout{{/str}}</a>
+        <a href="{{exportsalesurl}}" class="btn btn-outline-secondary btn-sm">{{#str}}reports_download_sales, local_educheckout{{/str}}</a>
+    </h3>
+    {{#haspricelist}}
+    <div class="table-responsive">
+        <table class="table table-sm">
+            <thead><tr>
+                <th>{{#str}}reports_col_product, local_educheckout{{/str}}</th>
+                <th>{{#str}}reports_col_category, local_educheckout{{/str}}</th>
+                <th>{{#str}}reports_col_variation, local_educheckout{{/str}}</th>
+                <th class="text-right">{{#str}}reports_col_price, local_educheckout{{/str}}</th>
+            </tr></thead>
+            <tbody>
+                {{#pricerows}}
+                <tr>
+                    <td>{{fullname}}</td>
+                    <td>{{categoryname}}</td>
+                    <td>{{#hasvariation}}{{variationname}}{{/hasvariation}}{{^hasvariation}}&mdash;{{/hasvariation}}</td>
+                    <td class="text-right">{{price}} <span class="text-muted">{{currency}}</span></td>
+                </tr>
+                {{/pricerows}}
+            </tbody>
+        </table>
+    </div>
+    {{/haspricelist}}
+    {{^haspricelist}}
+    <p class="text-muted">{{#str}}reports_no_products, local_educheckout{{/str}}</p>
+    {{/haspricelist}}
+
+</div>
