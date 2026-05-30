@@ -26,8 +26,9 @@ require_once(__DIR__ . '/../../config.php');
 
 // The cart page is intentionally available to anonymous visitors so they can
 // build a cart before signing up; the checkout page enforces authentication
-// before payment. No login check is appropriate here.
-// phpcs:disable moodle.Files.RequireLogin.Missing
+// before payment. require_course_login on the site course is Moodle's
+// standard pattern for pages that may be browsed without an account.
+require_course_login(SITEID, true);
 
 $action = optional_param('action', '', PARAM_ALPHA);
 
