@@ -31,7 +31,7 @@ $functions = [
         'description' => 'Add a product to the current cart.',
         'type' => 'write',
         'ajax' => true,
-        'loginrequired' => true,
+        'loginrequired' => false,
     ],
     'local_educheckout_cart_remove' => [
         'classname' => 'local_educheckout\\external\\cart_remove',
@@ -39,7 +39,7 @@ $functions = [
         'description' => 'Remove an item from the current cart.',
         'type' => 'write',
         'ajax' => true,
-        'loginrequired' => true,
+        'loginrequired' => false,
     ],
     'local_educheckout_cart_get' => [
         'classname' => 'local_educheckout\\external\\cart_get',
@@ -47,6 +47,6 @@ $functions = [
         'description' => 'Get the current cart contents.',
         'type' => 'read',
         'ajax' => true,
-        'loginrequired' => true,
+        'loginrequired' => false,
     ],
 ];

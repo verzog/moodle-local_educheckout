@@ -129,6 +129,7 @@ $string['product_type_session'] = 'Session (scheduled delivery)';
 $string['product_type_simple'] = 'Simple (self-paced course)';
 $string['product_usevariationpricing'] = 'Use variation pricing (override course fee)';
 $string['product_usevariationpricing_help'] = 'By default a product is priced from the linked course\'s enrolment fee (the "Enrolment on payment" method). Tick this to ignore the course fee and use the prices set on this product\'s variations instead.';
+$string['productunavailable'] = 'That course is no longer available.';
 $string['purchased'] = 'Purchased';
 $string['remove'] = 'Remove';
 $string['selectvariation'] = 'Choose an option';

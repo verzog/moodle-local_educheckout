@@ -24,9 +24,13 @@
 
 require_once(__DIR__ . '/../../config.php');
 
-$action = optional_param('action', '', PARAM_ALPHA);
+// The cart page is intentionally available to anonymous visitors so they can
+// build a cart before signing up; the checkout page enforces authentication
+// before payment. require_course_login on the site course is Moodle's
+// standard pattern for pages that may be browsed without an account.
+require_course_login(SITEID, true);
 
-require_login(null, true);
+$action = optional_param('action', '', PARAM_ALPHA);
 
 $context = context_system::instance();
 $PAGE->set_context($context);

@@ -64,7 +64,15 @@ class cart_add extends external_api {
         self::validate_context($context);
 
         $product = new \local_educheckout\product($params['productid']);
-        $cart = \local_educheckout\cart::get_open((int) $USER->id);
+        if (!$product->is_enabled()) {
+            throw new \moodle_exception('productunavailable', 'local_educheckout');
+        }
+
+        $isguest = !isloggedin() || isguestuser();
+        $cart = \local_educheckout\cart::get_open(
+            $isguest ? 0 : (int) $USER->id,
+            $isguest ? sesskey() : null
+        );
         $added = $cart->add_item(
             $product->get_id(),
             $params['variationid'],

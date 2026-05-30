@@ -56,6 +56,8 @@ function local_educheckout_extend_navigation(global_navigation $navigation) {
  * @return bool false if not found
  */
 function local_educheckout_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options = []) {
+    global $DB;
+
     if ($context->contextlevel !== CONTEXT_SYSTEM) {
         return false;
     }
@@ -64,11 +66,17 @@ function local_educheckout_pluginfile($course, $cm, $context, $filearea, $args, 
         return false;
     }
 
-    require_login(null, true);
-
     $itemid = (int) array_shift($args);
     $filename = array_pop($args);
     $filepath = $args ? ('/' . implode('/', $args) . '/') : '/';
+
+    // Product images are public on the catalogue, but disabling a product must
+    // also hide its image. Require login unless the product is currently
+    // enabled (the catalogue only ever publishes enabled products).
+    $isenabled = (bool) $DB->get_field('local_educheckout_product', 'is_enabled', ['id' => $itemid]);
+    if (!$isenabled) {
+        require_login(null, true);
+    }
 
     $fs = get_file_storage();
     $file = $fs->get_file($context->id, 'local_educheckout', 'product_image', $itemid, $filepath, $filename);
