@@ -140,6 +140,7 @@ $string['product_usevariationpricing'] = 'Use variation pricing (override course
 $string['product_usevariationpricing_help'] = 'By default a product is priced from the linked course\'s enrolment fee (the "Enrolment on payment" method). Tick this to ignore the course fee and use the prices set on this product\'s variations instead.';
 $string['productunavailable'] = 'That course is no longer available.';
 $string['purchased'] = 'Purchased';
+$string['purchased_banner'] = 'Already purchased';
 $string['remove'] = 'Remove';
 $string['report_unknown_product'] = '(product no longer available)';
 $string['reports_apply'] = 'Apply';
