@@ -163,7 +163,7 @@ if ($hassiteconfig) {
         'local_educheckout/gateway_fee_fixed',
         get_string('gateway_fee_fixed', 'local_educheckout'),
         get_string('gateway_fee_fixed_desc', 'local_educheckout'),
-        '0.30',
+        '0.3',
         PARAM_FLOAT
     );
     $settings->add($setting);
