@@ -72,10 +72,12 @@
     <div class="local-educheckout-catalogue__grid row">
         {{#products}}
         <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-4">
-            <div class="card h-100 local-educheckout-product-card">
+            <div class="card h-100 local-educheckout-product-card {{#purchased}}local-educheckout-product-card--purchased{{/purchased}}">
                 <div class="position-relative">
                     {{#purchased}}
-                    <span class="badge badge-success local-educheckout-product-card__purchased" style="position:absolute;top:.5rem;left:.5rem;z-index:1;">{{#str}}purchased, local_educheckout{{/str}}</span>
+                    <div class="local-educheckout-product-card__banner" role="status">
+                        {{#str}}purchased_banner, local_educheckout{{/str}}
+                    </div>
                     {{/purchased}}
                     {{#imageurl}}
                     <img src="{{imageurl}}" class="card-img-top local-educheckout-product-card__img" alt="{{fullname}}">
