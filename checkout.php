@@ -79,6 +79,31 @@ $cart->mark_ordered();
 
 $successurl = new moodle_url('/local/educheckout/receipt.php', ['id' => $order->get_id()]);
 
+$items = [];
+foreach ($order->get_items() as $item) {
+    $course = $DB->get_record('course', ['id' => (int) $item->courseid], 'id, fullname', IGNORE_MISSING);
+    $coursename = $course
+        ? format_string($course->fullname)
+        : get_string('order_course_missing', 'local_educheckout');
+    $items[] = [
+        'coursename' => $coursename,
+        'unitprice' => format_float((float) $item->unitprice + (float) $item->nettax, 2),
+    ];
+}
+
+$taxamount = $order->get_tax_amount();
+$hastax = $taxamount > 0.0;
+$taxlabel = '';
+if ($hastax) {
+    $taxlabel = (string) get_config('local_educheckout', 'tax_label');
+    if ($taxlabel === '') {
+        $taxlabel = get_string('tax', 'local_educheckout');
+    }
+}
+
+$gatewayfee = $order->get_gateway_fee();
+$hasgatewayfee = $gatewayfee > 0.0;
+
 $data = [
     'amount' => format_float($order->get_amount(), 2),
     'currency' => $order->get_currency(),
@@ -88,6 +113,15 @@ $data = [
     'itemid' => $order->get_id(),
     'description' => get_string('checkout_title', 'local_educheckout'),
     'successurl' => $successurl->out(false),
+    'hasitems' => !empty($items),
+    'items' => $items,
+    'hastax' => $hastax,
+    'taxlabel' => $taxlabel,
+    'netamount' => $hastax ? format_float($order->get_net_amount(), 2) : '',
+    'taxamount' => $hastax ? format_float($taxamount, 2) : '',
+    'hasgatewayfee' => $hasgatewayfee,
+    'gatewayfeelabel' => $hasgatewayfee ? \local_educheckout\gateway_fee::get_label() : '',
+    'gatewayfeeamount' => $hasgatewayfee ? format_float($gatewayfee, 2) : '',
 ];
 
 $PAGE->requires->js_call_amd('core_payment/gateways_modal', 'init');

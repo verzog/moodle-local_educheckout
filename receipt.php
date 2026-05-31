@@ -65,6 +65,9 @@ if ($hastax) {
     }
 }
 
+$gatewayfee = $order->get_gateway_fee();
+$hasgatewayfee = $gatewayfee > 0.0;
+
 $data = [
     'delivered' => $order->is_delivered(),
     'amount' => format_float($order->get_amount(), 2),
@@ -76,6 +79,9 @@ $data = [
     'taxlabel' => $taxlabel,
     'netamount' => $hastax ? format_float($order->get_net_amount(), 2) : '',
     'taxamount' => $hastax ? format_float($taxamount, 2) : '',
+    'hasgatewayfee' => $hasgatewayfee,
+    'gatewayfeelabel' => $hasgatewayfee ? \local_educheckout\gateway_fee::get_label() : '',
+    'gatewayfeeamount' => $hasgatewayfee ? format_float($gatewayfee, 2) : '',
 ];
 
 echo $OUTPUT->header();

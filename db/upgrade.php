@@ -135,5 +135,24 @@ function xmldb_local_educheckout_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026052700, 'local', 'educheckout');
     }
 
+    if ($oldversion < 2026053100) {
+        $table = new xmldb_table('local_educheckout_order');
+        $field = new xmldb_field(
+            'gateway_fee',
+            XMLDB_TYPE_NUMBER,
+            '10,2',
+            null,
+            XMLDB_NOTNULL,
+            null,
+            '0',
+            'taxinclusive'
+        );
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        upgrade_plugin_savepoint(true, 2026053100, 'local', 'educheckout');
+    }
+
     return true;
 }

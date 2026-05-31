@@ -118,6 +118,8 @@ class order {
             ];
         }
 
+        $gatewayfee = gateway_fee::calculate(round($gross, 2));
+
         $order = (object) [
             'userid' => $userid,
             'cartid' => $cart->get_id(),
@@ -126,7 +128,8 @@ class order {
             'taxamount' => round($taxtotal, 2),
             'taxrate' => $rate,
             'taxinclusive' => get_config('local_educheckout', 'tax_mode') === 'inclusive' ? 1 : 0,
-            'amount' => round($gross, 2),
+            'gateway_fee' => $gatewayfee,
+            'amount' => round($gross + $gatewayfee, 2),
             'status' => 'pending',
             'paymentid' => null,
             'timecreated' => $now,
@@ -176,6 +179,15 @@ class order {
      */
     public function get_tax_amount(): float {
         return (float) $this->record->taxamount;
+    }
+
+    /**
+     * Return the payment-gateway surcharge included in the order total.
+     *
+     * @return float
+     */
+    public function get_gateway_fee(): float {
+        return (float) ($this->record->gateway_fee ?? 0);
     }
 
     /**

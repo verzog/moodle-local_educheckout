@@ -128,7 +128,8 @@
         <FIELD NAME="taxamount" TYPE="number" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" DECIMALS="2"/>
         <FIELD NAME="taxrate" TYPE="number" LENGTH="7" NOTNULL="true" DEFAULT="0" SEQUENCE="false" DECIMALS="4"/>
         <FIELD NAME="taxinclusive" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
-        <FIELD NAME="amount" TYPE="number" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" DECIMALS="2" COMMENT="Gross = net + tax"/>
+        <FIELD NAME="gateway_fee" TYPE="number" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" DECIMALS="2" COMMENT="Payment gateway surcharge included in amount"/>
+        <FIELD NAME="amount" TYPE="number" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" DECIMALS="2" COMMENT="Gross = net + tax + gateway_fee"/>
         <FIELD NAME="status" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="pending" SEQUENCE="false" COMMENT="pending|paid|delivered|failed|cancelled"/>
         <FIELD NAME="paymentid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="FK to core {payments}"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
