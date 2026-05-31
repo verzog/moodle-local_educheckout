@@ -17,22 +17,61 @@
 {{!
     @template local_educheckout/checkout
 
-    Checkout page with the core payment trigger button.
+    Checkout summary with itemised cart, tax breakdown, optional gateway
+    surcharge, and the core payment trigger button.
 
     Example context (json):
     {
-        "amount": "10.00",
+        "amount": "112.45",
         "currency": "AUD",
-        "cost": "$10.00",
+        "cost": "$112.45",
         "component": "local_educheckout",
         "paymentarea": "cart",
         "itemid": 1,
         "description": "Checkout",
-        "successurl": "https://example.com/local/educheckout/receipt.php?id=1"
+        "successurl": "https://example.com/local/educheckout/receipt.php?id=1",
+        "hasitems": true,
+        "items": [{"coursename": "Introduction to Work Safety", "unitprice": "110.00"}],
+        "hastax": true,
+        "taxlabel": "GST",
+        "netamount": "100.00",
+        "taxamount": "10.00",
+        "hasgatewayfee": true,
+        "gatewayfeelabel": "Card processing fee",
+        "gatewayfeeamount": "2.45"
     }
 }}
 <div class="local-educheckout-checkout">
-    <p class="local-educheckout-total">{{#str}}gross, local_educheckout{{/str}}: {{cost}}</p>
+    {{#hasitems}}
+    <ul class="list-unstyled mb-3 local-educheckout-checkout__items">
+        {{#items}}
+        <li class="d-flex justify-content-between">
+            <span>{{coursename}}</span>
+            <span>{{currency}}&nbsp;{{unitprice}}</span>
+        </li>
+        {{/items}}
+    </ul>
+    {{/hasitems}}
+    {{#hastax}}
+    <p class="d-flex justify-content-between mb-1">
+        <span>{{#str}}subtotal, local_educheckout{{/str}}</span>
+        <span>{{currency}}&nbsp;{{netamount}}</span>
+    </p>
+    <p class="d-flex justify-content-between mb-1">
+        <span>{{taxlabel}}</span>
+        <span>{{currency}}&nbsp;{{taxamount}}</span>
+    </p>
+    {{/hastax}}
+    {{#hasgatewayfee}}
+    <p class="d-flex justify-content-between mb-1 local-educheckout-checkout__fee">
+        <span>{{gatewayfeelabel}}</span>
+        <span>{{currency}}&nbsp;{{gatewayfeeamount}}</span>
+    </p>
+    {{/hasgatewayfee}}
+    <p class="d-flex justify-content-between fw-bold local-educheckout-total mb-3">
+        <span>{{#str}}total, local_educheckout{{/str}}</span>
+        <span>{{currency}}&nbsp;{{amount}}</span>
+    </p>
     <button
         class="btn btn-primary"
         type="button"

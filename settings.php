@@ -132,4 +132,39 @@ if ($hassiteconfig) {
         PARAM_RAW
     );
     $settings->add($setting);
+
+    $setting = new admin_setting_configcheckbox(
+        'local_educheckout/gateway_fee_enable',
+        get_string('gateway_fee_enable', 'local_educheckout'),
+        get_string('gateway_fee_enable_desc', 'local_educheckout'),
+        0
+    );
+    $settings->add($setting);
+
+    $setting = new admin_setting_configtext(
+        'local_educheckout/gateway_fee_label',
+        get_string('gateway_fee_label', 'local_educheckout'),
+        get_string('gateway_fee_label_desc', 'local_educheckout'),
+        get_string('gateway_fee_default_label', 'local_educheckout'),
+        PARAM_TEXT
+    );
+    $settings->add($setting);
+
+    $setting = new admin_setting_configtext(
+        'local_educheckout/gateway_fee_percent',
+        get_string('gateway_fee_percent', 'local_educheckout'),
+        get_string('gateway_fee_percent_desc', 'local_educheckout'),
+        '1.75',
+        PARAM_FLOAT
+    );
+    $settings->add($setting);
+
+    $setting = new admin_setting_configtext(
+        'local_educheckout/gateway_fee_fixed',
+        get_string('gateway_fee_fixed', 'local_educheckout'),
+        get_string('gateway_fee_fixed_desc', 'local_educheckout'),
+        '0.30',
+        PARAM_FLOAT
+    );
+    $settings->add($setting);
 }

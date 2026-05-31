@@ -70,6 +70,12 @@
         <span>{{currency}}&nbsp;{{taxamount}}</span>
     </p>
     {{/hastax}}
+    {{#hasgatewayfee}}
+    <p class="d-flex justify-content-between">
+        <span>{{gatewayfeelabel}}</span>
+        <span>{{currency}}&nbsp;{{gatewayfeeamount}}</span>
+    </p>
+    {{/hasgatewayfee}}
     <p class="d-flex justify-content-between fw-bold">
         <span>{{#str}}total, local_educheckout{{/str}}</span>
         <span>{{currency}}&nbsp;{{amount}}</span>
