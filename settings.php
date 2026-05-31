@@ -50,6 +50,13 @@ if ($hassiteconfig) {
         'local/educheckout:viewallorders'
     ));
 
+    $ADMIN->add('localplugins', new admin_externalpage(
+        'local_educheckout_reports',
+        get_string('reports_title', 'local_educheckout'),
+        new moodle_url('/local/educheckout/reports.php'),
+        'local/educheckout:viewallorders'
+    ));
+
     $accounts = \core_payment\helper::get_payment_accounts_menu(context_system::instance());
     $setting = new admin_setting_configselect(
         'local_educheckout/paymentaccount',

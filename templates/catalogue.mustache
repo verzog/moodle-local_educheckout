@@ -26,7 +26,7 @@
         "allcaturl": "",
         "allcatactive": true,
         "hasproducts": true,
-        "products": [{"id":1,"fullname":"Course A","price":"From $10.00","imageurl":"","hastags":true,"tags":[{"label":"php"}],"producturl":"https://example.com/local/educheckout/product.php?id=1","categoryname":"Compliance","hascategoryname":true,"candirectadd":true,"directvariationid":0,"purchased":false,"courseurl":"https://example.com/course/view.php?id=2"}],
+        "products": [{"id":1,"fullname":"Course A","price":"From $10.00","imageurl":"","hastags":true,"tags":[{"label":"php"}],"producturl":"https://example.com/local/educheckout/product.php?id=1","categoryname":"Compliance","hascategoryname":true,"candirectadd":true,"directvariationid":0,"purchased":false,"courseurl":"https://example.com/course/view.php?id=2","hasseats":true,"seatstext":"5 seats remaining","isfull":false}],
         "carturl": "",
         "addurl": "https://example.com/local/educheckout/cart.php",
         "sesskey": "sesskey",
@@ -102,10 +102,19 @@
                     {{/hastags}}
                     <div class="mt-auto">
                         <span class="local-educheckout-product-card__price h5 text-primary d-block mb-2">{{price}}</span>
+                        {{#hasseats}}
+                        <p class="local-educheckout-product-card__seats small mb-2 {{#isfull}}text-danger{{/isfull}}{{^isfull}}text-muted{{/isfull}}">
+                            {{seatstext}}
+                        </p>
+                        {{/hasseats}}
                         {{#purchased}}
                         <a href="{{courseurl}}" class="btn btn-success btn-sm w-100">{{#str}}gotocourse, local_educheckout{{/str}}</a>
                         {{/purchased}}
                         {{^purchased}}
+                        {{#isfull}}
+                        <a href="{{producturl}}" class="btn btn-outline-secondary btn-sm w-100 disabled" aria-disabled="true">{{#str}}session_full, local_educheckout{{/str}}</a>
+                        {{/isfull}}
+                        {{^isfull}}
                         {{#candirectadd}}
                         <form method="post" action="{{addurl}}" data-educheckout="add-form">
                             <input type="hidden" name="action" value="add">
@@ -118,6 +127,7 @@
                         {{^candirectadd}}
                         <a href="{{producturl}}" class="btn btn-outline-primary btn-sm w-100">{{#str}}viewoptions, local_educheckout{{/str}}</a>
                         {{/candirectadd}}
+                        {{/isfull}}
                         {{/purchased}}
                     </div>
                 </div>
