@@ -85,8 +85,24 @@ foreach ($order->get_items() as $item) {
     $coursename = $course
         ? format_string($course->fullname)
         : get_string('order_course_missing', 'local_educheckout');
+
+    $summarytext = '';
+    if ((int) $item->productid > 0) {
+        try {
+            $product = new \local_educheckout\product((int) $item->productid);
+            $summaryhtml = $product->get_overview_html($context);
+            if ($summaryhtml !== '') {
+                $summarytext = shorten_text(trim(html_to_text($summaryhtml, 0, false)), 200, true);
+            }
+        } catch (\Throwable $e) {
+            $summarytext = '';
+        }
+    }
+
     $items[] = [
         'coursename' => $coursename,
+        'summary' => $summarytext,
+        'hassummary' => $summarytext !== '',
         'unitprice' => format_float((float) $item->unitprice + (float) $item->nettax, 2),
     ];
 }
