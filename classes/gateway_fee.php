@@ -29,7 +29,6 @@ namespace local_educheckout;
  * applied to an order based on the configured percentage + fixed amount.
  */
 class gateway_fee {
-
     /**
      * Compute the surcharge amount for the given pre-fee subtotal.
      *
