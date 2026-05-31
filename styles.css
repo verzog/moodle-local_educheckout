@@ -26,3 +26,18 @@
 .local-educheckout-total {
     font-weight: bold;
 }
+
+.local-educheckout-checkout__thumb-col {
+    width: 72px;
+}
+
+.local-educheckout-checkout__thumb-cell {
+    width: 72px;
+}
+
+.local-educheckout-checkout__thumb {
+    width: 56px;
+    height: 56px;
+    object-fit: cover;
+    display: block;
+}

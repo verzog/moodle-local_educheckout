@@ -46,6 +46,7 @@
     <table class="table table-striped table-sm align-middle local-educheckout-checkout__items mb-3">
         <thead>
             <tr>
+                <th scope="col" class="local-educheckout-checkout__thumb-col"><span class="sr-only">{{#str}}product_image, local_educheckout{{/str}}</span></th>
                 <th scope="col">{{#str}}product_course, local_educheckout{{/str}}</th>
                 <th scope="col">{{#str}}product_description, local_educheckout{{/str}}</th>
                 <th scope="col" class="text-end">{{#str}}price, local_educheckout{{/str}}</th>
@@ -54,9 +55,14 @@
         <tbody>
             {{#items}}
             <tr>
-                <td class="fw-semibold">{{coursename}}</td>
-                <td class="text-muted small">{{#hassummary}}{{summary}}{{/hassummary}}</td>
-                <td class="text-end text-nowrap">{{currency}}&nbsp;{{unitprice}}</td>
+                <td class="local-educheckout-checkout__thumb-cell">
+                    {{#hasimage}}
+                    <img src="{{imageurl}}" alt="" class="local-educheckout-checkout__thumb rounded" width="56" height="56">
+                    {{/hasimage}}
+                </td>
+                <td class="fw-semibold align-middle">{{coursename}}</td>
+                <td class="text-muted small align-middle">{{#hassummary}}{{summary}}{{/hassummary}}</td>
+                <td class="text-end text-nowrap align-middle">{{currency}}&nbsp;{{unitprice}}</td>
             </tr>
             {{/items}}
         </tbody>
