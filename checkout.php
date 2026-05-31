@@ -87,12 +87,17 @@ foreach ($order->get_items() as $item) {
         : get_string('order_course_missing', 'local_educheckout');
 
     $summarytext = '';
+    $imageurl = '';
     if ((int) $item->productid > 0) {
         try {
             $product = new \local_educheckout\product((int) $item->productid);
             $summaryhtml = $product->get_overview_html($context);
             if ($summaryhtml !== '') {
                 $summarytext = shorten_text(trim(html_to_text($summaryhtml, 0, false)), 200, true);
+            }
+            $url = $product->get_image_url($context);
+            if ($url) {
+                $imageurl = $url->out(false);
             }
         } catch (\Throwable $e) {
             $summarytext = '';
@@ -103,6 +108,8 @@ foreach ($order->get_items() as $item) {
         'coursename' => $coursename,
         'summary' => $summarytext,
         'hassummary' => $summarytext !== '',
+        'imageurl' => $imageurl,
+        'hasimage' => $imageurl !== '',
         'unitprice' => format_float((float) $item->unitprice + (float) $item->nettax, 2),
     ];
 }
